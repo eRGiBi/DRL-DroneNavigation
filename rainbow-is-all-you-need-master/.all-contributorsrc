@@ -1,0 +1,99 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "Curt-Park",
+      "name": "Jinwoo Park (Curt)",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/14961526?v=4",
+      "profile": "https://www.linkedin.com/in/curt-park/",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "MrSyee",
+      "name": "Kyunghwan Kim",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/17582508?v=4",
+      "profile": "https://www.linkedin.com/in/kyunghwan-kim-0739a314a/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Wei-1",
+      "name": "Wei Chen",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/10698262?v=4",
+      "profile": "https://github.com/Wei-1",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "wlbksy",
+      "name": "WANG Lei",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/2433806?v=4",
+      "profile": "https://github.com/wlbksy",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "leeyaf",
+      "name": "leeyaf",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10635308?v=4",
+      "profile": "https://www.tun6.com/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "AFanaei",
+      "name": "ahmadF",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5231504?v=4",
+      "profile": "https://github.com/AFanaei",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "robertoschiavone",
+      "name": "Roberto Schiavone",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5054879?v=4",
+      "profile": "https://github.com/robertoschiavone",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "DaivdYuan",
+      "name": "David Yuan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/47169162?v=4",
+      "profile": "https://github.com/DaivdYuan",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "dhanushka2001",
+      "name": "dhanushka2001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/79731347?v=4",
+      "profile": "https://github.com/dhanushka2001",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "rainbow-is-all-you-need",
+  "projectOwner": "Curt-Park",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true,
+  "commitType": "docs",
+  "commitConvention": "angular"
+}

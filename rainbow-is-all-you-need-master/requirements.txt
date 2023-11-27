@@ -1,0 +1,7 @@
+torch                           == 1.13.1
+matplotlib                      == 3.5.1
+pyglet                          == 1.5.15
+gymnasium[classic-control]      == 0.28.1
+PyVirtualDisplay                == 3.0
+jupyterlab                      == 3.2.6
+moviepy                         == 1.0.3
