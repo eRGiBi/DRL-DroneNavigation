@@ -1,35 +1,22 @@
-import numpy as np
-import pybullet as p
 import time
-import pyvirtualdisplay
 
-import abc
-import tensorflow as tf
-
-# from tf_agents.environments import py_environment
-from tf_agents.environments import tf_environment
-from tf_agents.environments import tf_py_environment
-from tf_agents.environments import utils
-from tf_agents.specs import array_spec
-from tf_agents.environments import wrappers
-from tf_agents.environments import suite_gym
-from tf_agents.trajectories import time_step as ts
-
-from stable_baselines3 import DQN, TD3
+import numpy as np
+from stable_baselines3 import PPO
 
 # from PyBullet import BaseAviary
-from PyBullet import Logger
-from PyBullet.enums import DroneModel, Physics, ImageType
-
+from PyBullet.enums import Physics
 from Sol.DroneEnvironment import DroneEnvironment
-from Sol.agent_controller import AgentController
+
+# from tf_agents.environments import py_environment
+
+start = time.perf_counter()
 
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
-import pybullet_envs.bullet.minitaur_gym_env as e
+discount = 0.999
 
 # env = e.MinitaurBulletEnv(render=True)
 
@@ -113,18 +100,18 @@ print("----------------------------")
 
 action = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
 
-model = TD3(
+model = PPO(
     "MlpPolicy",
     DroneEnvironment(drone=None,
                      race_track=None,
                      target_points=targets,
                      threshold=1,
-                     discount=1,
+                     discount=discount,
                      gui=False
                      ),
     verbose=1
 )
-model.learn(total_timesteps=10000)
+model.learn(total_timesteps=100000)
 
 rewards = []
 
@@ -136,8 +123,11 @@ while True:
     if terminated or truncated:
         obs, info = drone_environment.reset()
         break
-
+print(rewards)
 print(sum(rewards))
+
+end = time.perf_counter()
+print(end - start)
 
 # # time_step = drone_environment.reset()
 # time_step = drone_environment.step(action)

@@ -160,7 +160,6 @@ class BaseAviary(gym.Env):
         if self.GUI:
             #### With debug GUI ########################################
             self.CLIENT = p.connect(p.GUI)  # p.connect(p.GUI, options="--opengl2")
-            print("GUI Init")
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW,
                       p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
                 p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
@@ -343,7 +342,7 @@ class BaseAviary(gym.Env):
             for i in range(4):
                 self.gui_input[i] = p.readUserDebugParameter(int(self.SLIDERS[i]), physicsClientId=self.CLIENT)
             clipped_action = np.tile(self.gui_input, (self.NUM_DRONES, 1))
-            print(clipped_action)
+            # print(clipped_action)
             if self.step_counter % (self.PYB_FREQ / 2) == 0:
                 self.GUI_INPUT_TEXT = [p.addUserDebugText("Using GUI RPM",
                                                           textPosition=[0, 0, 0],
@@ -359,7 +358,7 @@ class BaseAviary(gym.Env):
         else:
             self._saveLastAction(action)
             clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
-        print(clipped_action)
+        # print(clipped_action)
         #### Repeat for as many as the aggregate physics steps #####
         for _ in range(self.PYB_STEPS_PER_CTRL):
             #### Update and store the drones kinematic info for certain
@@ -368,11 +367,10 @@ class BaseAviary(gym.Env):
                                                                 Physics.PYB_DW, Physics.PYB_GND_DRAG_DW]:
                 self._updateAndStoreKinematicInformation()
             #### Step the simulation using the desired physics update ##
-            print(type(self.PHYSICS) == type(Physics.PYB))
+            # print(type(self.PHYSICS) == type(Physics.PYB))
             self.PHYSICS = Physics.PYB
             for i in range(self.NUM_DRONES):
                 if self.PHYSICS == Physics.PYB:
-                    print("fasfa")
                     self._physics(clipped_action[i, :], i)
                 elif self.PHYSICS == Physics.DYN:
                     self._dynamics(clipped_action[i, :], i)

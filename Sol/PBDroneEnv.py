@@ -23,7 +23,8 @@ from PyBullet.enums import DroneModel, Physics, ImageType, ActionType, Observati
 
 
 class DroneEnvironment(
-    BaseAviary,
+    # BaseAviary,
+    BaseSingle
     # py_environment.PyEnvironment,
 ):
 
@@ -72,37 +73,6 @@ class DroneEnvironment(
         self._current_target = target_points[self._current_target_index]
         self._is_done = False
 
-        # Possible actions: the 4 rotor speed
-        self._action_spec = array_spec.BoundedArraySpec(
-            shape=(4,),  # Rotor speeds for 4 rotors
-            dtype=np.float32,
-            minimum=0.0,
-            maximum=1.0,
-            name='action'
-        )
-
-        # The observation: what state are we in: where is the drone and where is our next goal
-        self._observation_spec = array_spec.BoundedArraySpec(
-            shape=(6,),  # [x, y, z, target_x, target_y, target_z]
-            dtype=np.float32,
-            # minimum=[-np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf],
-            minimum=[0, 0, 0, 0, 0, 0],
-            maximum=[np.inf, np.inf, np.inf, np.inf, np.inf, np.inf],
-            name='observation'
-        )
-
-    def action_spec(self):
-        return self._action_spec
-
-    def observation_spec(self):
-        return self._observation_spec
-
-    def _reset(self):
-        self._current_position = np.array([0.0, 0.0, 0.0])
-        self._current_target = self._target_points[0]
-        self._is_done = False
-        # return ts.restart(tf.convert_to_tensor(self._get_observation()))
-        return self.reset()
 
     def _step(self, action):
         # The last action ended the episode. Ignore the current action and start
@@ -145,18 +115,6 @@ class DroneEnvironment(
         )
 
         return time_step
-
-    def _get_observation(self):
-        target_position = self._target_points[self._current_target_index] if self._current_target < len(
-            self._target_points) else [0.0, 0.0, 0.0]
-        return np.concatenate([self._current_position, target_position])
-
-    def _update_position(self, rotor_speeds):
-        # Implement the dynamics of the drone based on rotor speeds
-        # Update the position based on the dynamics
-
-        self._race_track.applyExternalForce(self._drone, -1, rotor_speeds, pybullet.LINK_FRAME)
-        self._current_position = self._race_track.getBasePositionAndOrientation(self._drone)
 
     def _actionSpace(self):
         """Returns the action space of the environment."""
@@ -383,11 +341,11 @@ class DroneEnvironment(
         distance_to_target = np.linalg.norm(
             self._getDroneStateVector(0)[:3]  - self._target_points[self._current_target_index])
         print(distance_to_target)
-        reward -= distance_to_target
+        # reward -= self.discount distance_to_target / 100
 
         # Check if the drone has reached the target
         if distance_to_target < self._threshold:
-            reward += 10
+            reward += 10 * self._discount ** self.step_counter
             self._current_target_index += 1
             if self._current_target_index == len(self._target_points):
                 self._is_done = True
@@ -398,8 +356,8 @@ class DroneEnvironment(
         else:
             # If the drone is outside the threshold, give a reward based on distance
             reward = max(0.0, 1.0 - distance_to_target / self._threshold)
-        print("rew: ", reward, self._discount, self.step_counter)
-        return reward * self._discount ** self.step_counter
+
+        return reward
 
     # quad_pt = np.array(
     #     list((self.state["position"].x_val, self.state["position"].y_val, self.state["position"].z_val,)))
