@@ -4,7 +4,7 @@ import pybullet as p
 # import importlib as pkg_resources
 import pkg_resources
 import sys
-sys.path.append("C:/Files/Egyetem/SzakdolgozatRL/gym-pybullet-drones-main/gym_pybullet_drones")
+sys.path.append("C:/Files/Egyetem/SzakdolgozatRL/GymPybulletDronesMain/gym_pybullet_drones")
 import sys
 
 sys.path.append("C:\Files\Egyetem\Szakdolgozat\RL\gym-pybullet-drones-main\gym_pybullet_drones")

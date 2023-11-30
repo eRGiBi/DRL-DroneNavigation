@@ -20,11 +20,13 @@ from tf_agents.typing import types
 
 from PyBullet.BaseAviary import BaseAviary
 from PyBullet.enums import DroneModel, Physics, ImageType, ActionType, ObservationType
+from PyBullet.GymPybulletDronesMain import *
+from PyBullet.GymPybulletDronesMain.gym_pybullet_drones.envs.single_agent_rl import BaseSingleAgentAviary
 
 
 class DroneEnvironment(
     # BaseAviary,
-    BaseSingle
+    BaseSingleAgentAviary
     # py_environment.PyEnvironment,
 ):
 
@@ -73,37 +75,38 @@ class DroneEnvironment(
         self._current_target = target_points[self._current_target_index]
         self._is_done = False
 
-
     def _step(self, action):
+
         # The last action ended the episode. Ignore the current action and start
         # a new episode.
         if self._is_done:
             return self.reset()
 
-        super(BaseAviary).step(self._preprocessAction(action))
+        super(BaseSingleAgentAviary).step(self._preprocessAction(action))
 
+        # # # Update position based on action
+        # # self._current_position += action
+        #
         # # Update position based on action
-        # self._current_position += action
-
-        # Update position based on action
-        self._update_position(self._preprocessAction(action))
+        # self._update_position(self._preprocessAction(action))
 
         # Calculate distance to the current target
-        distance_to_target = np.linalg.norm(self._current_position - self._target_points[self._current_target])
-
+        distance_to_target = np.linalg.norm(
+            self._computeObs()[:3] - self._target_points[self._current_target])
+        print(distance_to_target)
         # Reward based on distance to target
         reward = -distance_to_target
 
-        # Check if the drone has reached the target
+        # Check if the drone has reached a target
         if distance_to_target < self._threshold:
             reward += 10
             self._current_target_index += 1
 
-            if self._current_target_index == len(self._target_points):
+            if self._computeTerminated():
                 self._is_done = True
                 reward += 100.0  # Reward for reaching all targets
             else:
-                self._current_target += self._target_points[self._current_target_index]
+                self._current_target = self._target_points[self._current_target_index]
 
         # Create a time step
         # termination?????????????
@@ -131,7 +134,13 @@ class DroneEnvironment(
                           )
 
     def _computeObs(self):
-        """Returns the current observation of the environment."""
+        """
+        Returns the current observation of the environment.
+
+        Kinematic observation of size 12.
+
+        """
+        assert self.OBS_TYPE == ObservationType.KIN
 
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
@@ -268,66 +277,45 @@ class DroneEnvironment(
             Whether the current episode is done.
 
         """
-        if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC:
+        if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or \
+                self._step_counter > 1000 or \
+                self._current_target_index == len(self._target_points):
+                # positinal req
             return True
-        else:
-            return False
+        return False
 
-    def _preprocessAction(self,
-                          action
-                          ):
-        """Pre-processes the action passed to `.step()` into motors' RPMs.
+    # def _preprocessAction(self,
+    #                       action
+    #                       ):
+    #     """Pre-processes the action passed to `.step()` into motors' RPMs.
+    #
+    #     Parameter `action` is processed differenly for each of the different
+    #     action types: `action` can be of length 1, 3, 4, or 6 and represent
+    #     RPMs, desired thrust and torques, the next target position to reach
+    #     using PID control, a desired velocity vector, new PID coefficients, etc.
+    #
+    #     Parameters
+    #     ----------
+    #     action : ndarray
+    #         The input action for each drone, to be translated into RPMs.
+    #
+    #     Returns
+    #     -------
+    #     ndarray
+    #         (4,)-shaped array of ints containing to clipped RPMs
+    #         commanded to the 4 motors of each drone.
+    #
+    #     """
+    #
+    #     return super(BaseSingleAgentAviary)._preprocessAction(action)
 
-        Parameter `action` is processed differenly for each of the different
-        action types: `action` can be of length 1, 3, 4, or 6 and represent
-        RPMs, desired thrust and torques, the next target position to reach
-        using PID control, a desired velocity vector, new PID coefficients, etc.
-
-        Parameters
-        ----------
-        action : ndarray
-            The input action for each drone, to be translated into RPMs.
-
-        Returns
-        -------
-        ndarray
-            (4,)-shaped array of ints containing to clipped RPMs
-            commanded to the 4 motors of each drone.
-
-        """
-        thrust = self.HOVER_RPM * (1 + 0.05 * action)
-        print(thrust)
-
-        # Convert thrust to RPM for all motors
-        # rpm = np.array([thrust] * 4)
-
-        return thrust
-
-        if self.ACT_TYPE == ActionType.RPM:
-            return np.array(self.HOVER_RPM * (1 + 0.05 * action))
-
-        elif self.ACT_TYPE == ActionType.VEL:
-            state = self._getDroneStateVector(0)
-            if np.linalg.norm(action[0:3]) != 0:
-                v_unit_vector = action[0:3] / np.linalg.norm(action[0:3])
-            else:
-                v_unit_vector = np.zeros(3)
-            rpm, _, _ = self.ctrl.computeControl(control_timestep=self.CTRL_TIMESTEP,
-                                                 cur_pos=state[0:3],
-                                                 cur_quat=state[3:7],
-                                                 cur_vel=state[10:13],
-                                                 cur_ang_vel=state[13:16],
-                                                 target_pos=state[0:3],  # same as the current position
-                                                 target_rpy=np.array([0, 0, state[9]]),  # keep current yaw
-                                                 target_vel=self.SPEED_LIMIT * np.abs(action[3]) * v_unit_vector
-                                                 # target the desired velocity vector
-                                                 )
-            return rpm
-        elif self.ACT_TYPE == ActionType.ONE_D_RPM:
-            return np.repeat(self.HOVER_RPM * (1 + 0.05 * action), 4)
-        else:
-            print("[ERROR] in BaseSingleAgentAviary._preprocessAction()")
-
+    # thrust = self.HOVER_RPM * (1 + 0.05 * action)
+    # print(thrust)
+    #
+    # # Convert thrust to RPM for all motors
+    # # rpm = np.array([thrust] * 4)
+    #
+    # return thrust
 
     def _computeReward(self):
         thresh_dist = 7
@@ -335,11 +323,11 @@ class DroneEnvironment(
         reward = 0
         z = -10
         # distance_to_target = np.linalg.norm(
-            # self._current_position - self._target_points[self._current_target_index])
+        # self._current_position - self._target_points[self._current_target_index])
         print("pos", self._getDroneStateVector(0))
 
         distance_to_target = np.linalg.norm(
-            self._getDroneStateVector(0)[:3]  - self._target_points[self._current_target_index])
+            self._getDroneStateVector(0)[:3] - self._target_points[self._current_target_index])
         print(distance_to_target)
         # reward -= self.discount distance_to_target / 100
 
