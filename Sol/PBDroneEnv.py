@@ -24,7 +24,7 @@ from PyBullet.GymPybulletDronesMain import *
 from PyBullet.GymPybulletDronesMain.gym_pybullet_drones.envs.single_agent_rl import BaseSingleAgentAviary
 
 
-class DroneEnvironment(
+class PBDroneEnv(
     # BaseAviary,
     BaseSingleAgentAviary
     # py_environment.PyEnvironment,
@@ -79,10 +79,9 @@ class DroneEnvironment(
 
         # The last action ended the episode. Ignore the current action and start
         # a new episode.
-        if self._is_done:
-            return self.reset()
 
-        super(BaseSingleAgentAviary).step(self._preprocessAction(action))
+        obs, reward, terminated, truncated, info = (
+            super(BaseSingleAgentAviary).step(self._preprocessAction(action)))
 
         # # # Update position based on action
         # # self._current_position += action
@@ -90,34 +89,15 @@ class DroneEnvironment(
         # # Update position based on action
         # self._update_position(self._preprocessAction(action))
 
-        # Calculate distance to the current target
-        distance_to_target = np.linalg.norm(
-            self._computeObs()[:3] - self._target_points[self._current_target])
-        print(distance_to_target)
-        # Reward based on distance to target
-        reward = -distance_to_target
-
-        # Check if the drone has reached a target
-        if distance_to_target < self._threshold:
-            reward += 10
-            self._current_target_index += 1
-
-            if self._computeTerminated():
-                self._is_done = True
-                reward += 100.0  # Reward for reaching all targets
-            else:
-                self._current_target = self._target_points[self._current_target_index]
 
         # Create a time step
-        # termination?????????????
         time_step = ts.transition(
-            tf.convert_to_tensor(self._get_observation()),
+            tf.convert_to_tensor(obs),
             tf.convert_to_tensor(reward),
-            discount=tf.constant(self._discount),
-            #  step_type=tf.convert_to_tensor(1 if self._is_done else 0)
+            # discount=tf.constant(self._discount),
         )
 
-        return time_step
+        return time_step, terminated
 
     def _actionSpace(self):
         """Returns the action space of the environment."""
@@ -318,33 +298,35 @@ class DroneEnvironment(
     # return thrust
 
     def _computeReward(self):
-        thresh_dist = 7
+
         beta = 1
         reward = 0
         z = -10
         # distance_to_target = np.linalg.norm(
         # self._current_position - self._target_points[self._current_target_index])
+
+        # Calculate distance to the current target
         print("pos", self._getDroneStateVector(0))
-
         distance_to_target = np.linalg.norm(
-            self._getDroneStateVector(0)[:3] - self._target_points[self._current_target_index])
-        print(distance_to_target)
-        # reward -= self.discount distance_to_target / 100
+            self._computeObs()[:3] - self._target_points[self._current_target])
+        print("dis" , distance_to_target)
+        # Reward based on distance to target
+        reward = -distance_to_target
 
-        # Check if the drone has reached the target
+        # Check if the drone has reached a target
         if distance_to_target < self._threshold:
-            reward += 10 * self._discount ** self.step_counter
+            reward += 10
+            # * self._discount ** self.step_counter
             self._current_target_index += 1
+
+#            if self._computeTerminated():
+ #               reward += 100.0  # Reward for reaching all targets
+
             if self._current_target_index == len(self._target_points):
-                self._is_done = True
                 reward += 100.0  # Reward for reaching all targets
-            else:
-                self._current_target += self._target_points[self._current_target_index]
 
-        else:
             # If the drone is outside the threshold, give a reward based on distance
-            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
-
+#            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
         return reward
 
     # quad_pt = np.array(

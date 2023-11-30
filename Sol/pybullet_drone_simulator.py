@@ -6,6 +6,7 @@ from stable_baselines3 import PPO
 # from PyBullet import BaseAviary
 from PyBullet.enums import Physics
 from Sol.DroneEnvironment import DroneEnvironment
+from Sol.PBDroneEnv import PBDroneEnv
 
 # from tf_agents.environments import py_environment
 
@@ -76,7 +77,7 @@ targets = pts = [np.array([0.0, 0.0, 3.0]),
                  np.array([3.2474, 3.32137, -2.5725]),
                  np.array([1.3474, 1.6714, -2.07256]), ]
 
-drone_environment = DroneEnvironment(race_track=None,
+drone_environment = PBDroneEnv(race_track=None,
                                      target_points=targets,
                                      threshold=1,
                                      discount=1,
