@@ -21,7 +21,7 @@ from tf_agents.typing import types
 from PyBullet.BaseAviary import BaseAviary
 from PyBullet.enums import DroneModel, Physics, ImageType, ActionType, ObservationType
 from PyBullet.GymPybulletDronesMain import *
-from PyBullet.GymPybulletDronesMain.gym_pybullet_drones.envs.single_agent_rl import BaseSingleAgentAviary
+from Sol.BaseSingleAgentAviary import BaseSingleAgentAviary
 
 
 class PBDroneEnv(
@@ -46,7 +46,7 @@ class PBDroneEnv(
 
                  ):
 
-        super(DroneEnvironment, self).__init__(drone_model=drone_model,
+        super(BaseSingleAgentAviary, self).__init__(drone_model=drone_model,
                                                num_drones=1,
                                                initial_xyzs=initial_xyzs,
                                                initial_rpys=initial_rpys,

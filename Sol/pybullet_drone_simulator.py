@@ -83,12 +83,12 @@ drone_environment = PBDroneEnv(race_track=None,
                                      discount=1,
                                      drone=None,
                                      physics=Physics.PYB)
-print("----------------------------")
-print(drone_environment.action_space)
-print(drone_environment.action_spec())
-print(drone_environment.getDroneIds())
-print(drone_environment.observation_spec())
-print("----------------------------")
+# print("----------------------------")
+# print(drone_environment.action_space)
+# print(drone_environment.action_spec())
+# print(drone_environment.getDroneIds())
+# print(drone_environment.observation_spec())
+# print("----------------------------")
 
 # tf_env = tf_py_environment.TFPyEnvironment(drone_environment)
 #
