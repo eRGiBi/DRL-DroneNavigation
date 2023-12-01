@@ -199,7 +199,7 @@ class PolicySavedModelTrigger(interval_trigger.IntervalTrigger):
 
 
 class StepPerSecondLogTrigger(interval_trigger.IntervalTrigger):
-  """Logs train_steps_per_second."""
+  """logs train_steps_per_second."""
 
   def __init__(
       self, train_step: tf.Variable, interval: int, log_to_terminal: bool = True

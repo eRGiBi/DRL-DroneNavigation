@@ -223,7 +223,7 @@ class Actor(object):
           logging.error("Image summary could not be written for metric %s", m)
 
   def log_metrics(self):
-    """Logs metric results to stdout."""
+    """logs metric results to stdout."""
     if self._metrics is None:
       return
     log = ["{0} = {1}".format(m.name, m.result()) for m in self._metrics]

@@ -31,7 +31,7 @@ class PBDroneEnv(
 ):
 
     def __init__(self,
-                 race_track, target_points, threshold, drone, discount=1,
+                 target_points, threshold, discount=1,
                  drone_model: DroneModel = DroneModel.CF2X,
                  initial_xyzs=None,
                  initial_rpys=None,
@@ -43,45 +43,42 @@ class PBDroneEnv(
                  obs: ObservationType = ObservationType.KIN,
                  act: ActionType = ActionType.RPM,
                  vision_attributes=False,
-
                  ):
 
-        super(BaseSingleAgentAviary, self).__init__(drone_model=drone_model,
-                                               num_drones=1,
-                                               initial_xyzs=initial_xyzs,
-                                               initial_rpys=initial_rpys,
-                                               physics=physics,
-                                               pyb_freq=pyb_freq,
-                                               ctrl_freq=ctrl_freq,
-                                               gui=gui,
-                                               record=record,
-                                               obstacles=False,
-                                               user_debug_gui=False,
-                                               vision_attributes=vision_attributes,
-                                               )
+        super().__init__(drone_model=drone_model,
+                         # num_drones=1,
+                         initial_xyzs=initial_xyzs,
+                         initial_rpys=initial_rpys,
+                         physics=physics,
+                         pyb_freq=pyb_freq,
+                         ctrl_freq=ctrl_freq,
+                         gui=gui,
+                         record=record,
+                         # obstacles=False,
+                         # user_debug_gui=False,
+                         # vision_attributes=vision_attributes,
+                         )
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
         self.OBS_TYPE = obs
-        self._gui = gui
 
-        self._drone = drone
-        self._race_track = race_track
         self._target_points = np.array(target_points)
         self._threshold = threshold
         self._discount = discount
 
-        self._current_position = np.array([0.0, 0.0, 0.0])
+        self._steps = 0
+        # self._current_position = np.array([0.0, 0.0, 0.0])
         self._current_target_index = 0
         self._current_target = target_points[self._current_target_index]
-        self._is_done = False
 
-    def _step(self, action):
+    def step(self, action):
 
         # The last action ended the episode. Ignore the current action and start
         # a new episode.
 
+        self._steps += 1
         obs, reward, terminated, truncated, info = (
-            super(BaseSingleAgentAviary).step(self._preprocessAction(action)))
+            super().step(action))
 
         # # # Update position based on action
         # # self._current_position += action
@@ -89,15 +86,14 @@ class PBDroneEnv(
         # # Update position based on action
         # self._update_position(self._preprocessAction(action))
 
-
         # Create a time step
-        time_step = ts.transition(
-            tf.convert_to_tensor(obs),
-            tf.convert_to_tensor(reward),
-            # discount=tf.constant(self._discount),
-        )
+        # time_step = ts.transition(
+        #     tf.convert_to_tensor(obs),
+        #     tf.convert_to_tensor(reward),
+        #     # discount=tf.constant(self._discount),
+        # )
 
-        return time_step, terminated
+        return obs, reward, terminated, truncated, info
 
     def _actionSpace(self):
         """Returns the action space of the environment."""
@@ -257,10 +253,12 @@ class PBDroneEnv(
             Whether the current episode is done.
 
         """
-        if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or \
-                self._step_counter > 1000 or \
-                self._current_target_index == len(self._target_points):
-                # positinal req
+        # print(self._current_target_index, len(self._target_points))
+        if (self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 10) or \
+                self._steps > 10000 or \
+                self._current_target_index + 1 == len(self._target_points):
+            # self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or \
+            # positinal req
             return True
         return False
 
@@ -306,27 +304,31 @@ class PBDroneEnv(
         # self._current_position - self._target_points[self._current_target_index])
 
         # Calculate distance to the current target
-        print("pos", self._getDroneStateVector(0))
+        # print("pos", self._getDroneStateVector(0))
+        # print("observ", self._computeObs()[:3])
+        # print("tar", self._target_points[self._current_target_index])
         distance_to_target = np.linalg.norm(
-            self._computeObs()[:3] - self._target_points[self._current_target])
-        print("dis" , distance_to_target)
+            self._computeObs()[:3] - self._target_points[self._current_target_index])
+        # print("dis", distance_to_target)
         # Reward based on distance to target
-        reward = -distance_to_target
+
+        reward -= abs(distance_to_target)
 
         # Check if the drone has reached a target
         if distance_to_target < self._threshold:
-            reward += 10
-            # * self._discount ** self.step_counter
-            self._current_target_index += 1
 
-#            if self._computeTerminated():
- #               reward += 100.0  # Reward for reaching all targets
-
-            if self._current_target_index == len(self._target_points):
+            if self._current_target_index + 1 == len(self._target_points):
                 reward += 100.0  # Reward for reaching all targets
+            else:
+                reward += 10
+                # * self._discount ** self.step_counter
+                self._current_target_index += 1
+
+            #            if self._computeTerminated():
+            #               reward += 100.0  # Reward for reaching all targets
 
             # If the drone is outside the threshold, give a reward based on distance
-#            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
+        #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
         return reward
 
     # quad_pt = np.array(
@@ -363,3 +365,16 @@ class PBDroneEnv(
     #         quad_offset = (0, 0, -self.step_length)
     #     else:
     #         quad_offset = (0, 0, 0)
+
+
+    def reset(self,
+              seed: int = None,
+              options: dict = None):
+        """Resets the environment."""
+
+        self._current_target_index = 0
+        self._steps = 0
+
+        return super().reset(seed, options)
+
+

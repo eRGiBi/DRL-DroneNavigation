@@ -86,7 +86,7 @@ class Logger(object):
             state,
             control=np.zeros(12)
             ):
-        """Logs entries for a single simulation step, of a single drone.
+        """logs entries for a single simulation step, of a single drone.
 
         Parameters
         ----------
@@ -203,7 +203,7 @@ class Logger(object):
     ################################################################################
     
     def plot(self, pwm=False):
-        """Logs entries for a single simulation step, of a single drone.
+        """logs entries for a single simulation step, of a single drone.
 
         Parameters
         ----------

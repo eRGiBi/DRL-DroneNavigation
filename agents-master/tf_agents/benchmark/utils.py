@@ -103,7 +103,7 @@ class TimeHistory(object):
     self.global_steps = 0
     self.num_steps_per_batch = num_steps_per_batch
 
-    # Logs start of step 1 then end of each step based on log_steps interval.
+    # logs start of step 1 then end of each step based on log_steps interval.
     self.timestamp_log = []
 
   def on_batch_begin(self):
