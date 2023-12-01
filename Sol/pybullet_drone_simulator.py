@@ -37,7 +37,6 @@ targets = [np.array([0.0, 0.0, 1.0]),
 
 
 def run_test():
-
     action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
     action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
 
@@ -63,8 +62,8 @@ def run_test():
 
         time.sleep(1. / 740.)  # Control the simulation speed
 
-def run_full():
 
+def run_full():
     start = time.perf_counter()
 
     filename = os.path.join("model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -136,12 +135,12 @@ def run_full():
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
     train_env = PBDroneEnv(
-                           target_points=targets,
-                           threshold=threshold,
-                           discount=discount,
-                           gui=False,
-                           initial_xyzs=np.array([[0, 0, 0]]),
-                           )
+        target_points=targets,
+        threshold=threshold,
+        discount=discount,
+        gui=False,
+        initial_xyzs=np.array([[0, 0, 0]]),
+    )
     print('[INFO] Action space:', train_env.action_space)
     print('[INFO] Observation space:', train_env.observation_space)
 
@@ -171,7 +170,7 @@ def run_full():
                                  deterministic=True,
                                  render=False)
 
-    model.learn(total_timesteps=100000,
+    model.learn(total_timesteps=100,
                 callback=eval_callback,
                 log_interval=100)
 
@@ -203,22 +202,22 @@ def run_full():
     # model = PPO.load(path)
 
     test_env = PBDroneEnv(
-                          target_points=targets,
-                          threshold=discount,
-                          discount=threshold,
-                          physics=Physics.PYB,
-                          gui=True,
-                          initial_xyzs=np.array([[0, 0, 0]]),
-                          record=True
-                          )
+        target_points=targets,
+        threshold=discount,
+        discount=threshold,
+        physics=Physics.PYB,
+        gui=True,
+        initial_xyzs=np.array([[0, 0, 0]]),
+        record=True
+    )
     test_env_nogui = PBDroneEnv(
-                                target_points=targets,
-                                threshold=threshold,
-                                discount=discount,
-                                physics=Physics.PYB,
-                                gui=False,
-                                initial_xyzs=np.array([[0, 0, 0]]),
-                                )
+        target_points=targets,
+        threshold=threshold,
+        discount=discount,
+        physics=Physics.PYB,
+        gui=False,
+        initial_xyzs=np.array([[0, 0, 0]]),
+    )
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                     num_drones=1,
                     output_folder=os.curdir + "/logs"
@@ -232,12 +231,13 @@ def run_full():
 
     obs, info = test_env.reset(seed=42)
     start = time.time()
-    print((test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ)
+    print("wtasdas", (test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ)
     for i in range((test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ):
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
-        print(action)
+        print("act", action)
+        print("state", _states)
         obs, reward, terminated, truncated, info = test_env.step(action)
         obs2 = obs.squeeze()
         act2 = action.squeeze()
@@ -258,20 +258,20 @@ def run_full():
         #         sync(i, start, test_env.CTRL_TIMESTEP)
         #         if terminated:
         #             obs = test_env.reset(seed=42, options={})
-        test_env.close()
 
-        if plot:
-            logger.plot()
+    test_env.close()
+
+    if plot:
+        logger.plot()
 
     end = time.perf_counter()
     print(end - start)
 
 
 if __name__ == "__main__":
-    # run_full()
-
-    run_test()
-
+    run_full()
+    #
+    # run_test()
 
 #     #### Define and parse (optional) arguments for the script ##
 #     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
