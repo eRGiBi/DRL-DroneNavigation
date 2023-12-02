@@ -27,13 +27,14 @@ DEFAULT_COLAB = False
 plot = True
 
 discount = 0.999
-threshold = 0.2
+threshold = 0.01
 
 targets = [np.array([0.0, 0.0, 1.0]),
-           np.array([0., 1., 1.]),
-           np.array([0., 0.1, 1.]),
-           np.array([1., .1, 0.]),
-           np.array([1., 1., 1.]), ]
+           # np.array([0., 1., 1.]),
+           # np.array([0., 0.1, 1.]),
+           # np.array([1., .1, 0.]),
+           # np.array([1., 1., 1.]),
+           ]
 
 
 def run_test():
@@ -138,7 +139,7 @@ def run_full():
         target_points=targets,
         threshold=threshold,
         discount=discount,
-        gui=False,
+        gui=True,
         initial_xyzs=np.array([[0, 0, 0]]),
     )
     print('[INFO] Action space:', train_env.action_space)
@@ -170,7 +171,7 @@ def run_full():
                                  deterministic=True,
                                  render=False)
 
-    model.learn(total_timesteps=100,
+    model.learn(total_timesteps=100_000_0,
                 callback=eval_callback,
                 log_interval=100)
 

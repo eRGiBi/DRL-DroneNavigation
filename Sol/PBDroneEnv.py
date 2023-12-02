@@ -1,4 +1,5 @@
 import os
+import math
 
 import gym
 from gymnasium import spaces
@@ -254,9 +255,9 @@ class PBDroneEnv(
 
         """
         # print(self._current_target_index, len(self._target_points))
-        if (self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 10) or \
+        if (self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100) or \
                 self._steps > 10000 or \
-                self._current_target_index + 1 == len(self._target_points):
+                self._current_target_index == len(self._target_points):
             # self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or \
             # positinal req
             return True
@@ -297,18 +298,27 @@ class PBDroneEnv(
 
     def _computeReward(self):
 
+        if self._current_target_index == len(self._target_points):
+            return 0
         beta = 1
         reward = 0
         z = -10
+
         # distance_to_target = np.linalg.norm(
         # self._current_position - self._target_points[self._current_target_index])
 
         # Calculate distance to the current target
         # print("pos", self._getDroneStateVector(0))
         # print("observ", self._computeObs()[:3])
+
         # print("tar", self._target_points[self._current_target_index])
+
         distance_to_target = np.linalg.norm(
             self._computeObs()[:3] - self._target_points[self._current_target_index])
+        # print("dis", distance_to_target)
+        # distance_to_target = self.distance_between_points(self._computeObs()[:3],
+        #                                                   self._target_points[self._current_target_index])
+        #
         # print("dis", distance_to_target)
         # Reward based on distance to target
 
@@ -317,18 +327,20 @@ class PBDroneEnv(
         # Check if the drone has reached a target
         if distance_to_target < self._threshold:
 
-            if self._current_target_index + 1 == len(self._target_points):
+            self._current_target_index += 1
+
+            if self._current_target_index == len(self._target_points):
                 reward += 100.0  # Reward for reaching all targets
             else:
                 reward += 10
                 # * self._discount ** self.step_counter
-                self._current_target_index += 1
 
             #            if self._computeTerminated():
             #               reward += 100.0  # Reward for reaching all targets
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
+        print(reward)
         return reward
 
     # quad_pt = np.array(
@@ -366,7 +378,6 @@ class PBDroneEnv(
     #     else:
     #         quad_offset = (0, 0, 0)
 
-
     def reset(self,
               seed: int = None,
               options: dict = None):
@@ -377,4 +388,9 @@ class PBDroneEnv(
 
         return super().reset(seed, options)
 
+    def distance_between_points(self, point1, point2):
+        x1, y1, z1 = point1
+        x2, y2, z2 = point2
 
+        distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2)
+        return distance
