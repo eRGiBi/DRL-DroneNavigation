@@ -32,7 +32,8 @@ class PBDroneEnv(
 ):
 
     def __init__(self,
-                 target_points, threshold, discount=1,
+                 target_points, threshold,
+                 discount=1,
                  drone_model: DroneModel = DroneModel.CF2X,
                  initial_xyzs=None,
                  initial_rpys=None,
@@ -330,17 +331,13 @@ class PBDroneEnv(
             self._current_target_index += 1
 
             if self._current_target_index == len(self._target_points):
-                reward += 100.0  # Reward for reaching all targets
+                reward += 100.0 * self._discount ** self._steps # Reward for reaching all targets
             else:
-                reward += 10
-                # * self._discount ** self.step_counter
-
-            #            if self._computeTerminated():
-            #               reward += 100.0  # Reward for reaching all targets
+                reward += 10 * self._discount ** self._steps
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
-        print(reward)
+        # print(reward)
         return reward
 
     # quad_pt = np.array(

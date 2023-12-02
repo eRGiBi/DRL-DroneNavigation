@@ -29,17 +29,22 @@ plot = True
 discount = 0.999
 threshold = 0.01
 
+
 targets = [np.array([0.0, 0.0, 1.0]),
-           # np.array([0., 1., 1.]),
+           np.array([0., 0., 0.1]),
            # np.array([0., 0.1, 1.]),
            # np.array([1., .1, 0.]),
            # np.array([1., 1., 1.]),
            ]
 
+max_reward = 100 + len(targets) * 10
+
 
 def run_test():
     action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
     action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
+    action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
+    action * -1
 
     drone_environment = PBDroneEnv(
         target_points=targets,
@@ -63,6 +68,31 @@ def run_test():
 
         time.sleep(1. / 740.)  # Control the simulation speed
 
+def test_saved():
+
+    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.02.2023_14.25.14/best_model.zip")
+
+    drone_environment = PBDroneEnv(
+        target_points=targets,
+        threshold=threshold,
+        discount=discount,
+        physics=Physics.PYB,
+        gui=True,
+        initial_xyzs=np.array([[0, 0, 0]]),
+    )
+    obs, info = drone_environment.reset(seed=42)
+    while True:
+        action, _states = model.predict(obs,
+                                        deterministic=True
+                                        )
+        print("act", action)
+        print("state", _states)
+        obs, reward, terminated, truncated, info = drone_environment.step(action)
+        print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
+              truncated)
+
+        if terminated:
+            drone_environment.reset()
 
 def run_full():
     start = time.perf_counter()
@@ -147,7 +177,7 @@ def run_full():
 
     eval_env = PBDroneEnv(
         target_points=targets,
-        threshold=1,
+        threshold=threshold,
         discount=discount,
         physics=Physics.PYB,
         gui=False,
@@ -160,7 +190,7 @@ def run_full():
         verbose=1
     )
 
-    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=np.inf,
+    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=max_reward,
                                                      verbose=1)
     eval_callback = EvalCallback(eval_env,
                                  callback_on_new_best=callback_on_best,
@@ -201,7 +231,7 @@ def run_full():
     # else:
     #     print("[ERROR]: no model under the specified path", filename)
     # model = PPO.load(path)
-
+    train_env.close()
     test_env = PBDroneEnv(
         target_points=targets,
         threshold=discount,
@@ -273,6 +303,8 @@ if __name__ == "__main__":
     run_full()
     #
     # run_test()
+
+    # test_saved()
 
 #     #### Define and parse (optional) arguments for the script ##
 #     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
