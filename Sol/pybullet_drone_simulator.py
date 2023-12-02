@@ -27,7 +27,7 @@ DEFAULT_COLAB = False
 plot = True
 
 discount = 0.999
-threshold = 0.01
+threshold = 0.2
 
 
 targets = [np.array([0.0, 0.0, 1.0]),
@@ -70,7 +70,7 @@ def run_test():
 
 def test_saved():
 
-    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.02.2023_14.25.14/best_model.zip")
+    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.02.2023_20.46.21/best_model.zip")
 
     drone_environment = PBDroneEnv(
         target_points=targets,
@@ -232,6 +232,7 @@ def run_full():
     #     print("[ERROR]: no model under the specified path", filename)
     # model = PPO.load(path)
     train_env.close()
+
     test_env = PBDroneEnv(
         target_points=targets,
         threshold=discount,

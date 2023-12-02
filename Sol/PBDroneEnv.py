@@ -301,16 +301,8 @@ class PBDroneEnv(
 
         if self._current_target_index == len(self._target_points):
             return 0
-        beta = 1
-        reward = 0
-        z = -10
 
-        # distance_to_target = np.linalg.norm(
-        # self._current_position - self._target_points[self._current_target_index])
-
-        # Calculate distance to the current target
-        # print("pos", self._getDroneStateVector(0))
-        # print("observ", self._computeObs()[:3])
+        reward = 0.0
 
         # print("tar", self._target_points[self._current_target_index])
 
@@ -331,9 +323,11 @@ class PBDroneEnv(
             self._current_target_index += 1
 
             if self._current_target_index == len(self._target_points):
-                reward += 100.0 * self._discount ** self._steps # Reward for reaching all targets
+                reward += 10000.0  # * self._discount ** self._steps  # Reward for reaching all targets
             else:
-                reward += 10 * self._discount ** self._steps
+                reward += 1000 # * self._discount ** self._steps
+        else:
+            reward -= 10
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
