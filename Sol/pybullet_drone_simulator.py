@@ -4,6 +4,7 @@ from datetime import datetime
 # import sync, str2bool
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from stable_baselines3 import PPO, A2C, SAC, TD3
@@ -27,17 +28,77 @@ DEFAULT_COLAB = False
 plot = True
 
 discount = 0.999
-threshold = 0.2
+threshold = 0.1
 
-
-targets = [np.array([0.0, 0.0, 1.0]),
-           np.array([0., 0., 0.1]),
+targets = [np.array([0.0, 0.0, .5]),
+           np.array([0., 0., 0.2]),
+           # np.array([0., 0., 0.0]),
            # np.array([0., 0.1, 1.]),
            # np.array([1., .1, 0.]),
            # np.array([1., 1., 1.]),
            ]
 
 max_reward = 100 + len(targets) * 10
+
+
+def plot_learning_curve(scores, title='Learning Curve'):
+    plt.figure(figsize=(10, 6))
+    plt.plot(scores, label='Total Reward per Episode')
+    plt.title(title)
+    plt.xlabel('Episode')
+    plt.ylabel('Total Reward')
+    plt.legend(loc='upper left')
+    plt.show()
+
+
+def plot_metrics(episode_rewards, avg_rewards,
+                 exploration_rate, episode_durations,
+                 losses, title='Learning Metrics'):
+
+    [np.mean(episode_rewards[max(0, i - 10):i + 1]) for i in range(len(episode_rewards))]
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    color = 'tab:red'
+    ax1.set_xlabel('Episode')
+    ax1.set_ylabel('Total Reward', color=color)
+    ax1.plot(episode_rewards, label='Total Reward', color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax1.twinx()
+    color = 'tab:blue'
+    ax2.set_ylabel('Average Reward', color=color)
+    ax2.plot(avg_rewards, label='Avg. Reward', color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()
+    plt.title(title)
+    plt.show()
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(exploration_rate, label='Exploration Rate', color='green')
+    plt.title('Exploration Rate')
+    plt.xlabel('Episode')
+    plt.ylabel('Epsilon')
+    plt.legend()
+    plt.show()
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(episode_durations, label='Episode Duration', color='orange')
+    plt.title('Episode Duration')
+    plt.xlabel('Episode')
+    plt.ylabel('Duration')
+    plt.legend()
+    plt.show()
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(losses, label='Loss', color='purple')
+    plt.title('Loss')
+    plt.xlabel('Episode')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+
 
 
 def run_test():
@@ -54,23 +115,24 @@ def run_test():
         gui=True,
         initial_xyzs=np.array([[0, 0, 1]]),
     )
-
+    rewards = []
     time_step = drone_environment.step(action / 100)
     print(time_step)
 
     # for _ in range(100):
     while True:
         time_step = drone_environment.step(action)
-
+        rewards.append(time_step[1])
         print(time_step)
         if time_step[2]:
             break
 
         time.sleep(1. / 740.)  # Control the simulation speed
 
-def test_saved():
+    plot_learning_curve(rewards)
 
-    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.02.2023_20.46.21/best_model.zip")
+def test_saved():
+    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.02.2023_22.13.02/best_model.zip")
 
     drone_environment = PBDroneEnv(
         target_points=targets,
@@ -85,14 +147,13 @@ def test_saved():
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
-        print("act", action)
-        print("state", _states)
         obs, reward, terminated, truncated, info = drone_environment.step(action)
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
               truncated)
 
         if terminated:
             drone_environment.reset()
+
 
 def run_full():
     start = time.perf_counter()
@@ -201,12 +262,12 @@ def run_full():
                                  deterministic=True,
                                  render=False)
 
-    model.learn(total_timesteps=100_000_0,
+    model.learn(total_timesteps=1_000_000,
                 callback=eval_callback,
                 log_interval=100)
 
     model.save(os.curdir + "/model_chkpts" + '/success_model.zip')
-    # rewards = []
+    rewards = []
     #
     # obs, info = drone_environment.reset()
     # while True:
@@ -231,6 +292,7 @@ def run_full():
     # else:
     #     print("[ERROR]: no model under the specified path", filename)
     # model = PPO.load(path)
+
     train_env.close()
 
     test_env = PBDroneEnv(
@@ -271,6 +333,7 @@ def run_full():
         print("act", action)
         print("state", _states)
         obs, reward, terminated, truncated, info = test_env.step(action)
+        rewards.append(reward)
         obs2 = obs.squeeze()
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
@@ -296,16 +359,18 @@ def run_full():
     if plot:
         logger.plot()
 
+    plot_learning_curve(rewards)
     end = time.perf_counter()
     print(end - start)
 
 
 if __name__ == "__main__":
-    run_full()
-    #
-    # run_test()
+    # run_full()
+
+    run_test()
 
     # test_saved()
+
 
 #     #### Define and parse (optional) arguments for the script ##
 #     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
@@ -320,3 +385,5 @@ if __name__ == "__main__":
 #     ARGS = parser.parse_args()
 #
 #     run(**vars(ARGS))
+
+
