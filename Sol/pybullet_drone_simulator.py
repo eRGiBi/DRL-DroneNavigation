@@ -6,6 +6,8 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import stable_baselines3.common.monitor
+from stable_baselines3.common.env_checker import check_env
 
 from stable_baselines3 import PPO, A2C, SAC, TD3
 from stable_baselines3.common.env_util import make_vec_env
@@ -30,7 +32,7 @@ plot = True
 discount = 0.999
 threshold = 0.1
 
-targets = [np.array([0.0, 0.0, .5]),
+targets = [np.array([0.0, 0.0, 0.5]),
            np.array([0., 0., 0.2]),
            # np.array([0., 0., 0.0]),
            # np.array([0., 0.1, 1.]),
@@ -54,7 +56,6 @@ def plot_learning_curve(scores, title='Learning Curve'):
 def plot_metrics(episode_rewards, avg_rewards,
                  exploration_rate, episode_durations,
                  losses, title='Learning Metrics'):
-
     [np.mean(episode_rewards[max(0, i - 10):i + 1]) for i in range(len(episode_rewards))]
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -100,7 +101,6 @@ def plot_metrics(episode_rewards, avg_rewards,
     plt.show()
 
 
-
 def run_test():
     action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
     action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
@@ -115,8 +115,15 @@ def run_test():
         gui=True,
         initial_xyzs=np.array([[0, 0, 1]]),
     )
+
+    # It will check your custom environment and output additional warnings if needed
+    check_env(drone_environment, warn=True)
+
+    print('[INFO] Action space:', drone_environment.action_space)
+    print('[INFO] Observation space:', drone_environment.observation_space)
+
     rewards = []
-    time_step = drone_environment.step(action / 100)
+    time_step = drone_environment.reset()
     print(time_step)
 
     # for _ in range(100):
@@ -127,12 +134,14 @@ def run_test():
         if time_step[2]:
             break
 
-        time.sleep(1. / 740.)  # Control the simulation speed
+        time.sleep(1. / 240.)  # Control the simulation speed
 
     plot_learning_curve(rewards)
 
+
 def test_saved():
-    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.02.2023_22.13.02/best_model.zip")
+    model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.03.2023_20.10.04/best_model.zip")
+    # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\success_model.zip")
 
     drone_environment = PBDroneEnv(
         target_points=targets,
@@ -142,8 +151,9 @@ def test_saved():
         gui=True,
         initial_xyzs=np.array([[0, 0, 0]]),
     )
+    rewards = []
     obs, info = drone_environment.reset(seed=42)
-    while True:
+    for _ in range(5000):
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
@@ -151,8 +161,15 @@ def test_saved():
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
               truncated)
 
+        rewards.append(reward)
         if terminated:
+            plot_learning_curve(rewards)
+            rewards = []
             drone_environment.reset()
+
+        time.sleep(1. / 240.)
+
+
 
 
 def run_full():
@@ -230,11 +247,9 @@ def run_full():
         target_points=targets,
         threshold=threshold,
         discount=discount,
-        gui=True,
+        gui=False,
         initial_xyzs=np.array([[0, 0, 0]]),
     )
-    print('[INFO] Action space:', train_env.action_space)
-    print('[INFO] Observation space:', train_env.observation_space)
 
     eval_env = PBDroneEnv(
         target_points=targets,
@@ -250,15 +265,17 @@ def run_full():
         train_env,
         verbose=1
     )
+    train_env = stable_baselines3.common.monitor.Monitor(train_env)
+    eval_env = stable_baselines3.common.monitor.Monitor(eval_env)
 
-    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=max_reward,
+    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=np.inf,
                                                      verbose=1)
     eval_callback = EvalCallback(eval_env,
                                  callback_on_new_best=callback_on_best,
                                  verbose=1,
                                  best_model_save_path=filename + '/',
                                  log_path=filename + '/',
-                                 eval_freq=int(2000),
+                                 eval_freq=int(200),
                                  deterministic=True,
                                  render=False)
 
@@ -268,22 +285,7 @@ def run_full():
 
     model.save(os.curdir + "/model_chkpts" + '/success_model.zip')
     rewards = []
-    #
-    # obs, info = drone_environment.reset()
-    # while True:
-    #     action, _states = model.predict(obs, deterministic=True)
-    #     obs, reward, terminated, truncated, info = drone_environment.step(action)
-    #     print(obs)
-    #     print(reward)
-    #     rewards.append(reward)
-    #     if terminated or truncated:
-    #         obs, info = drone_environment.reset()
-    #         print(rewards)
-    #         print(sum(rewards))
-    #         rewards = []
-    #         break
 
-    #
 
     # if os.path.isfile(filename + '/success_model.zip'):
     #     path = filename + '/success_model.zip'
@@ -302,7 +304,7 @@ def run_full():
         physics=Physics.PYB,
         gui=True,
         initial_xyzs=np.array([[0, 0, 0]]),
-        record=True
+        record=False
     )
     test_env_nogui = PBDroneEnv(
         target_points=targets,
@@ -312,6 +314,10 @@ def run_full():
         gui=False,
         initial_xyzs=np.array([[0, 0, 0]]),
     )
+
+    test_env = stable_baselines3.common.monitor.Monitor(test_env)
+    test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
+
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                     num_drones=1,
                     output_folder=os.curdir + "/logs"
@@ -319,14 +325,16 @@ def run_full():
 
     mean_reward, std_reward = evaluate_policy(model,
                                               test_env_nogui,
-                                              n_eval_episodes=10
+                                              n_eval_episodes=100
                                               )
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
     obs, info = test_env.reset(seed=42)
+
     start = time.time()
     print("wtasdas", (test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ)
     for i in range((test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ):
+
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
@@ -338,6 +346,8 @@ def run_full():
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
               truncated)
+        if terminated:
+            obs, initial_info = test_env.reset()
 
         logger.log(drone=0,
                    timestamp=i / test_env.CTRL_FREQ,
@@ -360,17 +370,17 @@ def run_full():
         logger.plot()
 
     plot_learning_curve(rewards)
+
     end = time.perf_counter()
     print(end - start)
 
 
 if __name__ == "__main__":
     # run_full()
+    #
+    # run_test()
 
-    run_test()
-
-    # test_saved()
-
+    test_saved()
 
 #     #### Define and parse (optional) arguments for the script ##
 #     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
@@ -385,5 +395,3 @@ if __name__ == "__main__":
 #     ARGS = parser.parse_args()
 #
 #     run(**vars(ARGS))
-
-

@@ -67,11 +67,11 @@ class PBDroneEnv(
         self._target_points = np.array(target_points)
         self._threshold = threshold
         self._discount = discount
+        self._is_done = False
 
         self._steps = 0
         # self._current_position = np.array([0.0, 0.0, 0.0])
         self._current_target_index = 0
-        self._current_target = target_points[self._current_target_index]
 
     def step(self, action):
 
@@ -236,14 +236,14 @@ class PBDroneEnv(
     def _computeTruncated(self):
         """Computes the current truncated value(s).
 
-        Unused in this implementation.
-
         Returns
         -------
         bool
-            Always false.
+            Whether the agent has reached the time limit.
 
         """
+        # Fail by reaching a time limit
+
         return False
 
     def _computeTerminated(self):
@@ -256,51 +256,26 @@ class PBDroneEnv(
 
         """
         # print(self._current_target_index, len(self._target_points))
-        if (self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100) or \
-                self._steps > 10000 or \
-                self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or \
-                self._current_target_index == len(self._target_points):
-            # positinal req
+
+        # print(self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC)
+        # print(self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100)
+        # print(self._steps)
+        #  or \self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or
+        state = self._getDroneStateVector(0)
+        if (self._is_done or self._steps > 10000 or
+                state[0] > 1. or state[0] < -1. or
+                state[1] > 1. or state[1] < -1. or
+                (state[2] < self.COLLISION_H and self._steps > 100) or
+                self._current_target_index == len(self._target_points)):
             return True
-        return False
-
-    # def _preprocessAction(self,
-    #                       action
-    #                       ):
-    #     """Pre-processes the action passed to `.step()` into motors' RPMs.
-    #
-    #     Parameter `action` is processed differenly for each of the different
-    #     action types: `action` can be of length 1, 3, 4, or 6 and represent
-    #     RPMs, desired thrust and torques, the next target position to reach
-    #     using PID control, a desired velocity vector, new PID coefficients, etc.
-    #
-    #     Parameters
-    #     ----------
-    #     action : ndarray
-    #         The input action for each drone, to be translated into RPMs.
-    #
-    #     Returns
-    #     -------
-    #     ndarray
-    #         (4,)-shaped array of ints containing to clipped RPMs
-    #         commanded to the 4 motors of each drone.
-    #
-    #     """
-    #
-    #     return super(BaseSingleAgentAviary)._preprocessAction(action)
-
-    # thrust = self.HOVER_RPM * (1 + 0.05 * action)
-    # print(thrust)
-    #
-    # # Convert thrust to RPM for all motors
-    # # rpm = np.array([thrust] * 4)
-    #
-    # return thrust
+        else:
+            return False
 
     def _computeReward(self):
 
-        if self._current_target_index == len(self._target_points):
-            return 0
+        if self._computeTerminated() and not self._is_done:
+            # print("term and NOT DONE")
+            return - 1000
 
         reward = 0.0
 
@@ -316,8 +291,10 @@ class PBDroneEnv(
         # Reward based on distance to target
         # if self._steps > 100:
         #     reward += 10
-        reward -= abs(distance_to_target)
-
+        try:
+            reward += 10 / distance_to_target
+        except ZeroDivisionError:
+            reward += 100
         # Check if the drone has reached a target
         if distance_to_target <= self._threshold:
             # print("IN")
@@ -325,15 +302,14 @@ class PBDroneEnv(
 
             if self._current_target_index == len(self._target_points):
                 reward += 1000.0  # * self._discount ** self._steps  # Reward for reaching all targets
+                self._is_done = True
             else:
-                reward += 100 # * self._discount ** self._steps
-        # else:
-        #     print("OUT - 10")
-        #     reward -= 10
+                reward += 500  # * self._discount ** self._steps
+
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
-        # print(reward)
+
         return reward
 
     # quad_pt = np.array(
@@ -376,6 +352,7 @@ class PBDroneEnv(
               options: dict = None):
         """Resets the environment."""
 
+        self._is_done = False
         self._current_target_index = 0
         self._steps = 0
 
