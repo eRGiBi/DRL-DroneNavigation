@@ -32,8 +32,7 @@ class PBDroneEnv(
 ):
 
     def __init__(self,
-                 target_points, threshold,
-                 discount,
+                 target_points, threshold, discount, max_steps,
                  drone_model: DroneModel = DroneModel.CF2X,
                  initial_xyzs=None,
                  initial_rpys=None,
@@ -67,11 +66,12 @@ class PBDroneEnv(
         self._target_points = np.array(target_points)
         self._threshold = threshold
         self._discount = discount
-        self._is_done = False
+        self._max_steps = max_steps
 
         self._steps = 0
         # self._current_position = np.array([0.0, 0.0, 0.0])
         self._current_target_index = 0
+        self._is_done = False
 
     def step(self, action):
 
@@ -239,11 +239,11 @@ class PBDroneEnv(
         Returns
         -------
         bool
-            Whether the agent has reached the time limit.
+            Whether the agent has reached the time/step limit.
 
         """
-        # Fail by reaching a time limit
-
+        if self._max_steps <= self._steps:
+            return True
         return False
 
     def _computeTerminated(self):
@@ -265,7 +265,7 @@ class PBDroneEnv(
         if (self._is_done or self._steps > 10000 or
                 state[0] > 1. or state[0] < -1. or
                 state[1] > 1. or state[1] < -1. or
-                (state[2] < self.COLLISION_H and self._steps > 100) or
+                (state[2] < self.COLLISION_H * 3 and self._steps > 100) or state[2] > 1 or
                 self._current_target_index == len(self._target_points)):
             return True
         else:
@@ -287,12 +287,13 @@ class PBDroneEnv(
         # distance_to_target = self.distance_between_points(self._computeObs()[:3],
         #                                                   self._target_points[self._current_target_index])
         #
-        # print("dis", distance_to_target)
-        # Reward based on distance to target
+
         # if self._steps > 100:
         #     reward += 10
         try:
-            reward += 10 / distance_to_target
+            # Reward based on distance to target
+            # print("dis", distance_to_target)
+            reward += 1 / distance_to_target
         except ZeroDivisionError:
             reward += 100
         # Check if the drone has reached a target
@@ -301,10 +302,10 @@ class PBDroneEnv(
             self._current_target_index += 1
 
             if self._current_target_index == len(self._target_points):
-                reward += 1000.0  # * self._discount ** self._steps  # Reward for reaching all targets
+                reward += 10000.0 * self._discount ** self._steps  # Reward for reaching all targets
                 self._is_done = True
             else:
-                reward += 500  # * self._discount ** self._steps
+                reward += 200 * self._discount ** self._steps
 
 
             # If the drone is outside the threshold, give a reward based on distance

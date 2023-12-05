@@ -4,15 +4,31 @@ from datetime import datetime
 # import sync, str2bool
 import os
 
+import base64
+from pathlib import Path
+
+from IPython import display as ipythondisplay
+
 import matplotlib.pyplot as plt
 import numpy as np
 import stable_baselines3.common.monitor
+from gymnasium.envs.registration import register
 from stable_baselines3.common.env_checker import check_env
 
-from stable_baselines3 import PPO, A2C, SAC, TD3
+from stable_baselines3 import PPO, A2C, SAC, TD3, HerReplayBuffer
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
+from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
+    StopTrainingOnNoModelImprovement
 from stable_baselines3.common.evaluation import evaluate_policy
+
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.results_plotter import load_results, ts2xy
+
+from stable_baselines3.common.utils import set_random_seed
+
+import gymnasium as gym
 
 # from PyBullet import BaseAviary
 from PyBullet.enums import Physics
@@ -28,19 +44,36 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
 plot = True
-
 discount = 0.999
-threshold = 0.1
+threshold = 0.05
+max_steps = 1000
 
-targets = [np.array([0.0, 0.0, 0.5]),
-           np.array([0., 0., 0.2]),
-           # np.array([0., 0., 0.0]),
-           # np.array([0., 0.1, 1.]),
+num_cpu = 5
+
+targets = [np.array([0.0, 0.0, 0.1]),
+           np.array([0.0, 0.0, 0.25]),
+           np.array([0., 0., 0.5]),
+           np.array([0., 0.25, 0.5]),
+           np.array([0., 0.5, 0.5]),
+           # np.array([0.25, 0.5, 0.5]),
+           np.array([0.25, 0.5, 5]),
+           np.array([0.5, 0.5, 5]),
            # np.array([1., .1, 0.]),
            # np.array([1., 1., 1.]),
            ]
 
 max_reward = 100 + len(targets) * 10
+
+
+register(
+    # unique identifier for the env `name-version`
+    id="DroneEnv",
+    # path to the class for creating the env
+    # Note: entry_point also accept a class as input (and not only a string)
+    entry_point="PBDroneEnv",
+    # Max number of steps per episode, using a `TimeLimitWrapper`
+    max_episode_steps=3000,
+)
 
 
 def plot_learning_curve(scores, title='Learning Curve'):
@@ -101,6 +134,29 @@ def plot_metrics(episode_rewards, avg_rewards,
     plt.show()
 
 
+def make_env(gui, rank: int, seed: int = 0, ):
+    """
+    Utility function for multiprocessed env.
+    """
+
+    def _init():
+        env = PBDroneEnv(
+            target_points=targets,
+            threshold=threshold,
+            discount=discount,
+            max_steps=max_steps,
+            physics=Physics.PYB,
+            gui=gui,
+            initial_xyzs=np.array([[0, 0, 1]]),
+        )
+        env.reset(seed=seed + rank)
+        env = Monitor(env)
+        return env
+
+    set_random_seed(seed)
+    return _init
+
+
 def run_test():
     action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
     action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
@@ -111,6 +167,7 @@ def run_test():
         target_points=targets,
         threshold=threshold,
         discount=discount,
+        max_steps=max_steps,
         physics=Physics.PYB,
         gui=True,
         initial_xyzs=np.array([[0, 0, 1]]),
@@ -123,6 +180,7 @@ def run_test():
     print('[INFO] Observation space:', drone_environment.observation_space)
 
     rewards = []
+    rewards_sum = []
     time_step = drone_environment.reset()
     print(time_step)
 
@@ -130,6 +188,7 @@ def run_test():
     while True:
         time_step = drone_environment.step(action)
         rewards.append(time_step[1])
+        rewards_sum.append(sum(rewards))
         print(time_step)
         if time_step[2]:
             break
@@ -137,39 +196,44 @@ def run_test():
         time.sleep(1. / 240.)  # Control the simulation speed
 
     plot_learning_curve(rewards)
+    plot_learning_curve(rewards_sum)
 
 
 def test_saved():
-    model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.03.2023_20.10.04/best_model.zip")
-    # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\success_model.zip")
+    model = PPO.load(os.curdir + "\model_chkpts\save-12.05.2023_01.48.16/best_model.zip")
+    # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
+    # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
 
     drone_environment = PBDroneEnv(
         target_points=targets,
         threshold=threshold,
         discount=discount,
+        max_steps=max_steps,
         physics=Physics.PYB,
         gui=True,
         initial_xyzs=np.array([[0, 0, 0]]),
     )
     rewards = []
-    obs, info = drone_environment.reset(seed=42)
-    for _ in range(5000):
+    rewards_sum = []
+    obs, info = drone_environment.reset()
+    for i in range(5000):
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
         obs, reward, terminated, truncated, info = drone_environment.step(action)
+        print(i)
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
               truncated)
 
         rewards.append(reward)
+        rewards_sum.append(sum(rewards))
         if terminated:
             plot_learning_curve(rewards)
+            plot_learning_curve(rewards_sum, title="Cumulative Rewards")
             rewards = []
             drone_environment.reset()
 
         time.sleep(1. / 240.)
-
-
 
 
 def run_full():
@@ -243,33 +307,59 @@ def run_full():
     # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
-    train_env = PBDroneEnv(
-        target_points=targets,
-        threshold=threshold,
-        discount=discount,
-        gui=False,
-        initial_xyzs=np.array([[0, 0, 0]]),
-    )
+    # train_env = PBDroneEnv(
+    #     target_points=targets,
+    #     threshold=threshold,
+    #     discount=discount,
+    #     max_steps=max_steps,
+    #     gui=False,
+    #     initial_xyzs=np.array([[0, 0, 0]]),
+    # )
+    from stable_baselines3.common.env_util import make_vec_env
 
-    eval_env = PBDroneEnv(
-        target_points=targets,
-        threshold=threshold,
-        discount=discount,
-        physics=Physics.PYB,
-        gui=False,
-        initial_xyzs=np.array([[0, 0, 0]])
-    )
+    train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
 
-    model = PPO(
-        "MlpPolicy",
-        train_env,
-        verbose=1
-    )
-    train_env = stable_baselines3.common.monitor.Monitor(train_env)
-    eval_env = stable_baselines3.common.monitor.Monitor(eval_env)
+    # eval_env = PBDroneEnv(
+    #     target_points=targets,
+    #     threshold=threshold,
+    #     discount=discount,
+    #     max_steps=max_steps,
+    #     physics=Physics.PYB,
+    #     gui=False,
+    #     initial_xyzs=np.array([[0, 0, 0]])
+    # )
+    eval_env = SubprocVecEnv([make_env(gui=False, rank=1)])
+
+    model = PPO("MlpPolicy", train_env, verbose=1,
+                tensorboard_log="./logs/ppo_tensorboard/")
+    # tensorboard --logdir ./a2c_cartpole_tensorboard/
+
+    # model = SAC(
+    #     "MultiInputPolicy",
+    #     train_env,
+    #     replay_buffer_class=HerReplayBuffer,
+    #     replay_buffer_kwargs=dict(
+    #         n_sampled_goal=len(targets),
+    #         goal_selection_strategy="future",
+    #     ),
+    #     verbose=1,
+    #     # buffer_size=int(1e6),
+    #     # learning_rate=1e-3,
+    #     # gamma=0.95,
+    #     # batch_size=256,
+    #     # policy_kwargs=dict(net_arch=[256, 256, 256]),
+    # )
+
+    # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
+    # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
+
+    # train_env = stable_baselines3.common.monitor.Monitor(train_env)
+    # eval_env = stable_baselines3.common.monitor.Monitor(eval_env)
 
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=np.inf,
                                                      verbose=1)
+    stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
+
     eval_callback = EvalCallback(eval_env,
                                  callback_on_new_best=callback_on_best,
                                  verbose=1,
@@ -281,11 +371,11 @@ def run_full():
 
     model.learn(total_timesteps=1_000_000,
                 callback=eval_callback,
-                log_interval=100)
+                log_interval=100,
+                progress_bar=True)
 
     model.save(os.curdir + "/model_chkpts" + '/success_model.zip')
     rewards = []
-
 
     # if os.path.isfile(filename + '/success_model.zip'):
     #     path = filename + '/success_model.zip'
@@ -301,6 +391,7 @@ def run_full():
         target_points=targets,
         threshold=discount,
         discount=threshold,
+        max_steps=max_steps,
         physics=Physics.PYB,
         gui=True,
         initial_xyzs=np.array([[0, 0, 0]]),
@@ -310,6 +401,7 @@ def run_full():
         target_points=targets,
         threshold=threshold,
         discount=discount,
+        max_steps=max_steps,
         physics=Physics.PYB,
         gui=False,
         initial_xyzs=np.array([[0, 0, 0]]),
@@ -376,6 +468,8 @@ def run_full():
 
 
 if __name__ == "__main__":
+    # vec_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
+    #
     # run_full()
     #
     # run_test()
@@ -395,3 +489,51 @@ if __name__ == "__main__":
 #     ARGS = parser.parse_args()
 #
 #     run(**vars(ARGS))
+
+from typing import Callable
+
+
+def linear_schedule(initial_value: float) -> Callable[[float], float]:
+    """
+    Linear learning rate schedule.
+
+    :param initial_value: Initial learning rate.
+    :return: schedule that computes
+      current learning rate depending on remaining progress
+    """
+
+    def func(progress_remaining: float) -> float:
+        """
+        Progress will decrease from 1 (beginning) to 0.
+
+        :param progress_remaining:
+        :return: current learning rate
+        """
+        return progress_remaining * initial_value
+
+    return func
+
+# # now save the replay buffer too
+# model.save_replay_buffer("sac_replay_buffer")
+#
+# # load it into the loaded_model
+# loaded_model.load_replay_buffer("sac_replay_buffer")
+
+
+# import imageio
+# import numpy as np
+#
+# from stable_baselines3 import A2C
+#
+# model = A2C("MlpPolicy", "LunarLander-v2").learn(100_000)
+#
+# images = []
+# obs = model.env.reset()
+# img = model.env.render(mode="rgb_array")
+# for i in range(350):
+#     images.append(img)
+#     action, _ = model.predict(obs)
+#     obs, _, _ ,_ = model.env.step(action)
+#     img = model.env.render(mode="rgb_array")
+#
+# imageio.mimsave("lander_a2c.gif", [np.array(img) for i, img in enumerate(images) if i%2 == 0], fps=29)
