@@ -1,18 +1,24 @@
-import pathlib
+import os
 import time
 from datetime import datetime
 # import sync, str2bool
-import os
+
+from typing import Callable
 
 import base64
+import pathlib
 from pathlib import Path
 
 from IPython import display as ipythondisplay
 
 import matplotlib.pyplot as plt
 import numpy as np
-import stable_baselines3.common.monitor
+
+import gymnasium as gym
 from gymnasium.envs.registration import register
+
+import stable_baselines3.common.monitor
+
 from stable_baselines3.common.env_checker import check_env
 
 from stable_baselines3 import PPO, A2C, SAC, TD3, HerReplayBuffer
@@ -23,12 +29,9 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
-from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 from stable_baselines3.common.utils import set_random_seed
-
-import gymnasium as gym
 
 # from PyBullet import BaseAviary
 from PyBullet.enums import Physics
@@ -200,7 +203,8 @@ def run_test():
 
 
 def test_saved():
-    model = PPO.load(os.curdir + "\model_chkpts\save-12.05.2023_01.48.16/best_model.zip")
+    # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
+    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
     # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
     # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
 
@@ -243,48 +247,6 @@ def run_full():
     if not os.path.exists(filename):
         os.makedirs(filename + '/')
 
-    # env = e.MinitaurBulletEnv(render=True)
-
-    # def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB,
-    #         record_video=DEFAULT_RECORD_VIDEO):
-    #     env = DroneEnvironment()
-    #
-    #     model = ()
-    #
-    #     #### Show (and record a video of) the model's performance ##
-    #     env = FlyThruGateAviary(gui=gui,
-    #                             record=record_video
-    #                             )
-    #     logger = Logger(logging_freq_hz=int(env.CTRL_FREQ),
-    #                     num_drones=1,
-    #                     output_folder=output_folder,
-    #                     colab=colab
-    #                     )
-    #
-    #     obs, info = env.reset(seed=42, options={})
-    #     start = time.time()
-    #
-    #     for i in range(3 * env.CTRL_FREQ):
-    #
-    #         action, _states = model.predict(obs, deterministic=True)
-    #
-    #         obs, reward, terminated, truncated, info = env.step(action)
-    #
-    #         logger.log(drone=0,
-    #                    timestamp=i / env.CTRL_FREQ,
-    #                    state=np.hstack([obs[0:3], np.zeros(4), obs[3:15], np.resize(action, (4))]),
-    #                    control=np.zeros(12)
-    #                    )
-    #         env.render()
-    #         print(terminated)
-    #         sync(i, start, env.CTRL_TIMESTEP)
-    #         if terminated:
-    #             obs = env.reset(seed=42, options={})
-    #     env.close()
-    #
-    #     if plot:
-    #         logger.plot()
-
     # Connect to the PyBullet physics server
     # physicsClient = p.connect(p.GUI)
     # p.setGravity(0, 0, -9.81)
@@ -307,42 +269,43 @@ def run_full():
     # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
-    # train_env = PBDroneEnv(
-    #     target_points=targets,
-    #     threshold=threshold,
-    #     discount=discount,
-    #     max_steps=max_steps,
-    #     gui=False,
-    #     initial_xyzs=np.array([[0, 0, 0]]),
-    # )
-    from stable_baselines3.common.env_util import make_vec_env
+    train_env = PBDroneEnv(
+        target_points=targets,
+        threshold=threshold,
+        discount=discount,
+        max_steps=max_steps,
+        gui=False,
+        initial_xyzs=np.array([[0, 0, 0]]),
+    )
 
     train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
 
-    # eval_env = PBDroneEnv(
-    #     target_points=targets,
-    #     threshold=threshold,
-    #     discount=discount,
-    #     max_steps=max_steps,
-    #     physics=Physics.PYB,
-    #     gui=False,
-    #     initial_xyzs=np.array([[0, 0, 0]])
-    # )
+    eval_env = PBDroneEnv(
+        target_points=targets,
+        threshold=threshold,
+        discount=discount,
+        max_steps=max_steps,
+        physics=Physics.PYB,
+        gui=False,
+        initial_xyzs=np.array([[0, 0, 0]])
+    )
     eval_env = SubprocVecEnv([make_env(gui=False, rank=1)])
 
     model = PPO("MlpPolicy", train_env, verbose=1,
                 tensorboard_log="./logs/ppo_tensorboard/")
-    # tensorboard --logdir ./a2c_cartpole_tensorboard/
+    # tensorboard --logdir ./logs/ppo_tensorboard/
 
     # model = SAC(
-    #     "MultiInputPolicy",
+    #     "MlpPolicy",
     #     train_env,
-    #     replay_buffer_class=HerReplayBuffer,
-    #     replay_buffer_kwargs=dict(
-    #         n_sampled_goal=len(targets),
-    #         goal_selection_strategy="future",
-    #     ),
+    #     # replay_buffer_class=HerReplayBuffer,
+    #     # replay_buffer_kwargs=dict(
+    #     #     n_sampled_goal=len(targets),
+    #     #     goal_selection_strategy="future",
+    #     # ),
     #     verbose=1,
+    #     tensorboard_log="./logs/SAC_tensorboard/",
+    #     train_freq=1, gradient_steps=2,
     #     # buffer_size=int(1e6),
     #     # learning_rate=1e-3,
     #     # gamma=0.95,
@@ -423,23 +386,18 @@ def run_full():
 
     obs, info = test_env.reset(seed=42)
 
-    start = time.time()
-    print("wtasdas", (test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ)
-    for i in range((test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ):
+    while True:
 
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
-        print("act", action)
-        print("state", _states)
+
         obs, reward, terminated, truncated, info = test_env.step(action)
         rewards.append(reward)
         obs2 = obs.squeeze()
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
               truncated)
-        if terminated:
-            obs, initial_info = test_env.reset()
 
         logger.log(drone=0,
                    timestamp=i / test_env.CTRL_FREQ,
@@ -449,6 +407,10 @@ def run_full():
                                     act2
                                     ]),
                    control=np.zeros(12))
+
+        if terminated:
+            plot_learning_curve(rewards)
+            break
 
         # test_env.render()
         #         print(terminated)
@@ -461,8 +423,6 @@ def run_full():
     if plot:
         logger.plot()
 
-    plot_learning_curve(rewards)
-
     end = time.perf_counter()
     print(end - start)
 
@@ -470,11 +430,11 @@ def run_full():
 if __name__ == "__main__":
     # vec_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
     #
-    # run_full()
+    run_full()
     #
     # run_test()
 
-    test_saved()
+    # test_saved()
 
 #     #### Define and parse (optional) arguments for the script ##
 #     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
@@ -489,8 +449,6 @@ if __name__ == "__main__":
 #     ARGS = parser.parse_args()
 #
 #     run(**vars(ARGS))
-
-from typing import Callable
 
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
