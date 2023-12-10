@@ -62,8 +62,8 @@ class AgentController():
 
         # Convert to TF-Agents environment
         tf_env = tf_py_environment.TFPyEnvironment(discrete_action_env)
-        # train_env = tf_py_environment.TFPyEnvironment(train_py_env)
-        # eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
+        train_env = tf_py_environment.TFPyEnvironment(train_py_env)
+        eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
 
 
         # Define the underlying Neural Network
@@ -95,56 +95,55 @@ class AgentController():
         optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3)
         train_step_counter = tf.Variable(0)
 
-    #     agent = dqn_agent.DqnAgent(
-    #         tf_env.time_step_spec(),
-    #         tf_env.action_spec(),
-    #         q_network=q_net,
-    #         optimizer=optimizer,
-    #         td_errors_loss_fn=common.element_wise_squared_loss,
-    #         train_step_counter=train_step_counter
-    #     )
-    #     agent.initialize()
-    #
-    #     # return agent
-    #
-    # # def define_policies(self, agent):
-    #
-    #     eval_policy = agent.policy
-    #     collect_policy = agent.collect_policy
-    #
-    #     random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
-    #                                                     train_env.action_spec())
+        agent = dqn_agent.DqnAgent(
+            tf_env.time_step_spec(),
+            tf_env.action_spec(),
+            q_network=q_net,
+            optimizer=optimizer,
+            td_errors_loss_fn=common.element_wise_squared_loss,
+            train_step_counter=train_step_counter
+        )
+        agent.initialize()
+
+        return agent
+
+    def define_policies(self, agent):
+
+        eval_policy = agent.policy
+        collect_policy = agent.collect_policy
+
+        random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
+                                                        train_env.action_spec())
 
         # Create a random policy for data collection
         random_policy = random_tf_policy.RandomTFPolicy(
             tf_env.time_step_spec(),
             tf_env.action_spec())
 
-        # self.compute_avg_return(eval_env, random_policy, 100)
+        self.compute_avg_return(eval_env, random_policy, 100)
 
-    #     # Collect data from the environment
-    #     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
-    #         data_spec=agent.collect_data_spec,
-    #         batch_size=tf_env.batch_size,
-    #         max_length=replay_buffer_capacity
-    #     )
-    #     collect_driver = dynamic_step_driver.DynamicStepDriver(
-    #         tf_env,
-    #         random_policy,
-    #         observers=[replay_buffer.add_batch],
-    #         num_steps=collect_steps_per_iteration
-    #     )
-    #
-    # # Initialize the agent and collect initial data
-    # collect_driver.run()
+        # Collect data from the environment
+        replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
+            data_spec=agent.collect_data_spec,
+            batch_size=tf_env.batch_size,
+            max_length=replay_buffer_capacity
+        )
+        collect_driver = dynamic_step_driver.DynamicStepDriver(
+            tf_env,
+            random_policy,
+            observers=[replay_buffer.add_batch],
+            num_steps=collect_steps_per_iteration
+        )
+
+    # Initialize the agent and collect initial data
+    collect_driver.run()
 
     # Train the agent
-    # for _ in range(num_iterations):
-    #     trajectories, _ = collect_driver.run()
-    #     train_loss = agent.train(experience=trajectories)
+    for _ in range(num_iterations):
+        trajectories, _ = collect_driver.run()
+        train_loss = agent.train(experience=trajectories)
 
-    def asd(self, env):
-
+    def policy_initialisation(self, env):
         model = TD3(
             "MlpPolicy",
             env,

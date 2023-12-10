@@ -9,6 +9,7 @@ import base64
 import pathlib
 from pathlib import Path
 
+import imageio
 from IPython import display as ipythondisplay
 
 import matplotlib.pyplot as plt
@@ -38,6 +39,7 @@ from PyBullet.enums import Physics
 from Sol.DroneEnvironment import DroneEnvironment
 from Sol.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
+import Sol.Utilities.video_recorder as video_recorder
 
 # from tf_agents.environments import py_environment
 
@@ -49,24 +51,28 @@ DEFAULT_COLAB = False
 plot = True
 discount = 0.999
 threshold = 0.05
-max_steps = 1000
+max_steps = 5000
 
-num_cpu = 5
+num_cpu = 6
 
-targets = [np.array([0.0, 0.0, 0.1]),
-           np.array([0.0, 0.0, 0.25]),
-           np.array([0., 0., 0.5]),
-           np.array([0., 0.25, 0.5]),
-           np.array([0., 0.5, 0.5]),
-           # np.array([0.25, 0.5, 0.5]),
-           np.array([0.25, 0.5, 5]),
-           np.array([0.5, 0.5, 5]),
-           # np.array([1., .1, 0.]),
-           # np.array([1., 1., 1.]),
+# targets = [np.array([0.0, 0.0, 0.1]),
+#            np.array([0.0, 0.0, 0.25]),
+#            np.array([0., 0., 0.9]),
+#            # np.array([0., 0.25, 0.5]),
+#            # np.array([0., 0.5, 0.5]),
+#            # # np.array([0.25, 0.5, 0.5]),
+#            # np.array([0.25, 0.5, 5]),
+#            # np.array([0.5, 0.5, 5]),
+#            # np.array([1., .1, 0.]),
+#            # np.array([1., 1., 1.]),
+#            ]
+
+targets = [np.array([0.0, 0.0, 0.5]),
+           np.array([0.0, 0.5, 0.5]),
+           np.array([0.25, 0.25, 0.25]),
            ]
 
 max_reward = 100 + len(targets) * 10
-
 
 register(
     # unique identifier for the env `name-version`
@@ -163,8 +169,8 @@ def make_env(gui, rank: int, seed: int = 0, ):
 def run_test():
     action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
     action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
-    action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
-    action * -1
+    action = np.array([.9, .9, .9, .9], dtype=np.float32)
+    # action * -1
 
     drone_environment = PBDroneEnv(
         target_points=targets,
@@ -173,7 +179,7 @@ def run_test():
         max_steps=max_steps,
         physics=Physics.PYB,
         gui=True,
-        initial_xyzs=np.array([[0, 0, 1]]),
+        initial_xyzs=np.array([[0, 0, 0]], dtype=np.float64),
     )
 
     # It will check your custom environment and output additional warnings if needed
@@ -193,6 +199,7 @@ def run_test():
         rewards.append(time_step[1])
         rewards_sum.append(sum(rewards))
         print(time_step)
+        print(drone_environment._steps)
         if time_step[2]:
             break
 
@@ -203,23 +210,30 @@ def run_test():
 
 
 def test_saved():
-    # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
-    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
-    # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
-    # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
-
     drone_environment = PBDroneEnv(
         target_points=targets,
         threshold=threshold,
         discount=discount,
         max_steps=max_steps,
         physics=Physics.PYB,
+        record=True,
+        vision_attributes=True,
         gui=True,
-        initial_xyzs=np.array([[0, 0, 0]]),
+        initial_xyzs=np.array([[0, 0, 0]])
     )
+    # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
+    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.06.2023_14.02.13/best_model.zip",
+                     env=drone_environment)
+    # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
+    # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
+
     rewards = []
     rewards_sum = []
+    images = []
     obs, info = drone_environment.reset()
+
+    drone_environment._startVideoRecording()
+
     for i in range(5000):
         action, _states = model.predict(obs,
                                         deterministic=True
@@ -228,13 +242,20 @@ def test_saved():
         print(i)
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
               truncated)
-
+        print(drone_environment.rpy)
+        print(drone_environment.pos[0])
         rewards.append(reward)
         rewards_sum.append(sum(rewards))
+        # images.append(img)
+
         if terminated:
             plot_learning_curve(rewards)
             plot_learning_curve(rewards_sum, title="Cumulative Rewards")
-            rewards = []
+
+            # imageio.mimsave("save-12.03.2023_20.10.04.gif",
+            #                 [np.array(img) for i, img in enumerate(images) if i % 2 == 0],
+            #                 duration=0.58*(1000 * 1/50))
+
             drone_environment.reset()
 
         time.sleep(1. / 240.)
@@ -269,14 +290,14 @@ def run_full():
     # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
-    train_env = PBDroneEnv(
-        target_points=targets,
-        threshold=threshold,
-        discount=discount,
-        max_steps=max_steps,
-        gui=False,
-        initial_xyzs=np.array([[0, 0, 0]]),
-    )
+    # train_env = PBDroneEnv(
+    #     target_points=targets,
+    #     threshold=threshold,
+    #     discount=discount,
+    #     max_steps=max_steps,
+    #     gui=False,
+    #     initial_xyzs=np.array([[0, 0, 0]]),
+    # )
 
     train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
 
@@ -286,10 +307,10 @@ def run_full():
         discount=discount,
         max_steps=max_steps,
         physics=Physics.PYB,
-        gui=False,
+        gui=True,
         initial_xyzs=np.array([[0, 0, 0]])
     )
-    eval_env = SubprocVecEnv([make_env(gui=False, rank=1)])
+    # eval_env = SubprocVecEnv([make_env(gui=False, rank=1)])
 
     model = PPO("MlpPolicy", train_env, verbose=1,
                 tensorboard_log="./logs/ppo_tensorboard/")
@@ -324,7 +345,7 @@ def run_full():
     stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
     eval_callback = EvalCallback(eval_env,
-                                 callback_on_new_best=callback_on_best,
+                                 # callback_on_new_best=callback_on_best,
                                  verbose=1,
                                  best_model_save_path=filename + '/',
                                  log_path=filename + '/',
@@ -334,8 +355,8 @@ def run_full():
 
     model.learn(total_timesteps=1_000_000,
                 callback=eval_callback,
-                log_interval=100,
-                progress_bar=True)
+                log_interval=1000,
+                )
 
     model.save(os.curdir + "/model_chkpts" + '/success_model.zip')
     rewards = []
@@ -385,9 +406,8 @@ def run_full():
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
     obs, info = test_env.reset(seed=42)
-
+    i = 0
     while True:
-
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
@@ -411,7 +431,7 @@ def run_full():
         if terminated:
             plot_learning_curve(rewards)
             break
-
+        i += 1
         # test_env.render()
         #         print(terminated)
         #         sync(i, start, test_env.CTRL_TIMESTEP)
@@ -430,11 +450,16 @@ def run_full():
 if __name__ == "__main__":
     # vec_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
     #
-    run_full()
+    # run_full()
     #
     # run_test()
+    #
+    test_saved()
+    # video_recorder.record_video(
+    #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
+    #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",
+    #                    ))
 
-    # test_saved()
 
 #     #### Define and parse (optional) arguments for the script ##
 #     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')

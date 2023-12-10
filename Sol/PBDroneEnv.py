@@ -54,7 +54,9 @@ class PBDroneEnv(
                          pyb_freq=pyb_freq,
                          ctrl_freq=ctrl_freq,
                          gui=gui,
-                         record=record,
+                         vision_attributes=vision_attributes,
+                         record=True,
+
                          # obstacles=False,
                          # user_debug_gui=False,
                          # vision_attributes=vision_attributes,
@@ -265,18 +267,15 @@ class PBDroneEnv(
         # print(self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100)
         # print(self._steps)
         #  or \self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or
-        state = self._getDroneStateVector(0)
-        if (self._is_done or self._steps > 10000 or
-                state[0] > 1. or state[0] < -1. or
-                state[1] > 1. or state[1] < -1. or
-                (state[2] < self.COLLISION_H * 3 and self._steps > 100) or state[2] > 1 or
-                self._current_target_index == len(self._target_points)):
+
+        if self._has_collision_occurred() or self._current_target_index == len(self._target_points):
             return True
         else:
             return False
 
     def _computeReward(self):
 
+        reward = 0.0
         # Get the current drone position
         current_position = self._computeObs()[:3]
 
@@ -285,9 +284,7 @@ class PBDroneEnv(
 
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
-            return - 10 - distance_to_target
-
-        reward = 0.0
+            reward -= 300
 
         # print("tar", self._target_points[self._current_target_index])
 
@@ -295,22 +292,22 @@ class PBDroneEnv(
         # distance_to_target = self.distance_between_points(self._computeObs()[:3],
         #                                                   self._target_points[self._current_target_index])
 
-
         try:
+            # reward -= distance_to_target ** 2
             # Reward based on distance to target
             # print("dis", distance_to_target)
 
-            reward += (2 / distance_to_target / 3) * self._discount ** self._steps
+            reward += (1 / distance_to_target) #* self._discount ** self._steps/10
 
             # Additional reward for progressing towards the target
-            reward += 0.5 * (self._prev_distance_to_target - distance_to_target)
+            reward += (self._prev_distance_to_target - distance_to_target) # * 0.5
 
-            # Penalize large actions to avoid erratic behavior
-            reward -= 0.01 * np.linalg.norm(self._last_action)
+            # # Penalize large actions to avoid erratic behavior
+            # reward -= 0.01 * np.linalg.norm(self._last_action)
 
         except ZeroDivisionError:
             # Give a high reward if the drone is at the target (avoiding division by zero)
-            reward += 100
+            reward += 10
 
         # Check if the drone has reached a target
         if distance_to_target <= self._threshold:
@@ -319,11 +316,11 @@ class PBDroneEnv(
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 1000.0 * self._discount ** self._steps  # Reward for reaching all targets
+                reward += 100000.0 #* self._discount ** self._steps/10  # Reward for reaching all targets
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 20 * self._discount ** self._steps
+                reward += 100 #* self._discount ** self._steps/10
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
@@ -393,3 +390,16 @@ class PBDroneEnv(
 
         distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2)
         return distance
+
+    def _has_collision_occurred(self) -> bool:
+        # Three times the collision height because the drone tend act like a "wheel"
+        # and circle around a lower target point.
+
+        state = self._computeObs()[:3]
+
+        if (state[0] >= 1. or state[0] <= -1. or
+                state[1] >= 1. or state[1] <= -1. or
+                (state[2] <= self.COLLISION_H * 3 and self._steps > 100) or state[2] >= 1):
+            return True
+        else:
+            return False

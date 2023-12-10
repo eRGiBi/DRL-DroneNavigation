@@ -8,7 +8,7 @@ from pathlib import Path
 
 import gym
 from IPython import display as ipythondisplay
-from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv
+from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv, SubprocVecEnv
 
 os.system("Xvfb :1 -screen 0 1024x768x24 &")
 os.environ['DISPLAY'] = ':1'
@@ -19,6 +19,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.logger import Video
 
+from Sol.pybullet_drone_simulator import make_env
 
 def show_videos(video_path="", prefix=""):
     """
@@ -41,7 +42,7 @@ def show_videos(video_path="", prefix=""):
     ipythondisplay.display(ipythondisplay.HTML(data="<br>".join(html)))
 
 
-def record_video(env_id, model, video_length=500, prefix="", video_folder="videos/"):
+def record_video(model, video_length=500, prefix="", video_folder="videos/"):
     """
     :param env_id: (str)
     :param model: (RL model)
@@ -49,7 +50,8 @@ def record_video(env_id, model, video_length=500, prefix="", video_folder="video
     :param prefix: (str)
     :param video_folder: (str)
     """
-    eval_env = DummyVecEnv([lambda: gym.make(env_id, render_mode="rgb_array")])
+    # eval_env = DummyVecEnv([lambda: gym.make(env_id, render_mode="rgb_array")])
+    eval_env = DummyVecEnv([make_env(True, 0)])
     # Start the video at step=0 and record 500 steps
     eval_env = VecVideoRecorder(
         eval_env,
@@ -62,7 +64,10 @@ def record_video(env_id, model, video_length=500, prefix="", video_folder="video
     obs = eval_env.reset()
     for _ in range(video_length):
         action, _ = model.predict(obs)
-        obs, _, _, _ = eval_env.step(action)
+        obs, _, done, _ = eval_env.step(action)
+
+        if done:
+            break
 
     # Close the video recorder
     eval_env.close()

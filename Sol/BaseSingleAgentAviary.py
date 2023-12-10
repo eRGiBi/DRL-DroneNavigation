@@ -24,6 +24,7 @@ class BaseSingleAgentAviary(BaseAviary):
                  ctrl_freq: int = 240,
                  gui=False,
                  record=False,
+                 vision_attributes=False,
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM
                  ):
@@ -58,7 +59,8 @@ class BaseSingleAgentAviary(BaseAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
-        vision_attributes = True if obs == ObservationType.RGB else False
+        vision_attributes = vision_attributes
+            # True if obs == ObservationType.RGB else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
@@ -78,7 +80,7 @@ class BaseSingleAgentAviary(BaseAviary):
                          ctrl_freq=ctrl_freq,
                          gui=gui,
                          record=record, 
-                         obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
+                         obstacles=False, # Add obstacles for RGB observations and/or FlyThruGate
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
                          )
