@@ -53,24 +53,29 @@ discount = 0.999
 threshold = 0.05
 max_steps = 5000
 
-num_cpu = 6
+num_cpu = 10
 
-# targets = [np.array([0.0, 0.0, 0.1]),
-#            np.array([0.0, 0.0, 0.25]),
-#            np.array([0., 0., 0.9]),
-#            # np.array([0., 0.25, 0.5]),
-#            # np.array([0., 0.5, 0.5]),
-#            # # np.array([0.25, 0.5, 0.5]),
-#            # np.array([0.25, 0.5, 5]),
-#            # np.array([0.5, 0.5, 5]),
-#            # np.array([1., .1, 0.]),
-#            # np.array([1., 1., 1.]),
-#            ]
-
-targets = [np.array([0.0, 0.0, 0.5]),
-           np.array([0.0, 0.5, 0.5]),
-           np.array([0.25, 0.25, 0.25]),
+targets = [np.array([0.0, 0.0, 0.1]),
+           np.array([0.0, 0.0, 0.2]),
+           np.array([0., 0., 0.3]),
+           np.array([0., 0., 0.4]),
+           np.array([0., 0., 0.5]),
+           np.array([0., 0.1, 0.5]),
+           np.array([0., 0.2, 0.5]),
+           np.array([0., 0.35, 0.5]),
+           np.array([0., 0.5, 0.5]),
+           np.array([0.1, 0.5, 0.5]),
+           np.array([0.25, 0.5, 0.5]),
+           np.array([0.25, 0.5, 5]),
+           np.array([0.5, 0.5, 5]),
+           # np.array([1., .1, .]),
+           # np.array([1., 1., 1.]),
            ]
+
+# targets = [np.array([0.0, 0.0, 0.5]),
+#            np.array([0.0, 0.5, 0.5]),
+#            np.array([0.25, 0.25, 0.25]),
+#            ]
 
 max_reward = 100 + len(targets) * 10
 
@@ -222,7 +227,7 @@ def test_saved():
         initial_xyzs=np.array([[0, 0, 0]])
     )
     # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
-    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.06.2023_14.02.13/best_model.zip",
+    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.10.2023_15.56.55/best_model.zip",
                      env=drone_environment)
     # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
     # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
@@ -301,16 +306,16 @@ def run_full():
 
     train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
 
-    eval_env = PBDroneEnv(
-        target_points=targets,
-        threshold=threshold,
-        discount=discount,
-        max_steps=max_steps,
-        physics=Physics.PYB,
-        gui=True,
-        initial_xyzs=np.array([[0, 0, 0]])
-    )
-    # eval_env = SubprocVecEnv([make_env(gui=False, rank=1)])
+    # eval_env = PBDroneEnv(
+    #     target_points=targets,
+    #     threshold=threshold,
+    #     discount=discount,
+    #     max_steps=max_steps,
+    #     physics=Physics.PYB,
+    #     gui=False,
+    #     initial_xyzs=np.array([[0, 0, 0]])
+    # )
+    eval_env = SubprocVecEnv([make_env(gui=False, rank=1) for i in range(num_cpu)])
 
     model = PPO("MlpPolicy", train_env, verbose=1,
                 tensorboard_log="./logs/ppo_tensorboard/")
@@ -353,7 +358,7 @@ def run_full():
                                  deterministic=True,
                                  render=False)
 
-    model.learn(total_timesteps=1_000_000,
+    model.learn(total_timesteps=10_000_000,
                 callback=eval_callback,
                 log_interval=1000,
                 )
@@ -451,10 +456,13 @@ if __name__ == "__main__":
     # vec_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
     #
     # run_full()
-    #
+
     # run_test()
     #
     test_saved()
+    #
+
+
     # video_recorder.record_video(
     #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
     #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",

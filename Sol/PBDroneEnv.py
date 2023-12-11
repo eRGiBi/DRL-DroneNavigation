@@ -71,7 +71,7 @@ class PBDroneEnv(
         self._max_steps = max_steps
 
         self._steps = 0
-        # self._current_position = np.array([0.0, 0.0, 0.0])
+        self._current_position = np.array([0.0, 0.0, 0.0])
         self._last_action = np.array([0.0, 0.0, 0.0])
         self._prev_distance_to_target = np.linalg.norm(initial_xyzs - target_points[0])
         self._current_target_index = 0
@@ -101,6 +101,8 @@ class PBDroneEnv(
         #     # discount=tf.constant(self._discount),
         # )
         self._last_action = action
+        self._current_position = self._computeObs()[:3]
+
         return obs, reward, terminated, truncated, info
 
     def _actionSpace(self):
@@ -277,14 +279,15 @@ class PBDroneEnv(
 
         reward = 0.0
         # Get the current drone position
-        current_position = self._computeObs()[:3]
+        # current_position = self._computeObs()[:3]
 
         distance_to_target = np.linalg.norm(
-            current_position - self._target_points[self._current_target_index])
+            self._target_points[self._current_target_index] - self._current_position
+        )
 
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
-            reward -= 300
+            reward -= 1000
 
         # print("tar", self._target_points[self._current_target_index])
 
@@ -297,17 +300,17 @@ class PBDroneEnv(
             # Reward based on distance to target
             # print("dis", distance_to_target)
 
-            reward += (1 / distance_to_target) #* self._discount ** self._steps/10
+            reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
 
             # Additional reward for progressing towards the target
-            reward += (self._prev_distance_to_target - distance_to_target) # * 0.5
+            reward += (self._prev_distance_to_target - distance_to_target) * 0.5
 
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
 
         except ZeroDivisionError:
             # Give a high reward if the drone is at the target (avoiding division by zero)
-            reward += 10
+            reward += 100
 
         # Check if the drone has reached a target
         if distance_to_target <= self._threshold:
@@ -316,11 +319,11 @@ class PBDroneEnv(
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 100000.0 #* self._discount ** self._steps/10  # Reward for reaching all targets
+                reward += 100000.0  # * self._discount ** self._steps/10  # Reward for reaching all targets
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 100 #* self._discount ** self._steps/10
+                reward += 500 * self._discount ** self._steps / 10
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
@@ -380,9 +383,11 @@ class PBDroneEnv(
 
         self._is_done = False
         self._current_target_index = 0
+        self._current_position = np.array([0, 0, 0])
         self._steps = 0
 
         return super().reset(seed, options)
+
 
     def distance_between_points(self, point1, point2):
         x1, y1, z1 = point1
