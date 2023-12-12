@@ -29,7 +29,7 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecCheckNan
 from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 from stable_baselines3.common.utils import set_random_seed
@@ -43,17 +43,23 @@ import Sol.Utilities.video_recorder as video_recorder
 
 # from tf_agents.environments import py_environment
 
+import torch as th
+th.autograd.set_detect_anomaly(True)
+
+np.seterr(all="raise")
+
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
+INITIAL_POS = np.array([[0, 0, 0]])
 plot = True
 discount = 0.999
 threshold = 0.05
 max_steps = 5000
 
-num_cpu = 10
+num_cpu = 4
 
 targets = [np.array([0.0, 0.0, 0.1]),
            np.array([0.0, 0.0, 0.2]),
@@ -148,11 +154,10 @@ def plot_metrics(episode_rewards, avg_rewards,
     plt.show()
 
 
-def make_env(gui, rank: int, seed: int = 0, ):
+def make_env(multi=True, gui=False, rank: int = 0, seed: int = 0, ):
     """
     Utility function for multiprocessed env.
     """
-
     def _init():
         env = PBDroneEnv(
             target_points=targets,
@@ -161,14 +166,18 @@ def make_env(gui, rank: int, seed: int = 0, ):
             max_steps=max_steps,
             physics=Physics.PYB,
             gui=gui,
-            initial_xyzs=np.array([[0, 0, 1]]),
+            initial_xyzs=INITIAL_POS,
         )
         env.reset(seed=seed + rank)
         env = Monitor(env)
         return env
 
-    set_random_seed(seed)
-    return _init
+    if multi:
+        set_random_seed(seed)
+        return _init
+    else:
+        return _init()
+
 
 
 def run_test():
@@ -295,30 +304,24 @@ def run_full():
     # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
-    # train_env = PBDroneEnv(
-    #     target_points=targets,
-    #     threshold=threshold,
-    #     discount=discount,
-    #     max_steps=max_steps,
-    #     gui=False,
-    #     initial_xyzs=np.array([[0, 0, 0]]),
-    # )
+    # train_env = make
 
     train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
+    # train_env = VecCheckNan(train_env)
 
-    # eval_env = PBDroneEnv(
-    #     target_points=targets,
-    #     threshold=threshold,
-    #     discount=discount,
-    #     max_steps=max_steps,
-    #     physics=Physics.PYB,
-    #     gui=False,
-    #     initial_xyzs=np.array([[0, 0, 0]])
-    # )
-    eval_env = SubprocVecEnv([make_env(gui=False, rank=1) for i in range(num_cpu)])
+    # eval_env = make_env(gui=False, rank=0)
 
-    model = PPO("MlpPolicy", train_env, verbose=1,
-                tensorboard_log="./logs/ppo_tensorboard/")
+    eval_env = SubprocVecEnv([make_env()])
+    # eval_env = VecCheckNan(eval_env)
+
+    model = PPO("MlpPolicy",
+                train_env,
+                verbose=1,
+                tensorboard_log="./logs/ppo_tensorboard/",
+                batch_size=256,
+                gamma=discount,
+                device="cuda",
+                )
     # tensorboard --logdir ./logs/ppo_tensorboard/
 
     # model = SAC(
@@ -345,12 +348,12 @@ def run_full():
     # train_env = stable_baselines3.common.monitor.Monitor(train_env)
     # eval_env = stable_baselines3.common.monitor.Monitor(eval_env)
 
-    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=np.inf,
+    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=20000,
                                                      verbose=1)
     stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
     eval_callback = EvalCallback(eval_env,
-                                 # callback_on_new_best=callback_on_best,
+                                 callback_on_new_best=callback_on_best,
                                  verbose=1,
                                  best_model_save_path=filename + '/',
                                  log_path=filename + '/',
@@ -358,12 +361,12 @@ def run_full():
                                  deterministic=True,
                                  render=False)
 
-    model.learn(total_timesteps=10_000_000,
+    model.learn(total_timesteps=5_000_000,
                 callback=eval_callback,
                 log_interval=1000,
                 )
 
-    model.save(os.curdir + "/model_chkpts" + '/success_model.zip')
+    model.save(os.curdir + filename + '/success_model.zip')
     rewards = []
 
     # if os.path.isfile(filename + '/success_model.zip'):
@@ -376,28 +379,11 @@ def run_full():
 
     train_env.close()
 
-    test_env = PBDroneEnv(
-        target_points=targets,
-        threshold=discount,
-        discount=threshold,
-        max_steps=max_steps,
-        physics=Physics.PYB,
-        gui=True,
-        initial_xyzs=np.array([[0, 0, 0]]),
-        record=False
-    )
-    test_env_nogui = PBDroneEnv(
-        target_points=targets,
-        threshold=threshold,
-        discount=discount,
-        max_steps=max_steps,
-        physics=Physics.PYB,
-        gui=False,
-        initial_xyzs=np.array([[0, 0, 0]]),
-    )
+    test_env = make_env(multi=False)
+    test_env_nogui = make_env(multi=False)
 
-    test_env = stable_baselines3.common.monitor.Monitor(test_env)
-    test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
+    # test_env = stable_baselines3.common.monitor.Monitor(test_env)
+    # test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
 
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                     num_drones=1,
@@ -437,11 +423,6 @@ def run_full():
             plot_learning_curve(rewards)
             break
         i += 1
-        # test_env.render()
-        #         print(terminated)
-        #         sync(i, start, test_env.CTRL_TIMESTEP)
-        #         if terminated:
-        #             obs = test_env.reset(seed=42, options={})
 
     test_env.close()
 
@@ -455,11 +436,11 @@ def run_full():
 if __name__ == "__main__":
     # vec_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
     #
-    # run_full()
+    run_full()
 
     # run_test()
     #
-    test_saved()
+    # test_saved()
     #
 
 

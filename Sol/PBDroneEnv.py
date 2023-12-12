@@ -28,7 +28,6 @@ from Sol.BaseSingleAgentAviary import BaseSingleAgentAviary
 class PBDroneEnv(
     # BaseAviary,
     BaseSingleAgentAviary
-    # py_environment.PyEnvironment,
 ):
 
     def __init__(self,
@@ -61,6 +60,7 @@ class PBDroneEnv(
                          # user_debug_gui=False,
                          # vision_attributes=vision_attributes,
                          )
+
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
         self.OBS_TYPE = obs
@@ -277,17 +277,17 @@ class PBDroneEnv(
 
     def _computeReward(self):
 
+        if self._computeTerminated() and not self._is_done:
+            # print("term and NOT DONE")
+            return -3000
+
         reward = 0.0
         # Get the current drone position
         # current_position = self._computeObs()[:3]
 
-        distance_to_target = np.linalg.norm(
-            self._target_points[self._current_target_index] - self._current_position
-        )
-
-        if self._computeTerminated() and not self._is_done:
-            # print("term and NOT DONE")
-            reward -= 1000
+        distance_to_target = abs(np.linalg.norm(
+            self._current_position - self._target_points[self._current_target_index]
+        ))
 
         # print("tar", self._target_points[self._current_target_index])
 
@@ -303,7 +303,7 @@ class PBDroneEnv(
             reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
 
             # Additional reward for progressing towards the target
-            reward += (self._prev_distance_to_target - distance_to_target) * 0.5
+            reward += (self._prev_distance_to_target - distance_to_target)  # * 0.5
 
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
@@ -323,7 +323,7 @@ class PBDroneEnv(
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 500 * self._discount ** self._steps / 10
+                reward += 700 * self._discount ** self._steps / 10
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
@@ -387,7 +387,6 @@ class PBDroneEnv(
         self._steps = 0
 
         return super().reset(seed, options)
-
 
     def distance_between_points(self, point1, point2):
         x1, y1, z1 = point1
