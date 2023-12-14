@@ -154,7 +154,8 @@ def plot_metrics(episode_rewards, avg_rewards,
     plt.show()
 
 
-def make_env(multi=True, gui=False, rank: int = 0, seed: int = 0, ):
+def make_env(multi=True, gui=False, rank: int = 0, seed: int = 0,
+             save_model: bool = False, save_path: str = None):
     """
     Utility function for multiprocessed env.
     """
@@ -167,6 +168,8 @@ def make_env(multi=True, gui=False, rank: int = 0, seed: int = 0, ):
             physics=Physics.PYB,
             gui=gui,
             initial_xyzs=INITIAL_POS,
+            save_model=save_model,
+            save_folder=save_path
         )
         env.reset(seed=seed + rank)
         env = Monitor(env)
@@ -177,7 +180,6 @@ def make_env(multi=True, gui=False, rank: int = 0, seed: int = 0, ):
         return _init
     else:
         return _init()
-
 
 
 def run_test():
@@ -318,9 +320,11 @@ def run_full():
                 train_env,
                 verbose=1,
                 tensorboard_log="./logs/ppo_tensorboard/",
-                batch_size=256,
+                n_steps=512,
+                batch_size=64,
                 gamma=discount,
                 device="cuda",
+                learning_rate=1e-4
                 )
     # tensorboard --logdir ./logs/ppo_tensorboard/
 
@@ -357,13 +361,13 @@ def run_full():
                                  verbose=1,
                                  best_model_save_path=filename + '/',
                                  log_path=filename + '/',
-                                 eval_freq=int(200),
+                                 eval_freq=int(100),
                                  deterministic=True,
                                  render=False)
 
-    model.learn(total_timesteps=5_000_000,
+    model.learn(total_timesteps=int(5e6),
                 callback=eval_callback,
-                log_interval=1000,
+                log_interval=3000,
                 )
 
     model.save(os.curdir + filename + '/success_model.zip')
@@ -379,7 +383,7 @@ def run_full():
 
     train_env.close()
 
-    test_env = make_env(multi=False)
+    test_env = make_env(multi=False, save_model=True, save_path=filename)
     test_env_nogui = make_env(multi=False)
 
     # test_env = stable_baselines3.common.monitor.Monitor(test_env)

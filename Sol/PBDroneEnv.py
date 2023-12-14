@@ -1,6 +1,8 @@
 import os
 import math
 
+import inspect
+
 import gym
 from gymnasium import spaces
 import numpy as np
@@ -32,6 +34,7 @@ class PBDroneEnv(
 
     def __init__(self,
                  target_points, threshold, discount, max_steps,
+                 save_model=False, save_folder=None,
                  drone_model: DroneModel = DroneModel.CF2X,
                  initial_xyzs=None,
                  initial_rpys=None,
@@ -54,7 +57,7 @@ class PBDroneEnv(
                          ctrl_freq=ctrl_freq,
                          gui=gui,
                          vision_attributes=vision_attributes,
-                         record=True,
+                         record=record,
 
                          # obstacles=False,
                          # user_debug_gui=False,
@@ -76,6 +79,12 @@ class PBDroneEnv(
         self._prev_distance_to_target = np.linalg.norm(initial_xyzs - target_points[0])
         self._current_target_index = 0
         self._is_done = False
+
+        if save_model:
+            assert save_folder is not None
+
+            self.save_model(save_folder)
+
 
     def step(self, action):
 
@@ -407,3 +416,16 @@ class PBDroneEnv(
             return True
         else:
             return False
+
+    def save_model(self, save_folder):
+
+        # Get the source code of the object's class
+        source_code = inspect.getsource(self.__class__)
+
+        # Construct the file path for saving the source code
+        file_path = os.path.join(save_folder, "model.py")
+
+        # Save the source code as text
+        with open(file_path, "w") as file:
+            file.write(source_code)
+        print(f"Object source code saved to: {file_path}")
