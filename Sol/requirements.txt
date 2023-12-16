@@ -1,0 +1,16 @@
+cycler==0.11.0
+gym==0.23.0
+gymnasium==0.29.1
+imageio==2.31.4
+ipython==8.12.3
+matplotlib==3.7.2
+numpy==1.24.3
+Pillow==10.1.0
+pybullet==3.2.5
+scipy==1.10.1
+setuptools==68.2.2
+stable_baselines3==2.2.1
+tensorflow==2.10.1
+tf_agents==0.16.0
+torch==2.1.2
+transforms3d==0.4.1

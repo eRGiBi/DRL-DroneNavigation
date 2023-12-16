@@ -1,3 +1,4 @@
+import math
 import os
 import time
 from datetime import datetime
@@ -5,41 +6,30 @@ from datetime import datetime
 
 from typing import Callable
 
-import base64
-import pathlib
-from pathlib import Path
-
-import imageio
-from IPython import display as ipythondisplay
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-import gymnasium as gym
 from gymnasium.envs.registration import register
 
 import stable_baselines3.common.monitor
 
 from stable_baselines3.common.env_checker import check_env
 
-from stable_baselines3 import PPO, A2C, SAC, TD3, HerReplayBuffer
-from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
     StopTrainingOnNoModelImprovement
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecCheckNan
-from stable_baselines3.common.results_plotter import load_results, ts2xy
+from stable_baselines3.common.vec_env import SubprocVecEnv
 
 from stable_baselines3.common.utils import set_random_seed
 
 # from PyBullet import BaseAviary
-from PyBullet.enums import Physics
-from Sol.DroneEnvironment import DroneEnvironment
-from Sol.PBDroneEnv import PBDroneEnv
+from Sol.PyBullet.enums import Physics
+# from Sol.DroneEnvironment import DroneEnvironment
+from Sol.Model.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
-import Sol.Utilities.video_recorder as video_recorder
 
 # from tf_agents.environments import py_environment
 
@@ -57,9 +47,9 @@ INITIAL_POS = np.array([[0, 0, 0]])
 plot = True
 discount = 0.999
 threshold = 0.05
-max_steps = 5000
+max_steps = 10000
 
-num_cpu = 4
+num_cpu = 12
 
 targets = [np.array([0.0, 0.0, 0.1]),
            np.array([0.0, 0.0, 0.2]),
@@ -201,12 +191,16 @@ def run_test():
     # It will check your custom environment and output additional warnings if needed
     check_env(drone_environment, warn=True)
 
+    time_step = drone_environment.reset()
+
+    stable_baselines3.common.utils.is_vectorized_box_observation(time_step[0], drone_environment._observationSpace())
+
     print('[INFO] Action space:', drone_environment.action_space)
     print('[INFO] Observation space:', drone_environment.observation_space)
 
     rewards = []
     rewards_sum = []
-    time_step = drone_environment.reset()
+
     print(time_step)
 
     # for _ in range(100):
@@ -238,7 +232,7 @@ def test_saved():
         initial_xyzs=np.array([[0, 0, 0]])
     )
     # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
-    model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.10.2023_15.56.55/best_model.zip",
+    model = PPO.load("/Sol/model_chkpts/save-12.16.2023_14.40.13/best_model.zip",
                      env=drone_environment)
     # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
     # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
@@ -280,33 +274,12 @@ def test_saved():
 def run_full():
     start = time.perf_counter()
 
-    filename = os.path.join("model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+    filename = os.path.join("../model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
         os.makedirs(filename + '/')
 
-    # Connect to the PyBullet physics server
-    # physicsClient = p.connect(p.GUI)
-    # p.setGravity(0, 0, -9.81)
-    # p.setRealTimeSimulation(0)
-    # Load the drone model
-    # drone = p.loadURDF("cf2x.urdf", [0, 0, 0])
 
-    # print("----------------------------")
-    # print(drone_environment.action_space)
-    # print(drone_environment.action_spec())
-    # print(drone_environment.getDroneIds())
-    # print(drone_environment.observation_spec())
-    # print("----------------------------")
 
-    # tf_env = tf_py_environment.TFPyEnvironment(drone_environment)
-    #
-    # print('action_spec:', tf_env.action_spec())
-    # print('time_step_spec.observation:', tf_env.time_step_spec().observation)
-    # print('time_step_spec.step_type:', tf_env.time_step_spec().step_type)
-    # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
-    # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
-
-    # train_env = make
 
     train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
     # train_env = VecCheckNan(train_env)
@@ -316,35 +289,42 @@ def run_full():
     eval_env = SubprocVecEnv([make_env()])
     # eval_env = VecCheckNan(eval_env)
 
-    model = PPO("MlpPolicy",
-                train_env,
-                verbose=1,
-                tensorboard_log="./logs/ppo_tensorboard/",
-                n_steps=512,
-                batch_size=64,
-                gamma=discount,
-                device="cuda",
-                learning_rate=1e-4
-                )
+    test_env = make_env(multi=False, save_model=True, save_path=filename)
+    test_env_nogui = make_env(multi=False)
+
+    # test_env = stable_baselines3.common.monitor.Monitor(test_env)
+    # test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
+
+    # model = PPO("MlpPolicy",
+    #             train_env,
+    #             verbose=1,
+    #             tensorboard_log="./logs/ppo_tensorboard/",
+    #             n_steps=2048,
+    #             batch_size=1024,
+    #             device="auto",
+    #             learning_rate=1e-4
+    #             )
     # tensorboard --logdir ./logs/ppo_tensorboard/
 
-    # model = SAC(
-    #     "MlpPolicy",
-    #     train_env,
-    #     # replay_buffer_class=HerReplayBuffer,
-    #     # replay_buffer_kwargs=dict(
-    #     #     n_sampled_goal=len(targets),
-    #     #     goal_selection_strategy="future",
-    #     # ),
-    #     verbose=1,
-    #     tensorboard_log="./logs/SAC_tensorboard/",
-    #     train_freq=1, gradient_steps=2,
-    #     # buffer_size=int(1e6),
-    #     # learning_rate=1e-3,
-    #     # gamma=0.95,
-    #     # batch_size=256,
-    #     # policy_kwargs=dict(net_arch=[256, 256, 256]),
-    # )
+    model = SAC(
+        "MlpPolicy",
+        train_env,
+        # replay_buffer_class=HerReplayBuffer,
+        # replay_buffer_kwargs=dict(
+        #     n_sampled_goal=len(targets),
+        #     goal_selection_strategy="future",
+        # ),
+        verbose=1,
+        tensorboard_log="./logs/SAC_tensorboard/",
+        train_freq=1,
+        gradient_steps=2,
+        # buffer_size=int(1e6),
+        learning_rate=1e-4,
+        # gamma=0.95,
+        batch_size=1024,
+        # policy_kwargs=dict(net_arch=[256, 256, 256]),
+        device="auto",
+    )
 
     # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
     # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
@@ -383,11 +363,7 @@ def run_full():
 
     train_env.close()
 
-    test_env = make_env(multi=False, save_model=True, save_path=filename)
-    test_env_nogui = make_env(multi=False)
 
-    # test_env = stable_baselines3.common.monitor.Monitor(test_env)
-    # test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
 
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                     num_drones=1,
@@ -513,3 +489,59 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 #     img = model.env.render(mode="rgb_array")
 #
 # imageio.mimsave("lander_a2c.gif", [np.array(img) for i, img in enumerate(images) if i%2 == 0], fps=29)
+
+
+def generate_random_targets(num_targets: int) -> np.ndarray:
+    """Generates random targets for the drone to navigate to.
+
+    The targets are generated in a random order and are evenly distributed
+    around the origin. The z-coordinate of the targets is randomly chosen
+    between 0.1 and 1.0, but is capped at 0.1 if it is below that value.
+
+    Args:
+        num_targets: The number of targets to generate.
+
+    Returns:
+        A numpy array of shape (num_targets, 3) containing the x, y, and z
+        coordinates of the targets.
+    """
+
+    targets = np.zeros(shape=(num_targets, 3))
+    thetas = np.random.uniform(0.0, 2.0 * math.pi, size=(num_targets,))
+    phis = np.random.uniform(0.0, 2.0 * math.pi, size=(num_targets,))
+    for i, theta, phi in zip(range(num_targets), thetas, phis):
+        dist = np.random.uniform(low=1.0, high=1 * 0.9)
+        x = dist * math.sin(phi) * math.cos(theta)
+        y = dist * math.sin(phi) * math.sin(theta)
+        z = abs(dist * math.cos(phi))
+
+        # check for floor of z
+        targets[i] = np.array([x, y, z if z > 0.1 else 0.1])
+
+
+    print(targets)
+    return targets
+
+
+def manual_pb_env():
+    # Connect to the PyBullet physics server
+    # physicsClient = p.connect(p.GUI)
+    # p.setGravity(0, 0, -9.81)
+    # p.setRealTimeSimulation(0)
+    # Load the drone model
+    # drone = p.loadURDF("cf2x.urdf", [0, 0, 0])
+
+    print("----------------------------")
+    # print(drone_environment.action_space)
+    # print(drone_environment.action_spec())
+    # print(drone_environment.getDroneIds())
+    # print(drone_environment.observation_spec())
+    # print("----------------------------")
+
+    # tf_env = tf_py_environment.TFPyEnvironment(drone_environment)
+    #
+    # print('action_spec:', tf_env.action_spec())
+    # print('time_step_spec.observation:', tf_env.time_step_spec().observation)
+    # print('time_step_spec.step_type:', tf_env.time_step_spec().step_type)
+    # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
+    # print('time_step_spec.reward:', tf_env.time_step_spec().reward)

@@ -1,14 +1,13 @@
 import base64
 import os
 
-import gymnasium as gym
 import torch as th
 
 from pathlib import Path
 
 import gym
 from IPython import display as ipythondisplay
-from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv
 
 os.system("Xvfb :1 -screen 0 1024x768x24 &")
 os.environ['DISPLAY'] = ':1'
@@ -19,7 +18,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.logger import Video
 
-from Sol.pybullet_drone_simulator import make_env
+from Sol.Model.pybullet_drone_simulator import make_env
 
 def show_videos(video_path="", prefix=""):
     """

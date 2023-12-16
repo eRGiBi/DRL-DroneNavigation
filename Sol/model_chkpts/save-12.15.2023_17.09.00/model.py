@@ -1,32 +1,3 @@
-import os
-import math
-
-import inspect
-
-import gym
-from gymnasium import spaces
-import numpy as np
-import pybullet
-import tensorflow as tf
-from tf_agents.environments import py_environment
-from tf_agents.environments import tf_environment
-from tf_agents.environments import tf_py_environment
-from tf_agents.environments import utils
-from tf_agents.specs import array_spec
-from tf_agents.environments import wrappers
-from tf_agents.environments import py_environment
-from tf_agents.environments import tf_environment
-from tf_agents.environments import utils
-from tf_agents.specs import array_spec
-from tf_agents.trajectories import time_step as ts
-from tf_agents.typing import types
-
-from PyBullet.BaseAviary import BaseAviary
-from PyBullet.enums import DroneModel, Physics, ImageType, ActionType, ObservationType
-from PyBullet.GymPybulletDronesMain import *
-from Sol.BaseSingleAgentAviary import BaseSingleAgentAviary
-
-
 class PBDroneEnv(
     # BaseAviary,
     BaseSingleAgentAviary
