@@ -15,7 +15,7 @@ import stable_baselines3.common.monitor
 
 from stable_baselines3.common.env_checker import check_env
 
-from stable_baselines3 import PPO, SAC
+from stable_baselines3 import PPO, SAC, DDPG
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
     StopTrainingOnNoModelImprovement
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -34,6 +34,7 @@ from Sol.PyBullet.Logger import Logger
 # from tf_agents.environments import py_environment
 
 import torch as th
+
 th.autograd.set_detect_anomaly(True)
 
 np.seterr(all="raise")
@@ -149,6 +150,7 @@ def make_env(multi=True, gui=False, rank: int = 0, seed: int = 0,
     """
     Utility function for multiprocessed env.
     """
+
     def _init():
         env = PBDroneEnv(
             target_points=targets,
@@ -278,15 +280,13 @@ def run_full():
     if not os.path.exists(filename):
         os.makedirs(filename + '/')
 
-
-
-
-    train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
+    train_env = make_env(multi=False, gui=False)
+    # train_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
     # train_env = VecCheckNan(train_env)
 
-    # eval_env = make_env(gui=False, rank=0)
+    eval_env = make_env(multi=False, gui=False, rank=0)
 
-    eval_env = SubprocVecEnv([make_env()])
+    # eval_env = SubprocVecEnv([make_env()])
     # eval_env = VecCheckNan(eval_env)
 
     test_env = make_env(multi=False, save_model=True, save_path=filename)
@@ -295,36 +295,48 @@ def run_full():
     # test_env = stable_baselines3.common.monitor.Monitor(test_env)
     # test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
 
-    # model = PPO("MlpPolicy",
-    #             train_env,
-    #             verbose=1,
-    #             tensorboard_log="./logs/ppo_tensorboard/",
-    #             n_steps=2048,
-    #             batch_size=1024,
-    #             device="auto",
-    #             learning_rate=1e-4
-    #             )
+    model = PPO("MlpPolicy",
+                train_env,
+                verbose=1,
+                n_steps=2048,
+                batch_size=1024,
+                learning_rate=1e-4,
+                tensorboard_log="./logs/ppo_tensorboard/",
+                device="auto",
+                policy_kwargs=dict(net_arch=[64, 64])
+                )
+
     # tensorboard --logdir ./logs/ppo_tensorboard/
 
-    model = SAC(
-        "MlpPolicy",
-        train_env,
-        # replay_buffer_class=HerReplayBuffer,
-        # replay_buffer_kwargs=dict(
-        #     n_sampled_goal=len(targets),
-        #     goal_selection_strategy="future",
-        # ),
-        verbose=1,
-        tensorboard_log="./logs/SAC_tensorboard/",
-        train_freq=1,
-        gradient_steps=2,
-        # buffer_size=int(1e6),
-        learning_rate=1e-4,
-        # gamma=0.95,
-        batch_size=1024,
-        # policy_kwargs=dict(net_arch=[256, 256, 256]),
-        device="auto",
-    )
+    # model = SAC(
+    #     "MlpPolicy",
+    #     train_env,
+    #     # replay_buffer_class=HerReplayBuffer,
+    #     # replay_buffer_kwargs=dict(
+    #     #     n_sampled_goal=len(targets),
+    #     #     goal_selection_strategy="future",
+    #     # ),
+    #     verbose=1,
+    #     tensorboard_log="./logs/SAC_tensorboard/",
+    #     train_freq=1,
+    #     gradient_steps=2,
+    #     # buffer_size=int(1e6),
+    #     learning_rate=1e-4,
+    #     # gamma=0.95,
+    #     batch_size=1024,
+    #     # policy_kwargs=dict(net_arch=[256, 256, 256]),
+    #     device="auto",
+    # )
+
+    model = DDPG("MlpPolicy",
+                 train_env,
+                 verbose=1,
+                 batch_size=1024,
+                 learning_rate=1e-4,
+                 tensorboard_log="./logs/ddpg_tensorboard/",
+                 device="auto",
+                 policy_kwargs=dict(net_arch=[64, 64])
+                 )
 
     # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
     # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
@@ -362,8 +374,6 @@ def run_full():
     # model = PPO.load(path)
 
     train_env.close()
-
-
 
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                     num_drones=1,
@@ -423,7 +433,6 @@ if __name__ == "__main__":
     # test_saved()
     #
 
-
     # video_recorder.record_video(
     #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
     #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",
@@ -464,6 +473,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
         return progress_remaining * initial_value
 
     return func
+
 
 # # now save the replay buffer too
 # model.save_replay_buffer("sac_replay_buffer")
@@ -517,7 +527,6 @@ def generate_random_targets(num_targets: int) -> np.ndarray:
 
         # check for floor of z
         targets[i] = np.array([x, y, z if z > 0.1 else 0.1])
-
 
     print(targets)
     return targets

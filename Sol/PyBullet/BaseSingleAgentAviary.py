@@ -5,9 +5,9 @@ from gymnasium import spaces
 import pybullet as p
 
 
-from PyBullet.BaseAviary import BaseAviary
-from PyBullet.enums import DroneModel, Physics, ImageType, ActionType, ObservationType
-from PyBullet.DSLPIDControl import DSLPIDControl
+from Sol.PyBullet.BaseAviary import BaseAviary
+from Sol.PyBullet.enums import DroneModel, Physics, ImageType, ActionType, ObservationType
+from Sol.PyBullet.DSLPIDControl import DSLPIDControl
 
 
 class BaseSingleAgentAviary(BaseAviary):
