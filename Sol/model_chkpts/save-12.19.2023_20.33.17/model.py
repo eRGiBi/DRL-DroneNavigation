@@ -1,16 +1,3 @@
-import os
-import math
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-
-
 class PBDroneEnv(
     # BaseAviary,
     BaseSingleAgentAviary
@@ -33,7 +20,7 @@ class PBDroneEnv(
                  ):
 
         super().__init__(drone_model=drone_model,
-                         initial_xyzs=initial_xyzs,
+                         initial_xyzs=np.array(initial_xyzs),
                          initial_rpys=initial_rpys,
                          physics=physics,
                          pyb_freq=pyb_freq,
@@ -57,9 +44,9 @@ class PBDroneEnv(
         self._max_steps = max_steps
 
         self._steps = 0
-        self._current_position = self.INIT_XYZS
+        self._current_position = np.array([0.0, 0.0, 0.0])
         self._last_action = np.array([0.0, 0.0, 0.0])
-        self._prev_distance_to_target = np.linalg.norm(self._current_position - target_points[0])
+        self._prev_distance_to_target = np.linalg.norm(initial_xyzs - target_points[0])
         self._current_target_index = 0
         self._is_done = False
 
@@ -290,7 +277,7 @@ class PBDroneEnv(
         ))
 
         # print("tar", self._target_points[self._current_target_index])
-        #
+
         # print("dis", distance_to_target)
         # distance_to_target = self.distance_between_points(self._computeObs()[:3],
         #                                                   self._target_points[self._current_target_index])
@@ -298,6 +285,7 @@ class PBDroneEnv(
         try:
             # reward -= distance_to_target ** 2
             # Reward based on distance to target
+            # print("dis", distance_to_target)
 
             reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
 
@@ -322,7 +310,7 @@ class PBDroneEnv(
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 700 * (self._discount ** (self._steps / 10))
+                reward += 700 * self._discount ** self._steps / 10
 
             # If the drone is outside the threshold, give a reward based on distance
         #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)

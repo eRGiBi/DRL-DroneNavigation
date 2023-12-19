@@ -57,14 +57,12 @@ register(
 
 class PBDroneSimulator:
     def __init__(self, targets, target_factor=0,
-                 initial_xyzs=np.array([0, 0, 0]),
                  plot=True,
                  discount=0.999,
                  threshold=0.03,
                  max_steps=10000,
-                 num_cpu=16):
+                 num_cpu=18):
 
-        self.initial_xyzs = initial_xyzs,
         self.plot = plot
         self.discount = discount
         self.threshold = threshold
@@ -81,7 +79,8 @@ class PBDroneSimulator:
         #            np.array([0.25, 0.25, 0.25]),
         #            ]
 
-    def make_env(self, multi=False, gui=False, rank: int = 0, seed: int = 0,
+    def make_env(self, multi=False, gui=False, initial_xyzs=None,
+                 rank: int = 0, seed: int = 0,
                  save_model: bool = False, save_path: str = None):
         """
         Utility function for multiprocessed env.
@@ -95,7 +94,7 @@ class PBDroneSimulator:
                 max_steps=self.max_steps,
                 physics=Physics.PYB,
                 gui=gui,
-                initial_xyzs=self.initial_xyzs,
+                initial_xyzs=initial_xyzs,
                 save_model=save_model,
                 save_folder=save_path
             )
@@ -136,15 +135,12 @@ class PBDroneSimulator:
         action = np.array([.9, .9, .9, .9], dtype=np.float32)
         # action * -1
 
-        drone_environment = self.make_env(gui=True)
+        drone_environment = self.make_env(gui=True, initial_xyzs=np.array([[0,0,0.02]]))
 
         # It will check your custom environment and output additional warnings if needed
         check_env(drone_environment, warn=True)
 
         time_step = drone_environment.reset()
-
-        stable_baselines3.common.utils.is_vectorized_box_observation(time_step[0],
-                                                                     drone_environment._observationSpace())
 
         print('[INFO] Action space:', drone_environment.action_space)
         print('[INFO] Observation space:', drone_environment.observation_space)
@@ -160,7 +156,6 @@ class PBDroneSimulator:
             rewards.append(time_step[1])
             rewards_sum.append(sum(rewards))
             print(time_step)
-            print(drone_environment._steps)
             if time_step[2]:
                 break
 
@@ -173,7 +168,7 @@ class PBDroneSimulator:
         drone_environment = self.make_env(gui=True)
 
         # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.05.2023_17.41.00/best_model.zip")
-        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.17.2023_23.27.55/best_model.zip",
+        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.19.2023_20.33.17/best_model.zip",
                          env=drone_environment)
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
@@ -182,8 +177,6 @@ class PBDroneSimulator:
         rewards_sum = []
         images = []
         obs, info = drone_environment.reset()
-
-        drone_environment._startVideoRecording()
 
         for i in range(5000):
             action, _states = model.predict(obs,
@@ -221,8 +214,8 @@ class PBDroneSimulator:
         # train_env = make_env(multi=False, gui=False)
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
         train_env = VecCheckNan(train_env)
-        train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
-                                 clip_obs=1)
+        # train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
+        #                          clip_obs=1)
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
         #
@@ -290,7 +283,7 @@ class PBDroneSimulator:
                                      verbose=1,
                                      best_model_save_path=filename + '/',
                                      log_path=filename + '/',
-                                     eval_freq=int(100),
+                                     eval_freq=int(300),
                                      deterministic=True,
                                      render=False)
 
@@ -385,7 +378,7 @@ if __name__ == "__main__":
                np.array([0.3, 0.5, 0.5]),
                np.array([0.4, 0.5, 0.5]),
                np.array([0.5, 0.5, 0.5]),
-               # np.array([1., .1, .]),
+
                # np.array([1., 1., 1.]),
                ]
 
@@ -394,7 +387,7 @@ if __name__ == "__main__":
     sim.run_full()
 
     # sim.run_test()
-    #
+
     # sim.test_saved()
     #
 
