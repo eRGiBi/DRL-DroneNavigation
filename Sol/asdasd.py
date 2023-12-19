@@ -10,7 +10,7 @@ class DroneEnv:
         p.connect(p.GUI)  # You can use p.DIRECT for headless mode
 
         # Load the drone and set up the environment
-        self.drone_urdf_path = "cf2p.urdf"
+        self.drone_urdf_path = "resources/cf2p.urdf"
         self.drone_id = p.loadURDF(self.drone_urdf_path, [0, 0, 1])
 
         # Define points in a sequence that the drone should reach
