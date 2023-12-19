@@ -1,16 +1,3 @@
-import os
-import math
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-
-
 class PBDroneEnv(
     # BaseAviary,
     BaseSingleAgentAviary
@@ -101,14 +88,14 @@ class PBDroneEnv(
         """Returns the action space of the environment."""
 
         return spaces.Box(low=-1 * np.ones(4), high=np.ones(4),
-                          shape=(4,), dtype=np.float64)
+                          shape=(4,), dtype=np.float32)
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
 
         return spaces.Box(low=np.array([-1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1]),
                           high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-                          dtype=np.float64
+                          dtype=np.float32
                           )
 
     def _computeObs(self):
@@ -268,14 +255,6 @@ class PBDroneEnv(
             return False
 
     def _computeReward(self):
-        """Computes the current reward value.
-
-        Returns
-        -------
-        float
-            The reward value.
-
-        """
 
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
@@ -396,16 +375,6 @@ class PBDroneEnv(
         return distance
 
     def _has_collision_occurred(self) -> bool:
-        """
-        Checks if the drone has collided with the ground or an obstacle.
-
-        Returns
-        -------
-        bool
-            True if the drone has collided, False otherwise.
-
-        """
-        # COLLISION_H = 0.15  # Height at which the drone is considered to have collided with the ground.
         # Three times the collision height because the drone tend act like a "wheel"
         # and circle around a lower target point.
 
@@ -419,15 +388,7 @@ class PBDroneEnv(
             return False
 
     def save_model(self, save_folder):
-        """
-        Saves the model to a folder.
 
-        Parameters
-        ----------
-        save_folder : str
-            The folder to save the model to.
-
-        """
         # Get the source code of the object's class
         source_code = inspect.getsource(self.__class__)
 

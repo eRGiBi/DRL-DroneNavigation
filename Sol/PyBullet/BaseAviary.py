@@ -510,7 +510,7 @@ class BaseAviary(gym.Env):
         p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=self.CLIENT)
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
-        urdf_path = os.path.join('C:\Files\\Egyetem\Szakdolgozat\RL\Sol', self.URDF)
+        urdf_path = os.path.join('C:\Files\\Egyetem\Szakdolgozat\RL\Sol/resources', self.URDF)
         self.DRONE_IDS = np.array([p.loadURDF(
             # pkg_resources.resource_filename('gym_pybullet_drones', 'assets/'+self.URDF),
             urdf_path,
@@ -1040,11 +1040,11 @@ class BaseAviary(gym.Env):
 
         """
         # URDF_TREE = etxml.parse(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/'+self.URDF)).getroot()
-        urdf_path = os.path.join('C:\\Files\\Egyetem\\Szakdolgozat\\RL\\Sol', 'cf2x.urdf')
+        urdf_path = "C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources"
         print("Attempting to open:", urdf_path)
-        source = open(urdf_path, "rb")
-        urdf_path = os.path.join('C:\Files\\Egyetem\Szakdolgozat\RL\Sol', self.URDF)
-        URDF_TREE = etxml.parse(urdf_path).getroot()
+        source = open(urdf_path + "/cf2x.urdf", "rb")
+
+        URDF_TREE = etxml.parse(os.path.join(urdf_path, 'cf2x.urdf')).getroot()
         M = float(URDF_TREE[1][0][1].attrib['value'])
         L = float(URDF_TREE[0].attrib['arm'])
         THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib['thrust2weight'])

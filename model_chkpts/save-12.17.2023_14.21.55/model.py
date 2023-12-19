@@ -1,16 +1,3 @@
-import os
-import math
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-
-
 class PBDroneEnv(
     # BaseAviary,
     BaseSingleAgentAviary
@@ -33,7 +20,8 @@ class PBDroneEnv(
                  ):
 
         super().__init__(drone_model=drone_model,
-                         initial_xyzs=np.array(initial_xyzs),
+                         # num_drones=1,
+                         initial_xyzs=initial_xyzs,
                          initial_rpys=initial_rpys,
                          physics=physics,
                          pyb_freq=pyb_freq,
@@ -101,14 +89,14 @@ class PBDroneEnv(
         """Returns the action space of the environment."""
 
         return spaces.Box(low=-1 * np.ones(4), high=np.ones(4),
-                          shape=(4,), dtype=np.float64)
+                          shape=(4,), dtype=np.float32)
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
 
         return spaces.Box(low=np.array([-1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1]),
                           high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-                          dtype=np.float64
+                          dtype=np.float32
                           )
 
     def _computeObs(self):
@@ -268,14 +256,6 @@ class PBDroneEnv(
             return False
 
     def _computeReward(self):
-        """Computes the current reward value.
-
-        Returns
-        -------
-        float
-            The reward value.
-
-        """
 
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
@@ -396,16 +376,6 @@ class PBDroneEnv(
         return distance
 
     def _has_collision_occurred(self) -> bool:
-        """
-        Checks if the drone has collided with the ground or an obstacle.
-
-        Returns
-        -------
-        bool
-            True if the drone has collided, False otherwise.
-
-        """
-        # COLLISION_H = 0.15  # Height at which the drone is considered to have collided with the ground.
         # Three times the collision height because the drone tend act like a "wheel"
         # and circle around a lower target point.
 
@@ -419,15 +389,7 @@ class PBDroneEnv(
             return False
 
     def save_model(self, save_folder):
-        """
-        Saves the model to a folder.
 
-        Parameters
-        ----------
-        save_folder : str
-            The folder to save the model to.
-
-        """
         # Get the source code of the object's class
         source_code = inspect.getsource(self.__class__)
 
@@ -438,70 +400,3 @@ class PBDroneEnv(
         with open(file_path, "w") as file:
             file.write(source_code)
         print(f"Object source code saved to: {file_path}")
-
-
-    # def _computeReward(self):
-    #
-    #     if self._computeTerminated() and not self._is_done:
-    #         # print("term and NOT DONE")
-    #         return -10#  * np.linalg.norm(velocity)
-    #
-    #     reward = 0.0
-    #     # Get the current drone position
-    #     # current_position = self._computeObs()[:3]
-    #
-    #     distance_to_target = abs(np.linalg.norm(
-    #         self._current_position - self._target_points[self._current_target_index]
-    #     ))
-    #
-    #     # print("tar", self._target_points[self._current_target_index])
-    #
-    #     # print("dis", distance_to_target)
-    #     # distance_to_target = self.distance_between_points(self._computeObs()[:3],
-    #     #                                                   self._target_points[self._current_target_index])
-    #
-    #     try:
-    #         # reward -= distance_to_target ** 2
-    #         # Reward based on distance to target
-    #         # print("dis", distance_to_target)
-    #
-    ##        reward += (1 / distance_to_target) * self._discount ** self._steps/10
-    #
-    #         # Additional reward for progressing towards the target
-    #         reward += (self._prev_distance_to_target - distance_to_target) * 1.5
-    #
-    #         # # Penalize large actions to avoid erratic behavior
-    #         reward -= 0.01 * np.linalg.norm(self._last_action)
-    #
-    #     except ZeroDivisionError:
-    #         # Give a high reward if the drone is at the target (avoiding division by zero)
-    #         reward += 10
-    #
-    #     # Check if the drone has reached a target
-    #     if distance_to_target <= self._threshold:
-    #         # print("IN")
-    #         self._current_target_index += 1
-    #
-    #         if self._current_target_index == len(self._target_points):
-    #             # Reward for reaching all targets
-    #             reward += 100000.0  * self._discount ** self._steps/10  # Reward for reaching all targets
-    #             self._is_done = True
-    #         else:
-    #             # Reward for reaching a target
-    #             reward += 1000 * self._discount ** self._steps / 10
-    #
-    #         # If the drone is outside the threshold, give a reward based on distance
-    #     #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
-    #
-    #     # if self._computeTerminated() and not self._is_done:
-    #     #     reward -= 1
-    #     #
-    #     # if (np.linalg.norm(self._computeObs()[:3] - self._target_points[self._current_target_index])) < self._threshold:
-    #     #     self._current_target_index += 1
-    #     #     if self._current_target_index == len(self._target_points):
-    #     #         self._is_done = True
-    #     #         reward += 10
-    #     #     else:
-    #     #         reward += 1
-    #     self._prev_distance_to_target = distance_to_target
-    #     return reward
