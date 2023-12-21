@@ -58,7 +58,7 @@ class PBDroneEnv(
 
         self._steps = 0
         self._current_position = self.INIT_XYZS
-        self._last_action = np.array([0.0, 0.0, 0.0])
+        self._last_action = np.zeros(4, dtype=np.float32)
         self._prev_distance_to_target = np.linalg.norm(self._current_position - target_points[0])
         self._current_target_index = 0
         self._is_done = False
@@ -68,47 +68,32 @@ class PBDroneEnv(
 
             self.save_model(save_folder)
 
-
     def step(self, action):
-
-        # The last action ended the episode. Ignore the current action and start
-        # a new episode.
-        # print(self._steps)
-
-        self._steps += 1
+        """Applies the given action to the environment."""
+        action = np.array(action, dtype=np.float32)
 
         obs, reward, terminated, truncated, info = (
             super().step(action))
 
-        # # # Update position based on action
-        # # self._current_position += action
-        #
-        # # Update position based on action
-        # self._update_position(self._preprocessAction(action))
-
-        # Create a time step
-        # time_step = ts.transition(
-        #     tf.convert_to_tensor(obs),
-        #     tf.convert_to_tensor(reward),
-        #     # discount=tf.constant(self._discount),
-        # )
+        self._steps += 1
         self._last_action = action
-        self._current_position = self._computeObs()[:3]
+        self._current_position = obs[:3]
 
         return obs, reward, terminated, truncated, info
 
     def _actionSpace(self):
         """Returns the action space of the environment."""
 
-        return spaces.Box(low=-1 * np.ones(4), high=np.ones(4),
-                          shape=(4,), dtype=np.float64)
+        return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
+                          high=np.ones(4, dtype=np.float32),
+                          shape=(4,), dtype=np.float32)
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
 
-        return spaces.Box(low=np.array([-1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1]),
-                          high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-                          dtype=np.float64
+        return spaces.Box(low=np.array([-1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
+                          high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
+                          dtype=np.float32
                           )
 
     def _computeObs(self):
@@ -118,15 +103,12 @@ class PBDroneEnv(
         Kinematic observation of size 12.
 
         """
-        assert self.OBS_TYPE == ObservationType.KIN
-
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
-        return ret.astype('float32')
+        # ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
+        # ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16, 19], obs[19, 20]]).reshape(20, )
+        return obs#.astype('float32')
 
-    def _clipAndNormalizeState(self,
-                               state
-                               ):
+    def _clipAndNormalizeState(self, state):
         """Normalizes a drone's state to the [-1,1] range.
 
         Parameters
@@ -223,15 +205,15 @@ class PBDroneEnv(
     def _computeInfo(self):
         """Computes the current info dict(s).
 
-        Unused.
-
         Returns
         -------
         dict[str, int]
-            Dummy value.
+            A dict containing the current
+            info values.
+            The number of found targets is stored under the key "found_targets".
 
         """
-        return {"answer": 42}
+        return {"found_targets": self._current_target_index}
 
     def _computeTruncated(self):
         """Computes the current truncated value(s).
@@ -279,15 +261,12 @@ class PBDroneEnv(
 
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
-            return -3000 #  * np.linalg.norm(velocity)
+            return -100 #  * np.linalg.norm(velocity)
 
         reward = 0.0
-        # Get the current drone position
-        # current_position = self._computeObs()[:3]
 
-        distance_to_target = abs(np.linalg.norm(
-            self._current_position - self._target_points[self._current_target_index]
-        ))
+        distance_to_target = np.linalg.norm(
+            self._target_points[self._current_target_index] - self._current_position)
 
         # print("tar", self._target_points[self._current_target_index])
         #
@@ -295,48 +274,35 @@ class PBDroneEnv(
         # distance_to_target = self.distance_between_points(self._computeObs()[:3],
         #                                                   self._target_points[self._current_target_index])
 
-        try:
+        # try:
             # reward -= distance_to_target ** 2
             # Reward based on distance to target
 
-            reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
+            # reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
 
             # Additional reward for progressing towards the target
-            reward += (self._prev_distance_to_target - distance_to_target)  # * 0.5
+        reward += (self._prev_distance_to_target - distance_to_target) * 20
 
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
 
-        except ZeroDivisionError:
-            # Give a high reward if the drone is at the target (avoiding division by zero)
-            reward += 100
+        # except ZeroDivisionError:
+        #     # Give a high reward if the drone is at the target (avoiding division by zero)
+        #     reward += 20
 
         # Check if the drone has reached a target
-        if distance_to_target <= self._threshold:
+        if distance_to_target <= self._threshold * 3:
             # print("IN")
             self._current_target_index += 1
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 100000.0  # * self._discount ** self._steps/10  # Reward for reaching all targets
+                reward += 1000000.0  # * self._discount ** self._steps/10  # Reward for reaching all targets
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 700 * (self._discount ** (self._steps / 10))
+                reward += 10  # * (self._discount ** (self._steps / 5))
 
-            # If the drone is outside the threshold, give a reward based on distance
-        #            reward = max(0.0, 1.0 - distance_to_target / self._threshold)
-
-        # if self._computeTerminated() and not self._is_done:
-        #     reward -= 1
-        #
-        # if (np.linalg.norm(self._computeObs()[:3] - self._target_points[self._current_target_index])) < self._threshold:
-        #     self._current_target_index += 1
-        #     if self._current_target_index == len(self._target_points):
-        #         self._is_done = True
-        #         reward += 10
-        #     else:
-        #         reward += 1
         self._prev_distance_to_target = distance_to_target
         return reward
 
@@ -382,8 +348,11 @@ class PBDroneEnv(
 
         self._is_done = False
         self._current_target_index = 0
-        self._current_position = np.array([0, 0, 0])
+        self._current_position = self.INIT_XYZS
         self._steps = 0
+        self._prev_distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
+        self._last_action = np.zeros(4, dtype=np.float32)
+        
 
         return super().reset(seed, options)
 
