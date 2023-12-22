@@ -1,17 +1,3 @@
-import os
-import math
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
-
-
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,
@@ -78,7 +64,6 @@ class PBDroneEnv(
     def step(self, action):
         """Applies the given action to the environment."""
 
-        print(action)
         obs, reward, terminated, truncated, info = (
             super().step(action))
 

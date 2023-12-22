@@ -1,5 +1,6 @@
 import math
 import os
+import random
 import time
 from datetime import datetime
 # import sync, str2bool
@@ -26,6 +27,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 from stable_baselines3.common.utils import set_random_seed
 
+from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
 # from PyBullet import BaseAviary
 from Sol.PyBullet.enums import Physics
 # from Sol.DroneEnvironment import DroneEnvironment
@@ -62,9 +64,9 @@ class PBDroneSimulator:
     def __init__(self, targets, target_factor=0,
                  plot=True,
                  discount=0.999,
-                 threshold=0.05,
+                 threshold=0.1,
                  max_steps=10000,
-                 num_cpu=12):
+                 num_cpu=20):
 
         self.plot = plot
         self.discount = discount
@@ -139,7 +141,7 @@ class PBDroneSimulator:
         # action * -1
 
         drone_environment = self.make_env(gui=True, initial_xyzs=np.array([[0, 0, 0.02]]))
-
+        print(drone_environment.INIT_XYZS)
         # It will check your custom environment and output additional warnings if needed
         check_env(drone_environment, warn=True)
 
@@ -152,9 +154,12 @@ class PBDroneSimulator:
         rewards_sum = []
 
         print(time_step)
+        i = 0
 
         # for _ in range(100):
         while True:
+            i += 1
+            print(i)
             time_step = drone_environment.step(action)
             rewards.append(time_step[1])
             rewards_sum.append(sum(rewards))
@@ -171,7 +176,7 @@ class PBDroneSimulator:
         drone_environment = self.make_env(gui=True)
 
         # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.21.2023_11.50.57/best_model.zip")
-        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.21.2023_16.47.49/best_model.zip",
+        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.22.2023_17.37.39/best_model.zip",
                          env=drone_environment)
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
@@ -223,38 +228,44 @@ class PBDroneSimulator:
         if not os.path.exists(filename):
             os.makedirs(filename + '/')
 
-        # train_env = make_env(multi=False, gui=False)
-        train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu - 11)])
-        # train_env = VecCheckNan(train_env)
+        train_env = self.make_env(multi=False, gui=False)
+        check_env(train_env, warn=True, skip_render_check=True)
+
+        train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
+        train_env = VecCheckNan(train_env)
         # train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
         #                          clip_obs=1)
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
         #
-        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename)])
+        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=True)])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
-        # eval_env = VecCheckNan(eval_env)
+        eval_env = VecCheckNan(eval_env)
         # eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
         #                         clip_obs=1)
+        onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
+                               net_arch=dict(vf=[512, 512, 256, 128],
+                                             pi=[512, 512, 256, 128]))
 
-        # onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
-        #                        net_arch=dict(vf=[512, 512, 256, 128],
-        #                                      pi=[512, 512, 256, 128])
-        #                        )
 
         model = PPO("MlpPolicy",
                     train_env,
                     verbose=1,
                     n_steps=2048,
-                    batch_size=1024,
+                    batch_size=2048,
+                    ent_coef=0.01,
+                    clip_range=0.1,
                     learning_rate=3e-4,
-                    use_sde=True,
                     tensorboard_log="./logs/ppo_tensorboard/",
                     device="auto",
-                    policy_kwargs=dict(activation_fn=th.nn.ReLU, net_arch=[64,64])
+                    policy_kwargs=onpolicy_kwargs,
                     )
 
         # tensorboard --logdir ./logs/ppo_tensorboard/
+
+        #### Off-policy algorithms #################################
+        #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
+        #                             net_arch=[512, 512, 256, 128]
 
         # model = SAC(
         #     "MlpPolicy",
@@ -281,7 +292,8 @@ class PBDroneSimulator:
         #              train_env,
         #              verbose=1,
         #              batch_size=1024,
-        #              learning_rate=1e-4,
+        #              learning_rate=1e-3,
+        #              train_freq=(10, "step"),
         #              tensorboard_log="./logs/ddpg_tensorboard/",
         #              device="auto",
         #              policy_kwargs=dict(net_arch=[64, 64])
@@ -309,11 +321,11 @@ class PBDroneSimulator:
                                      render=False
                                      )
 
-        model.learn(total_timesteps=int(10e6),
+        model.learn(total_timesteps=int(1e7),
                     callback=[eval_callback,
                               # pl_callback
                               ],
-                    log_interval=3000,
+                    log_interval=1000,
                     )
 
         model.save(os.curdir + filename + '/success_model.zip')
@@ -347,7 +359,7 @@ class PBDroneSimulator:
                                                   )
         print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
-        obs, info = test_env.reset(seed=42)
+        obs, info = test_env.reset()
         i = 0
         while True:
             action, _states = model.predict(obs,
@@ -406,7 +418,20 @@ if __name__ == "__main__":
                # np.array([1., 1., 1.]),
                ]
 
-    sim = PBDroneSimulator(targets, target_factor=10)
+    # args = parse_args()
+    # run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
+    #
+    # # seeding
+    # random.seed(args.seed)
+    # np.random.seed(args.seed)
+    # th.manual_seed(args.seed)
+    # th.backends.cudnn.deterministic = args.torch_deterministic
+    #
+    # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
+
+
+
+    sim = PBDroneSimulator(targets, target_factor=0)
 
     sim.run_full()
     #

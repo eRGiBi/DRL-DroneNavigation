@@ -1,17 +1,3 @@
-import os
-import math
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
-
-
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,
@@ -78,7 +64,6 @@ class PBDroneEnv(
     def step(self, action):
         """Applies the given action to the environment."""
 
-        print(action)
         obs, reward, terminated, truncated, info = (
             super().step(action))
 
@@ -109,6 +94,7 @@ class PBDroneEnv(
         Kinematic observation of size 12.
 
         """
+        assert self.OBS_TYPE == ObservationType.KIN
 
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
@@ -267,13 +253,12 @@ class PBDroneEnv(
 
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
-            return -3000
-                    # -10 * (len(self._target_points) - self._current_target_index)) #  * np.linalg.norm(velocity)
+            return -10 * (len(self._target_points) - self._current_target_index) #  * np.linalg.norm(velocity)
 
         reward = 0.0
 
-        distance_to_target = abs(np.linalg.norm(
-            self._target_points[self._current_target_index] - self._current_position))
+        distance_to_target = np.linalg.norm(
+            self._target_points[self._current_target_index] - self._current_position)
 
         # print("tar", self._target_points[self._current_target_index])
         #
@@ -285,20 +270,20 @@ class PBDroneEnv(
             # reward -= distance_to_target ** 2
             # Reward based on distance to target
 
-            reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
+            # reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
 
             # Additional reward for progressing towards the target
-            reward += (self._prev_distance_to_target - distance_to_target)
+            reward += (self._prev_distance_to_target - distance_to_target) * 50
 
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
 
         except ZeroDivisionError:
             # Give a high reward if the drone is at the target (avoiding division by zero)
-            reward += 100
+            reward += 20
 
         # Check if the drone has reached a target
-        if distance_to_target <= self._threshold:
+        if distance_to_target <= self._threshold * 3:
             # print("IN")
             self._current_target_index += 1
 
@@ -308,8 +293,7 @@ class PBDroneEnv(
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                # reward += 1000  # * (self._discount ** (self._steps / 5))
-                reward += 700 * (self._discount ** (self._steps / 10))
+                reward += 1000  # * (self._discount ** (self._steps / 5))
 
 # #####################################
 #
