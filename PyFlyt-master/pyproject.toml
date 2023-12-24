@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyFlyt"
+version = "0.15.5"
+authors = [
+  { name="Jet", email="taijunjet@hotmail.com" },
+]
+description = "UAV Flight Simulator Gymnasium Environments for Reinforcement Learning Research."
+readme = "readme.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = ["numba", "numpy", "scipy", "gymnasium", "pettingzoo", "pybullet", "pyyaml"]
+keywords = ["Reinforcement Learning", "UAVs", "drones", "Quadcopter", "AI", "RL", "Gymnasium"]
+license = { file="./LICENSE.txt" }
+
+[project.optional-dependencies]
+dev = ["pytest", "pre-commit", "matplotlib"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["PyFlyt", "PyFlyt.*"]
+
+[tool.setuptools.package-data]
+PyFlyt = [
+    "models/**",
+]
+
+[project.urls]
+Repository = "https://github.com/jjshoots/PyFlyt"
+Documentation = "https://jjshoots.github.io/PyFlyt/documentation.html"
+"Bug Report" = "https://github.com/jjshoots/PyFlyt/issues"
+
+#######################################################################################
+# linters
+#######################################################################################
+[tool.pyright]
+reportMissingImports = "none"

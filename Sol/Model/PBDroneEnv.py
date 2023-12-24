@@ -5,6 +5,7 @@ import inspect
 
 from gymnasium import spaces
 import numpy as np
+import pybullet as p
 
 from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
 from Sol.PyBullet.GymPybulletDronesMain import *
@@ -73,12 +74,15 @@ class PBDroneEnv(
 
             self.save_model(save_folder)
 
+        if gui:
+            self.render_targets()
+
         # self._addObstacles()
 
     def step(self, action):
         """Applies the given action to the environment."""
 
-        print(action)
+        # print(action)
         obs, reward, terminated, truncated, info = (
             super().step(action))
 
@@ -310,6 +314,7 @@ class PBDroneEnv(
                 # Reward for reaching a target
                 # reward += 1000  # * (self._discount ** (self._steps / 5))
                 reward += 700 * (self._discount ** (self._steps / 10))
+                self.remove_target()
 
 # #####################################
 #
@@ -378,6 +383,9 @@ class PBDroneEnv(
         self._last_action = np.zeros(4, dtype=np.float32)
         # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
 
+        if self.GUI:
+            self.render_targets()
+
         return super().reset(seed, options)
 
     def distance_between_points(self, point1, point2):
@@ -443,6 +451,43 @@ class PBDroneEnv(
 
         return distance
 
+    def render_targets(self):
+
+        # the target visual
+        file_dir = os.path.dirname(os.path.realpath(__file__))
+        self.targ_obj_dir = os.path.join(file_dir, "./resources/target.urdf")
+
+        self.target_visual = []
+        for target in self._target_points:
+            self.target_visual.append(
+                self.CLIENT.loadURDF(
+                    self.targ_obj_dir,
+                    basePosition=target,
+                    useFixedBase=True,
+                    globalScaling=self._threshold / 4.0,
+                )
+            )
+
+        for i, visual in enumerate(self.target_visual):
+            self.CLIENT.changeVisualShape(
+                visual,
+                linkIndex=-1,
+                rgbaColor=(0, 1 - (i / len(self.target_visual)), 0, 1),
+            )
+
+    def remove_target(self):
+        # delete the reached target and recolour the others
+        if len(self.target_visual) > 0:
+            self.CLIENT.removeBody(self.target_visual[0])
+            self.target_visual = self.target_visual[1:]
+
+            # recolour
+            for i, visual in enumerate(self.target_visual):
+                self.CLIENT.changeVisualShape(
+                    visual,
+                    linkIndex=-1,
+                    rgbaColor=(0, 1 - (i / len(self.target_visual)), 0, 1),
+                )
 
     # def _computeReward(self):
     #

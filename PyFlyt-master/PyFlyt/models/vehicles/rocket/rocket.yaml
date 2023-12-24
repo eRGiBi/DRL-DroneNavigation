@@ -1,0 +1,40 @@
+# Total RP1: 123_500 kg
+# Total LOX: 287_400 kg
+# Total thrust: 7_607_000 N
+# Throttle capability: 39% - 100%
+# Gimbal range: 5 degrees
+
+booster_params:
+  total_fuel: 410.9
+  max_fuel_rate: 1.451
+  inertia_ixx: 1678
+  inertia_iyy: 1678
+  inertia_izz: 7.01
+  min_thrust: 2966.7
+  max_thrust: 7607.0
+  reignitable: true
+  gimbal_range_degrees: 5
+  booster_tau: 0.01
+  gimbal_tau: 0.01
+  noise_ratio: 0.01
+
+finlet_params:
+  Cl_alpha_2D: 6.283 # since it's a gridfin, this is guesstimated
+  chord: 0.5 # meters
+  span: 0.5
+  flap_to_chord: 1.0
+  eta: 0.65 # Correction factor for viscosity effects (An average obtained from pg 112)
+  alpha_0_base: 0.0 # 2D dCl_dalpha X-intercept
+  alpha_stall_P_base: +20.0 # Positive stall AoA
+  alpha_stall_N_base: -20.0 # Negative stall AoA
+  Cd_0: 0.01 # Skin friction coefficient
+  deflection_limit: 45.0
+  tau: 0.05
+
+body_params:
+  drag_coef_x: 1.16
+  drag_coef_y: 1.16
+  drag_coef_z: 2.0
+  area_x: 1.7649
+  area_y: 1.7649
+  area_z: 0.1075
