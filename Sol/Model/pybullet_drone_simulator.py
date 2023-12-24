@@ -253,18 +253,18 @@ class PBDroneSimulator:
                                net_arch=dict(vf=[512, 512, 256, 128],
                                              pi=[512, 512, 256, 128]))
 
-        # model = PPO("MlpPolicy",
-        #             train_env,
-        #             verbose=1,
-        #             n_steps=2048,
-        #             batch_size=2048,
-        #             ent_coef=0.01,
-        #             clip_range=0.1,
-        #             learning_rate=3e-4,
-        #             tensorboard_log="./logs/ppo_tensorboard/",
-        #             device="auto",
-        #             policy_kwargs=onpolicy_kwargs,
-        #             )
+        model = PPO("MlpPolicy",
+                    train_env,
+                    verbose=1,
+                    n_steps=512,
+                    batch_size=2048,
+                    ent_coef=0.01,
+                    clip_range=0.1,
+                    learning_rate=1e-3,
+                    tensorboard_log="./logs/ppo_tensorboard/",
+                    device="auto",
+                    policy_kwargs=dict(net_arch=[256, 256, 256]),
+                    )
 
         # tensorboard --logdir ./logs/ppo_tensorboard/
 
@@ -272,25 +272,25 @@ class PBDroneSimulator:
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             net_arch=[512, 512, 256, 128]
 
-        model = SAC(
-            "MlpPolicy",
-            train_env,
-            # replay_buffer_class=HerReplayBuffer,
-            # replay_buffer_kwargs=dict(
-            #     n_sampled_goal=len(targets),
-            #     goal_selection_strategy="future",
-            # ),
-            verbose=1,
-            tensorboard_log="./logs/SAC_tensorboard/",
-            train_freq=1,
-            gradient_steps=2,
-            buffer_size=int(2e6),
-            learning_rate=1e-3,
-            # gamma=0.95,
-            batch_size=2048,
-            policy_kwargs=dict(net_arch=[256, 256, 256]),
-            device="auto",
-        )
+        # model = SAC(
+        #     "MlpPolicy",
+        #     train_env,
+        #     # replay_buffer_class=HerReplayBuffer,
+        #     # replay_buffer_kwargs=dict(
+        #     #     n_sampled_goal=len(targets),
+        #     #     goal_selection_strategy="future",
+        #     # ),
+        #     verbose=1,
+        #     tensorboard_log="./logs/SAC_tensorboard/",
+        #     train_freq=1,
+        #     gradient_steps=2,
+        #     buffer_size=int(2e6),
+        #     learning_rate=1e-3,
+        #     # gamma=0.95,
+        #     batch_size=2048,
+        #     policy_kwargs=dict(net_arch=[256, 256, 256]),
+        #     device="auto",
+        # )
         # train_env = make_vec_env(make_env(multi=False), n_envs=12)
 
         # model = DDPG("MlpPolicy",

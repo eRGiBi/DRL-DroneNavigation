@@ -1,18 +1,3 @@
-import os
-import math
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-import pybullet as p
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
-
-
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,
@@ -77,7 +62,7 @@ class PBDroneEnv(
             self.save_model(save_folder)
 
         if gui:
-            self.show_targets()
+            self.render_targets()
 
         # self._addObstacles()
 
@@ -118,14 +103,8 @@ class PBDroneEnv(
 
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
-        try:
-            return ret.astype('float32')
-        except FloatingPointError as e:
-            print("Error in _computeObs():", ret)
-            print(f"Underflow error: {e}")
-            # raise FloatingPointError
-            # return np.zeros_like(ret).astype('float32')
-            return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max).astype('float32')
+        return ret.astype('float32')
+
     def _clipAndNormalizeState(self, state):
         """Normalizes a drone's state to the [-1,1] range.
 
@@ -280,7 +259,7 @@ class PBDroneEnv(
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
             return -3000
-            # -10 * (len(self._target_points) - self._current_target_index)) #  * np.linalg.norm(velocity)
+                    # -10 * (len(self._target_points) - self._current_target_index)) #  * np.linalg.norm(velocity)
 
         reward = 0.0
 
@@ -324,21 +303,21 @@ class PBDroneEnv(
                 reward += 700 * (self._discount ** (self._steps / 10))
                 self.remove_target()
 
-        # #####################################
-        #
-        #         # Calculate the Euclidean distance between the drone and each target
-        #         distances = np.linalg.norm(self._target_points - self._current_position, axis=1)
-        #
-        #         # Check if the minimum distance is within the threshold
-        #         near_targets = [distance < self._threshold for distance in distances]
-        #         print(self._reached_targets)
-        #         print(near_targets)
-        #         for i, target in enumerate(near_targets):
-        #             if target and not self._reached_targets[i]:
-        #                 reward += 10
-        #                 self._reached_targets[i] = True
-        #
-        #         #####################################
+# #####################################
+#
+#         # Calculate the Euclidean distance between the drone and each target
+#         distances = np.linalg.norm(self._target_points - self._current_position, axis=1)
+#
+#         # Check if the minimum distance is within the threshold
+#         near_targets = [distance < self._threshold for distance in distances]
+#         print(self._reached_targets)
+#         print(near_targets)
+#         for i, target in enumerate(near_targets):
+#             if target and not self._reached_targets[i]:
+#                 reward += 10
+#                 self._reached_targets[i] = True
+#
+#         #####################################
 
         self._prev_distance_to_target = distance_to_target
         return reward
@@ -392,7 +371,7 @@ class PBDroneEnv(
         # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
 
         if self.GUI:
-            self.show_targets()
+            self.render_targets()
 
         return super().reset(seed, options)
 
@@ -459,38 +438,43 @@ class PBDroneEnv(
 
         return distance
 
-    def show_targets(self):
+    def render_targets(self):
+
+        # the target visual
+        file_dir = os.path.dirname(os.path.realpath(__file__))
+        self.targ_obj_dir = os.path.join(file_dir, "./resources/target.urdf")
 
         self.target_visual = []
-
         for target in self._target_points:
             self.target_visual.append(
-                p.loadURDF(
-                    fileName="./resources/target.urdf",
+                self.CLIENT.loadURDF(
+                    self.targ_obj_dir,
                     basePosition=target,
                     useFixedBase=True,
                     globalScaling=self._threshold / 4.0,
-                    physicsClientId=self.CLIENT
                 )
             )
-        self.render_targets()
+
+        for i, visual in enumerate(self.target_visual):
+            self.CLIENT.changeVisualShape(
+                visual,
+                linkIndex=-1,
+                rgbaColor=(0, 1 - (i / len(self.target_visual)), 0, 1),
+            )
 
     def remove_target(self):
         # delete the reached target and recolour the others
         if len(self.target_visual) > 0:
-            p.removeBody(self.target_visual[0])
+            self.CLIENT.removeBody(self.target_visual[0])
             self.target_visual = self.target_visual[1:]
 
-        self.render_targets()
-
-    def render_targets(self):
-        for i, visual in enumerate(self.target_visual):
-            p.changeVisualShape(
-                visual,
-                linkIndex=-1,
-                rgbaColor=(0, 1 - (i / len(self.target_visual)), 0, 1),
-                physicsClientId=self.CLIENT
-            )
+            # recolour
+            for i, visual in enumerate(self.target_visual):
+                self.CLIENT.changeVisualShape(
+                    visual,
+                    linkIndex=-1,
+                    rgbaColor=(0, 1 - (i / len(self.target_visual)), 0, 1),
+                )
 
     # def _computeReward(self):
     #
