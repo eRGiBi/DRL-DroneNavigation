@@ -60,5 +60,34 @@ def plot_learning_curve(scores, title='Learning Curve'):
     plt.show()
 
 
+def plot_3d_targets(targets):
+    """
+    Plot the targets in 3D.
+
+    Parameters:
+    - targets (list): List of target points, where each target is a NumPy array of [x, y, z] coordinates.
+    """
+    # Create a 3D plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Extract X, Y, and Z coordinates from targets
+    x, y, z = zip(*targets)
+
+    # Plot the targets
+    ax.scatter(x, y, z, c='r', marker='o', label='Targets')
+
+    # Connect the targets with lines
+    ax.plot(x, y, z, c='b', linestyle='-', linewidth=1, label='Path')
+
+    # Set labels
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    ax.legend()
+    plt.show()
+
+
 class Plotter:
     pass

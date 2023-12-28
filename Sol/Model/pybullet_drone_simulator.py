@@ -34,14 +34,12 @@ from Sol.PyBullet.enums import Physics
 # from Sol.DroneEnvironment import DroneEnvironment
 from Sol.Model.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
+import Sol.Model.Waypoints as Waypoints
 
-from Sol.Utilities.Plotter import plot_learning_curve, plot_metrics
-from Sol.Utilities.PlottingCallback import PlottingCallback
+from Sol.Utilities.Plotter import plot_learning_curve, plot_metrics, plot_3d_targets
+import Sol.Utilities.Callbacks as Callbacks
 
 # from tf_agents.environments import py_environment
-
-
-
 
 
 th.autograd.set_detect_anomaly(True)
@@ -70,7 +68,7 @@ class PBDroneSimulator:
                  discount=0.999,
                  threshold=0.1,
                  max_steps=10000,
-                 num_cpu=20):
+                 num_cpu=24):
 
         self.plot = plot
         self.discount = discount
@@ -80,15 +78,10 @@ class PBDroneSimulator:
         # self.max_reward = 100 + len(targets) * 10
 
         self.num_cpu = num_cpu
-
         self.targets = self.dilate_targets(targets, target_factor)
 
-        # targets = [np.array([0.0, 0.0, 0.5]),
-        #            np.array([0.0, 0.5, 0.5]),
-        #            np.array([0.25, 0.25, 0.25]),
-        #            ]
 
-    def make_env(self, multi=False, gui=False, initial_xyzs=None,
+    def make_env(self, multi=False, gui=False, initial_xyzs=None, aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
                  rank: int = 0, seed: int = 0,
                  save_model: bool = False, save_path: str = None):
         """
@@ -105,7 +98,8 @@ class PBDroneSimulator:
                 gui=gui,
                 initial_xyzs=initial_xyzs,
                 save_model=save_model,
-                save_folder=save_path
+                save_folder=save_path,
+                aviary_dim=aviary_dim,
             )
             env.reset(seed=seed + rank)
             env = Monitor(env)
@@ -144,8 +138,12 @@ class PBDroneSimulator:
         action = np.array([.9, .9, .9, .9], dtype=np.float32)
         # action * -1
 
-        drone_environment = self.make_env(gui=True, initial_xyzs=np.array([[0, 0, 0.02]]))
+        plot_3d_targets(self.targets)
+
+        drone_environment = self.make_env(gui=True, # initial_xyzs=np.array([[1.5, 0, 0.3]]),
+                                          aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
         print(drone_environment.INIT_XYZS)
+
         # It will check your custom environment and output additional warnings if needed
         check_env(drone_environment, warn=True)
 
@@ -237,14 +235,16 @@ class PBDroneSimulator:
         train_env = self.make_env(multi=False, gui=False)
         check_env(train_env, warn=True, skip_render_check=True)
 
-        train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
+        train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in range(self.num_cpu)])
         train_env = VecCheckNan(train_env)
         # train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
         #                          clip_obs=1)
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
         #
-        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=True)])
+        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=True,
+                                                aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
         eval_env = VecCheckNan(eval_env)
         # eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
@@ -253,18 +253,19 @@ class PBDroneSimulator:
                                net_arch=dict(vf=[512, 512, 256, 128],
                                              pi=[512, 512, 256, 128]))
 
-        model = PPO("MlpPolicy",
-                    train_env,
-                    verbose=1,
-                    n_steps=512,
-                    batch_size=2048,
-                    ent_coef=0.01,
-                    clip_range=0.1,
-                    learning_rate=1e-3,
-                    tensorboard_log="./logs/ppo_tensorboard/",
-                    device="auto",
-                    policy_kwargs=dict(net_arch=[256, 256, 256]),
-                    )
+        # model = PPO("MlpPolicy",
+        #             train_env,
+        #             verbose=1,
+        #             n_steps=512,
+        #             batch_size=2048,
+        #             ent_coef=0.01,
+        #             clip_range=0.1,
+        #             learning_rate=1e-3,
+        #             tensorboard_log="./logs/ppo_tensorboard/",
+        #             device="auto",
+        #             policy_kwargs=onpolicy_kwargs
+        #                 # dict(net_arch=[256, 256, 256]),
+        #             )
 
         # tensorboard --logdir ./logs/ppo_tensorboard/
 
@@ -272,25 +273,25 @@ class PBDroneSimulator:
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             net_arch=[512, 512, 256, 128]
 
-        # model = SAC(
-        #     "MlpPolicy",
-        #     train_env,
-        #     # replay_buffer_class=HerReplayBuffer,
-        #     # replay_buffer_kwargs=dict(
-        #     #     n_sampled_goal=len(targets),
-        #     #     goal_selection_strategy="future",
-        #     # ),
-        #     verbose=1,
-        #     tensorboard_log="./logs/SAC_tensorboard/",
-        #     train_freq=1,
-        #     gradient_steps=2,
-        #     buffer_size=int(2e6),
-        #     learning_rate=1e-3,
-        #     # gamma=0.95,
-        #     batch_size=2048,
-        #     policy_kwargs=dict(net_arch=[256, 256, 256]),
-        #     device="auto",
-        # )
+        model = SAC(
+            "MlpPolicy",
+            train_env,
+            # replay_buffer_class=HerReplayBuffer,
+            # replay_buffer_kwargs=dict(
+            #     n_sampled_goal=len(targets),
+            #     goal_selection_strategy="future",
+            # ),
+            verbose=1,
+            tensorboard_log="./logs/SAC_tensorboard/",
+            train_freq=1,
+            gradient_steps=2,
+            buffer_size=int(2e6),
+            learning_rate=1e-3,
+            # gamma=0.95,
+            batch_size=2048,
+            policy_kwargs=dict(net_arch=[256, 256, 256]),
+            device="auto",
+        )
         # train_env = make_vec_env(make_env(multi=False), n_envs=12)
 
         # model = DDPG("MlpPolicy",
@@ -314,7 +315,7 @@ class PBDroneSimulator:
                                                          verbose=1)
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
-        # pl_callback = PlottingCallback(log_dir="./logs/SAC_tensorboard/")
+        found_tar_callback = Callbacks.FoundTargetsCallback(log_dir=filename)
 
         eval_callback = EvalCallback(eval_env,
                                      # callback_on_new_best=callback_on_best,
@@ -328,7 +329,7 @@ class PBDroneSimulator:
 
         model.learn(total_timesteps=int(1e7),
                     callback=[eval_callback,
-                              # pl_callback
+                              found_tar_callback
                               # AimCallback(repo='.Aim/', experiment_name='sb3_test')
                               ],
                     log_interval=1000,
@@ -403,26 +404,7 @@ class PBDroneSimulator:
 
 
 if __name__ == "__main__":
-    # vec_env = SubprocVecEnv([make_env(gui=False, rank=i) for i in range(num_cpu)])
-    #
-    targets = [np.array([0.0, 0.0, 0.1]),
-               np.array([0.0, 0.0, 0.2]),
-               np.array([0., 0., 0.3]),
-               np.array([0., 0., 0.4]),
-               np.array([0., 0., 0.5]),
-               np.array([0., 0.1, 0.5]),
-               np.array([0., 0.2, 0.5]),
-               np.array([0., 0.3, 0.5]),
-               np.array([0., 0.4, 0.5]),
-               np.array([0., 0.5, 0.5]),
-               np.array([0.1, 0.5, 0.5]),
-               np.array([0.2, 0.5, 0.5]),
-               np.array([0.3, 0.5, 0.5]),
-               np.array([0.4, 0.5, 0.5]),
-               np.array([0.5, 0.5, 0.5]),
 
-               # np.array([1., 1., 1.]),
-               ]
 
     # args = parse_args()
     # run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
@@ -434,6 +416,9 @@ if __name__ == "__main__":
     # th.backends.cudnn.deterministic = args.torch_deterministic
     #
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
+
+    # targets = Waypoints.up_circle()
+    targets = Waypoints.half_up_forward()
 
     sim = PBDroneSimulator(targets, target_factor=0)
 

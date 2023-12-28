@@ -20,7 +20,7 @@ class PBDroneEnv(
 ):
 
     def __init__(self,
-                 target_points, threshold, discount, max_steps,
+                 target_points, threshold, discount, max_steps, aviary_dim,
                  save_model=False, save_folder=None,
                  drone_model: DroneModel = DroneModel.CF2X,
                  initial_xyzs=None,
@@ -36,6 +36,20 @@ class PBDroneEnv(
                  obstacles=False,
                  ):
 
+        self.ACT_TYPE = act
+        self.EPISODE_LEN_SEC = 5
+        self.OBS_TYPE = obs
+        self._OBS_TYPE = obs
+
+        self._target_points = np.array(target_points)
+        self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
+        self._threshold = threshold
+        self._discount = discount
+        self._max_steps = max_steps
+        self._aviary_dim = aviary_dim
+        self._x_low, self._y_low, self._y_low, self._x_high, self._y_high, self._z_high = aviary_dim
+        print("AVIARY DIM", self._aviary_dim)
+
         super().__init__(drone_model=drone_model,
                          initial_xyzs=initial_xyzs,
                          initial_rpys=initial_rpys,
@@ -43,37 +57,24 @@ class PBDroneEnv(
                          pyb_freq=pyb_freq,
                          ctrl_freq=ctrl_freq,
                          gui=gui,
-                         # vision_attributes=vision_attributes,
                          record=record,
                          obstacles=obstacles,
                          # user_debug_gui=False,
                          # vision_attributes=vision_attributes,
                          )
 
-        self.ACT_TYPE = act
-        self.EPISODE_LEN_SEC = 5
-        self.OBS_TYPE = obs
-        self._OBS_TYPE = obs
-        self.CLIENT = self.CLIENT
-
-        self._target_points = np.array(target_points)
-        self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
-        self._threshold = threshold
-        self._discount = discount
-        self._max_steps = max_steps
-
-        self._steps = 0
         self._current_position = self.INIT_XYZS[0]
+        self._steps = 0
         self._last_action = np.zeros(4, dtype=np.float32)
         self._prev_distance_to_target = np.linalg.norm(self._current_position - target_points[0])
         self._current_target_index = 0
         self._is_done = False
 
+        self.CLIENT = self.CLIENT
         self.target_visual = []
 
         if save_model:
             assert save_folder is not None
-
             self.save_model(save_folder)
 
         if gui:
@@ -90,7 +91,7 @@ class PBDroneEnv(
 
         self._steps += 1
         self._last_action = action
-        self._current_position = obs[:3]
+        self._current_position = self.pos[0]
 
         return obs, reward, terminated, truncated, info
 
@@ -103,8 +104,10 @@ class PBDroneEnv(
     def _observationSpace(self):
         """Returns the observation space of the environment."""
 
-        return spaces.Box(low=np.array([-1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
-                          high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
+        return spaces.Box(low=np.array([self._x_low, self._y_low, 0,
+                                        -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
+                          high=np.array([self._x_high, self._y_high, self._z_high,
+                                         1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
                           dtype=np.float32
                           )
 
@@ -126,6 +129,7 @@ class PBDroneEnv(
             # raise FloatingPointError
             # return np.zeros_like(ret).astype('float32')
             return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max).astype('float32')
+
     def _clipAndNormalizeState(self, state):
         """Normalizes a drone's state to the [-1,1] range.
 
@@ -148,8 +152,10 @@ class PBDroneEnv(
 
         MAX_PITCH_ROLL = np.pi  # Full range
 
-        clipped_pos_xy = np.clip(state[0:2], -MAX_XY, MAX_XY)
-        clipped_pos_z = np.clip(state[2], 0, MAX_Z)
+        # clipped_pos_xy = np.clip(state[0:2], -MAX_XY, MAX_XY)
+        clipped_pos_xy = np.clip(state[0:2], self._aviary_dim[0], self._aviary_dim[3])
+        # clipped_pos_z = np.clip(state[2], 0, MAX_Z)
+        clipped_pos_z = np.clip(state[2], 0, self._aviary_dim[5])
         clipped_rp = np.clip(state[7:9], -MAX_PITCH_ROLL, MAX_PITCH_ROLL)
         clipped_vel_xy = np.clip(state[10:12], -MAX_LIN_VEL_XY, MAX_LIN_VEL_XY)
         clipped_vel_z = np.clip(state[12], -MAX_LIN_VEL_Z, MAX_LIN_VEL_Z)
@@ -322,7 +328,9 @@ class PBDroneEnv(
                 # Reward for reaching a target
                 # reward += 1000  # * (self._discount ** (self._steps / 5))
                 reward += 700 * (self._discount ** (self._steps / 10))
-                self.remove_target()
+
+                if self.GUI:
+                    self.remove_target()
 
         # #####################################
         #
@@ -391,10 +399,11 @@ class PBDroneEnv(
         self._last_action = np.zeros(4, dtype=np.float32)
         # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
 
+        ret = super().reset(seed, options)
         if self.GUI:
             self.show_targets()
 
-        return super().reset(seed, options)
+        return ret
 
     def distance_between_points(self, point1, point2):
         x1, y1, z1 = point1
@@ -419,9 +428,9 @@ class PBDroneEnv(
 
         state = self._current_position
 
-        if (state[0] >= 1. or state[0] <= -1. or
-                state[1] >= 1. or state[1] <= -1. or
-                (state[2] <= self.COLLISION_H * 3 and self._steps > 100) or state[2] >= 1):
+        if (state[0] > self._x_high or state[0] < self._x_low or
+                state[1] > self._y_high or state[1] < -self._y_low or
+                (state[2] < self.COLLISION_H and self._steps > 100) or state[2] > self._z_high):
             return True
         else:
             return False
@@ -466,24 +475,13 @@ class PBDroneEnv(
         for target in self._target_points:
             self.target_visual.append(
                 p.loadURDF(
-                    fileName="./resources/target.urdf",
+                    fileName="/resources/target.urdf",
                     basePosition=target,
                     useFixedBase=True,
                     globalScaling=self._threshold / 4.0,
-                    physicsClientId=self.CLIENT
+                    physicsClientId=self.CLIENT,
                 )
             )
-        self.render_targets()
-
-    def remove_target(self):
-        # delete the reached target and recolour the others
-        if len(self.target_visual) > 0:
-            p.removeBody(self.target_visual[0])
-            self.target_visual = self.target_visual[1:]
-
-        self.render_targets()
-
-    def render_targets(self):
         for i, visual in enumerate(self.target_visual):
             p.changeVisualShape(
                 visual,
@@ -491,6 +489,13 @@ class PBDroneEnv(
                 rgbaColor=(0, 1 - (i / len(self.target_visual)), 0, 1),
                 physicsClientId=self.CLIENT
             )
+
+    def remove_target(self):
+        # delete the reached target and recolour the others
+        if len(self.target_visual) > 0:
+            p.removeBody(self.target_visual[0])
+            self.target_visual = self.target_visual[1:]
+
 
     # def _computeReward(self):
     #
