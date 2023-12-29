@@ -65,6 +65,7 @@ class PBDroneEnv(
 
         self._current_position = self.INIT_XYZS[0]
         self._steps = 0
+        self.steps_since_last_target = 0
         self._last_action = np.zeros(4, dtype=np.float64)
         self._prev_distance_to_target = np.linalg.norm(self._current_position - target_points[0])
         self._current_target_index = 0
@@ -308,6 +309,9 @@ class PBDroneEnv(
             # Additional reward for progressing towards the target
             reward += (self._prev_distance_to_target - distance_to_target) * 300
 
+            # Add a negative reward for spinning too fast
+            reward += -np.linalg.norm(self.ang_v)
+
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
 
@@ -317,20 +321,22 @@ class PBDroneEnv(
 
         # Check if the drone has reached a target
         if distance_to_target <= self._threshold:
-            # print("IN")
             self._current_target_index += 1
+            self._steps_since_last_target = 0
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 1000000.0  # * self._discount ** self._steps/10  # Reward for reaching all targets
+                reward += 1_000_000.0  # * self._discount ** self._steps/10
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                # reward += 1000  # * (self._discount ** (self._steps / 5))
-                reward += 1000 * (self._discount ** (self._steps / 10))
+                reward += 5000 * (self._discount ** (self._steps / 10))
 
                 if self.GUI:
                     self.remove_target()
+        else:
+            reward *= self._discount ** (self.steps_since_last_target / 2)
+            self._steps_since_last_target += 1
 
         # #####################################
         #
@@ -395,6 +401,7 @@ class PBDroneEnv(
         self._current_target_index = 0
         self._current_position = self.INIT_XYZS[0]
         self._steps = 0
+        self._steps_since_last_target = 0
         self._prev_distance_to_target = np.linalg.norm(self.INIT_XYZS - self._target_points[0])
         self._last_action = np.zeros(4, dtype=np.float64)
         # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)

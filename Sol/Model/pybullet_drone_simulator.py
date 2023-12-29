@@ -246,7 +246,7 @@ class PBDroneSimulator:
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
         #
-        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=True,
+        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=False,
                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
         eval_env = VecCheckNan(eval_env)
@@ -258,19 +258,19 @@ class PBDroneSimulator:
                                              pi=[512, 512, 256, 128]))
         # onpolicy_kwargs = dict(net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])])
 
-        model = PPO("MlpPolicy",
-                    train_env,
-                    verbose=1,
-                    n_steps=2048,
-                    batch_size=2048,
-                    ent_coef=0.01,
-                    clip_range=0.1,
-                    learning_rate=3e-4,
-                    tensorboard_log="./logs/ppo_tensorboard/",
-                    device="auto",
-                    policy_kwargs=onpolicy_kwargs
-                    # dict(net_arch=[256, 256, 256], activation_fn=th.nn.Tanh,),
-                    )
+        # model = PPO("MlpPolicy",
+        #             train_env,
+        #             verbose=1,
+        #             n_steps=2048,
+        #             batch_size=2048,
+        #             ent_coef=0.01,
+        #             clip_range=0.1,
+        #             learning_rate=3e-4,
+        #             tensorboard_log="./logs/ppo_tensorboard/",
+        #             device="auto",
+        #             policy_kwargs=onpolicy_kwargs
+        #             # dict(net_arch=[256, 256, 256], activation_fn=th.nn.Tanh,),
+        #             )
 
         # tensorboard --logdir ./logs/ppo_tensorboard/
 
@@ -281,25 +281,25 @@ class PBDroneSimulator:
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
 
-        # model = SAC(
-        #     "MlpPolicy",
-        #     train_env,
-        #     # replay_buffer_class=HerReplayBuffer,
-        #     # replay_buffer_kwargs=dict(
-        #     #     n_sampled_goal=len(targets),
-        #     #     goal_selection_strategy="future",
-        #     # ),
-        #     verbose=1,
-        #     tensorboard_log="./logs/SAC_tensorboard/",
-        #     train_freq=1,
-        #     gradient_steps=2,
-        #     buffer_size=int(2e6),
-        #     learning_rate=1e-3,
-        #     # gamma=0.95,
-        #     batch_size=2048,
-        #     policy_kwargs=dict(net_arch=[256, 256, 256]),
-        #     device="auto",
-        # )
+        model = SAC(
+            "MlpPolicy",
+            train_env,
+            # replay_buffer_class=HerReplayBuffer,
+            # replay_buffer_kwargs=dict(
+            #     n_sampled_goal=len(targets),
+            #     goal_selection_strategy="future",
+            # ),
+            verbose=1,
+            tensorboard_log="./logs/SAC_tensorboard/",
+            train_freq=1,
+            gradient_steps=2,
+            buffer_size=int(3e6),
+            learning_rate=1e-3,
+            # gamma=0.95,
+            batch_size=2048,
+            policy_kwargs=dict(net_arch=[256, 256, 256]),
+            device="auto",
+        )
         # train_env = make_vec_env(make_env(multi=False), n_envs=12)
 
         # model = DDPG("MlpPolicy",
