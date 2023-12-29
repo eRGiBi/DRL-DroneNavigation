@@ -96,4 +96,4 @@ class CustomActorCriticPolicy(ActorCriticPolicy):
         return action, value
 
     def _build_mlp_extractor(self) -> None:
-        self.mlp_extractor = CustomNetwork(self.features_dim)
+        self.mlp_extractor = CustomActorCriticPolicy(self.features_dim)

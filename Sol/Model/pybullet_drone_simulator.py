@@ -17,7 +17,7 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.env_util import make_vec_env
 import stable_baselines3.common.monitor
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv, VecEnv, VecCheckNan, VecNormalize
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecEnv, VecCheckNan, VecNormalize, VecTransposeImage
 
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3 import PPO, SAC, DDPG
@@ -80,7 +80,6 @@ class PBDroneSimulator:
         self.num_cpu = num_cpu
         self.targets = self.dilate_targets(targets, target_factor)
 
-
     def make_env(self, multi=False, gui=False, initial_xyzs=None, aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
                  rank: int = 0, seed: int = 0,
                  save_model: bool = False, save_path: str = None):
@@ -133,15 +132,18 @@ class PBDroneSimulator:
         return dilated_points
 
     def run_test(self):
-        action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
-        action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
-        action = np.array([.9, .9, .9, .9], dtype=np.float32)
-        # action * -1
-
+        # action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
+        # action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
+        # action = np.array([.9, .9, .9, .9], dtype=np.float32)
+        action = np.array([-1, -1, -1, -1], dtype=np.float32)
+        action *= -1
+        # action = np.array([0, 0, 0, 0], dtype=np.float32)
         plot_3d_targets(self.targets)
 
-        drone_environment = self.make_env(gui=True, # initial_xyzs=np.array([[1.5, 0, 0.3]]),
+        drone_environment = self.make_env(gui=True,  #initial_xyzs=np.array([[0, 0, 0.5]]),
                                           aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
+        print(drone_environment.G)
+
         print(drone_environment.INIT_XYZS)
 
         # It will check your custom environment and output additional warnings if needed
@@ -161,7 +163,7 @@ class PBDroneSimulator:
         # for _ in range(100):
         while True:
             i += 1
-            print(i)
+            print("step: ", i, "------------------")
             time_step = drone_environment.step(action)
             rewards.append(time_step[1])
             rewards_sum.append(sum(rewards))
@@ -175,10 +177,10 @@ class PBDroneSimulator:
         plot_learning_curve(rewards_sum)
 
     def test_saved(self):
-        drone_environment = self.make_env(gui=True)
+        drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
         # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.21.2023_11.50.57/best_model.zip")
-        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.22.2023_17.37.39/best_model.zip",
+        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.28.2023_19.24.42/best_model.zip",
                          env=drone_environment)
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
@@ -206,8 +208,8 @@ class PBDroneSimulator:
             print(i)
             print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
                   truncated)
-            print(drone_environment.rpy)
-            print(drone_environment.pos[0])
+            print("rpy", drone_environment.rpy)
+            print("pos", drone_environment.pos[0])
             rewards.append(reward)
             rewards_sum.append(sum(rewards))
             # images.append(img)
@@ -236,7 +238,8 @@ class PBDroneSimulator:
         check_env(train_env, warn=True, skip_render_check=True)
 
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
-                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in range(self.num_cpu)])
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
+                                   range(self.num_cpu)])
         train_env = VecCheckNan(train_env)
         # train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
         #                          clip_obs=1)
@@ -249,23 +252,25 @@ class PBDroneSimulator:
         eval_env = VecCheckNan(eval_env)
         # eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
         #                         clip_obs=1)
+
         onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
                                net_arch=dict(vf=[512, 512, 256, 128],
                                              pi=[512, 512, 256, 128]))
+        # onpolicy_kwargs = dict(net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])])
 
-        # model = PPO("MlpPolicy",
-        #             train_env,
-        #             verbose=1,
-        #             n_steps=512,
-        #             batch_size=2048,
-        #             ent_coef=0.01,
-        #             clip_range=0.1,
-        #             learning_rate=1e-3,
-        #             tensorboard_log="./logs/ppo_tensorboard/",
-        #             device="auto",
-        #             policy_kwargs=onpolicy_kwargs
-        #                 # dict(net_arch=[256, 256, 256]),
-        #             )
+        model = PPO("MlpPolicy",
+                    train_env,
+                    verbose=1,
+                    n_steps=2048,
+                    batch_size=2048,
+                    ent_coef=0.01,
+                    clip_range=0.1,
+                    learning_rate=3e-4,
+                    tensorboard_log="./logs/ppo_tensorboard/",
+                    device="auto",
+                    policy_kwargs=onpolicy_kwargs
+                    # dict(net_arch=[256, 256, 256], activation_fn=th.nn.Tanh,),
+                    )
 
         # tensorboard --logdir ./logs/ppo_tensorboard/
 
@@ -273,25 +278,28 @@ class PBDroneSimulator:
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             net_arch=[512, 512, 256, 128]
 
-        model = SAC(
-            "MlpPolicy",
-            train_env,
-            # replay_buffer_class=HerReplayBuffer,
-            # replay_buffer_kwargs=dict(
-            #     n_sampled_goal=len(targets),
-            #     goal_selection_strategy="future",
-            # ),
-            verbose=1,
-            tensorboard_log="./logs/SAC_tensorboard/",
-            train_freq=1,
-            gradient_steps=2,
-            buffer_size=int(2e6),
-            learning_rate=1e-3,
-            # gamma=0.95,
-            batch_size=2048,
-            policy_kwargs=dict(net_arch=[256, 256, 256]),
-            device="auto",
-        )
+        #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
+        #                             dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
+
+        # model = SAC(
+        #     "MlpPolicy",
+        #     train_env,
+        #     # replay_buffer_class=HerReplayBuffer,
+        #     # replay_buffer_kwargs=dict(
+        #     #     n_sampled_goal=len(targets),
+        #     #     goal_selection_strategy="future",
+        #     # ),
+        #     verbose=1,
+        #     tensorboard_log="./logs/SAC_tensorboard/",
+        #     train_freq=1,
+        #     gradient_steps=2,
+        #     buffer_size=int(2e6),
+        #     learning_rate=1e-3,
+        #     # gamma=0.95,
+        #     batch_size=2048,
+        #     policy_kwargs=dict(net_arch=[256, 256, 256]),
+        #     device="auto",
+        # )
         # train_env = make_vec_env(make_env(multi=False), n_envs=12)
 
         # model = DDPG("MlpPolicy",
@@ -404,8 +412,6 @@ class PBDroneSimulator:
 
 
 if __name__ == "__main__":
-
-
     # args = parse_args()
     # run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
     #

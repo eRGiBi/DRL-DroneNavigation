@@ -47,7 +47,7 @@ class PBDroneEnv(
         self._discount = discount
         self._max_steps = max_steps
         self._aviary_dim = aviary_dim
-        self._x_low, self._y_low, self._y_low, self._x_high, self._y_high, self._z_high = aviary_dim
+        self._x_low, self._y_low, self._z_low, self._x_high, self._y_high, self._z_high = aviary_dim
         print("AVIARY DIM", self._aviary_dim)
 
         super().__init__(drone_model=drone_model,
@@ -65,7 +65,7 @@ class PBDroneEnv(
 
         self._current_position = self.INIT_XYZS[0]
         self._steps = 0
-        self._last_action = np.zeros(4, dtype=np.float32)
+        self._last_action = np.zeros(4, dtype=np.float64)
         self._prev_distance_to_target = np.linalg.norm(self._current_position - target_points[0])
         self._current_target_index = 0
         self._is_done = False
@@ -98,17 +98,18 @@ class PBDroneEnv(
     def _actionSpace(self):
         """Returns the action space of the environment."""
 
-        return spaces.Box(low=-1 * np.ones(4, dtype=np.float32), high=np.ones(4, dtype=np.float32),
-                          shape=(4,), dtype=np.float32)
+        return spaces.Box(low=-1 * np.ones(4, dtype=np.float64),
+                          high=np.ones(4, dtype=np.float64),
+                          shape=(4,), dtype=np.float64)
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
 
         return spaces.Box(low=np.array([self._x_low, self._y_low, 0,
-                                        -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
+                                        -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float64),
                           high=np.array([self._x_high, self._y_high, self._z_high,
-                                         1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
-                          dtype=np.float32
+                                         1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float64),
+                          dtype=np.float64
                           )
 
     def _computeObs(self):
@@ -122,7 +123,7 @@ class PBDroneEnv(
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
         try:
-            return ret.astype('float32')
+            return ret.astype('float64')
         except FloatingPointError as e:
             print("Error in _computeObs():", ret)
             print(f"Underflow error: {e}")
@@ -160,14 +161,14 @@ class PBDroneEnv(
         clipped_vel_xy = np.clip(state[10:12], -MAX_LIN_VEL_XY, MAX_LIN_VEL_XY)
         clipped_vel_z = np.clip(state[12], -MAX_LIN_VEL_Z, MAX_LIN_VEL_Z)
 
-        if self.GUI:
-            self._clipAndNormalizeStateWarning(state,
-                                               clipped_pos_xy,
-                                               clipped_pos_z,
-                                               clipped_rp,
-                                               clipped_vel_xy,
-                                               clipped_vel_z
-                                               )
+        # if self.GUI:
+        #     self._clipAndNormalizeStateWarning(state,
+        #                                        clipped_pos_xy,
+        #                                        clipped_pos_z,
+        #                                        clipped_rp,
+        #                                        clipped_vel_xy,
+        #                                        clipped_vel_z
+        #                                        )
 
         normalized_pos_xy = clipped_pos_xy / MAX_XY
         normalized_pos_z = clipped_pos_z / MAX_Z
@@ -282,7 +283,6 @@ class PBDroneEnv(
             The reward value.
 
         """
-
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
             return -3000
@@ -303,10 +303,10 @@ class PBDroneEnv(
             # reward -= distance_to_target ** 2
             # Reward based on distance to target
 
-            reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
-
+            # reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
+            reward += np.exp(-distance_to_target * 5) * 50
             # Additional reward for progressing towards the target
-            reward += (self._prev_distance_to_target - distance_to_target)
+            reward += (self._prev_distance_to_target - distance_to_target) * 300
 
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
@@ -327,7 +327,7 @@ class PBDroneEnv(
             else:
                 # Reward for reaching a target
                 # reward += 1000  # * (self._discount ** (self._steps / 5))
-                reward += 700 * (self._discount ** (self._steps / 10))
+                reward += 1000 * (self._discount ** (self._steps / 10))
 
                 if self.GUI:
                     self.remove_target()
@@ -396,7 +396,7 @@ class PBDroneEnv(
         self._current_position = self.INIT_XYZS[0]
         self._steps = 0
         self._prev_distance_to_target = np.linalg.norm(self.INIT_XYZS - self._target_points[0])
-        self._last_action = np.zeros(4, dtype=np.float32)
+        self._last_action = np.zeros(4, dtype=np.float64)
         # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
 
         ret = super().reset(seed, options)
@@ -429,8 +429,13 @@ class PBDroneEnv(
         state = self._current_position
 
         if (state[0] > self._x_high or state[0] < self._x_low or
-                state[1] > self._y_high or state[1] < -self._y_low or
-                (state[2] < self.COLLISION_H and self._steps > 100) or state[2] > self._z_high):
+                state[1] > self._y_high or state[1] < self._y_low or
+                # (state[2] < self.COLLISION_H * 3 and self._steps > 100) or
+                len(p.getContactPoints()) > 0 or
+                state[2] > self._z_high):
+
+            # print(p.getOverlappingObjects())
+
             return True
         else:
             return False
@@ -475,7 +480,8 @@ class PBDroneEnv(
         for target in self._target_points:
             self.target_visual.append(
                 p.loadURDF(
-                    fileName="/resources/target.urdf",
+                    fileName="C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources/target.urdf",
+                    # "/resources/target.urdf",
                     basePosition=target,
                     useFixedBase=True,
                     globalScaling=self._threshold / 4.0,

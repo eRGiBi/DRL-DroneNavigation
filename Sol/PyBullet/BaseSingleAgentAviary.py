@@ -82,7 +82,7 @@ class BaseSingleAgentAviary(BaseAviary):
                          gui=gui,
                          record=record, 
                          obstacles=obstacles,  # Add obstacles for RGB observations and/or FlyThruGate
-                         user_debug_gui=False,  # Remove of RPM sliders from all single agent learning aviaries
+                         user_debug_gui=True,  # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes
                          )
         #### Set a limit on the maximum target speed ###############
@@ -173,6 +173,8 @@ class BaseSingleAgentAviary(BaseAviary):
 
         """
         if self.ACT_TYPE == ActionType.RPM:
+            # print("action: ", action)
+            # print(np.array(self.HOVER_RPM * (1+0.05*action)))
             return np.array(self.HOVER_RPM * (1+0.05*action))
         elif self.ACT_TYPE == ActionType.PID:
             state = self._getDroneStateVector(0)

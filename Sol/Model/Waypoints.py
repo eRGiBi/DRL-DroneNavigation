@@ -20,21 +20,22 @@ def parametric_eq(num_points=5):
 
 
 def half_up_forward():
-    return [np.array([0.0, 0.0, 0.1]),
-            np.array([0.0, 0.0, 0.2]),
-            np.array([0., 0., 0.3]),
-            np.array([0., 0., 0.4]),
+    return [
+        # np.array([0.0, 0.0, 0.1]),
+    #         np.array([0.0, 0.0, 0.2]),
             np.array([0., 0., 0.5]),
-            np.array([0., 0.1, 0.5]),
-            np.array([0., 0.2, 0.5]),
-            np.array([0., 0.3, 0.5]),
-            np.array([0., 0.4, 0.5]),
-            np.array([0., 0.5, 0.5]),
-            np.array([0.1, 0.5, 0.5]),
-            np.array([0.2, 0.5, 0.5]),
-            np.array([0.3, 0.5, 0.5]),
-            np.array([0.4, 0.5, 0.5]),
-            np.array([0.5, 0.5, 0.5]),
+            # np.array([0., 0., 0.4]),
+            np.array([0., 0., 1]),
+            # np.array([0., 0.1, 0.5]),
+            np.array([0., 1, 1.5]),
+            # np.array([0., 0.3, 0.5]),
+            # np.array([0., 0.4, 0.5]),
+            # np.array([0., 0.5, 0.5]),
+            np.array([0.5, 1.5, 1.5]),
+            # np.array([0.2, 0.5, 0.5]),
+            # np.array([0.3, 0.5, 0.5]),
+            # np.array([0.4, 0.5, 0.5]),
+            np.array([1.5, 1.5, 1.5]),
             ]
 
 
