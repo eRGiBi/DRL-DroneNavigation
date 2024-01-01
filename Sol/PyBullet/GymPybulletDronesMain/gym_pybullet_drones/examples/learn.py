@@ -85,7 +85,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
-    parser.add_argument('--gui', default=DEFAULT_GUI, type=str2bool, help='Whether to use PyBullet GUI (default: True)',
+    parser.add_argument('--gui', default=DEFAULT_GUI, type=str2bool, help='Whether wandb loginto use PyBullet GUI (default: True)',
                         metavar='')
     parser.add_argument('--record_video', default=DEFAULT_RECORD_VIDEO, type=str2bool,
                         help='Whether to record a video (default: False)', metavar='')
@@ -118,60 +118,60 @@ if __name__ == "__main__":
 #     http://localhost:6006/
 
 # """
-# import os
-# import time
-# from datetime import datetime
-# from sys import platform
-# import argparse
-# import subprocess
-# import numpy as np
-# import gymnasium as gym
-# import torch
-# from stable_baselines3.common.env_checker import check_env
+import os
+import time
+from datetime import datetime
+from sys import platform
+import argparse
+import subprocess
+import numpy as np
+import gymnasium as gym
+import torch
+from stable_baselines3.common.env_checker import check_env
 # from stable_baselines3.common.cmd_util import make_vec_env # Module cmd_util will be renamed to env_util https://github.com/DLR-RM/stable-baselines3/pull/197
-# from stable_baselines3.common.vec_env import SubprocVecEnv, VecTransposeImage
-# from stable_baselines3.common.utils import set_random_seed
-# from stable_baselines3 import A2C
-# from stable_baselines3 import PPO
-# from stable_baselines3 import SAC
-# from stable_baselines3 import TD3
-# from stable_baselines3 import DDPG
-# from stable_baselines3.common.policies import ActorCriticPolicy as a2cppoMlpPolicy
-# from stable_baselines3.common.policies import ActorCriticCnnPolicy as a2cppoCnnPolicy
-# from stable_baselines3.sac.policies import SACPolicy as sacMlpPolicy
-# from stable_baselines3.sac import CnnPolicy as sacCnnPolicy
-# from stable_baselines3.td3 import MlpPolicy as td3ddpgMlpPolicy
-# from stable_baselines3.td3 import CnnPolicy as td3ddpgCnnPolicy
-# from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, StopTrainingOnRewardThreshold
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecTransposeImage
+from stable_baselines3.common.utils import set_random_seed
+from stable_baselines3 import A2C
+from stable_baselines3 import PPO
+from stable_baselines3 import SAC
+from stable_baselines3 import TD3
+from stable_baselines3 import DDPG
+from stable_baselines3.common.policies import ActorCriticPolicy as a2cppoMlpPolicy
+from stable_baselines3.common.policies import ActorCriticCnnPolicy as a2cppoCnnPolicy
+from stable_baselines3.sac.policies import SACPolicy as sacMlpPolicy
+from stable_baselines3.sac import CnnPolicy as sacCnnPolicy
+from stable_baselines3.td3 import MlpPolicy as td3ddpgMlpPolicy
+from stable_baselines3.td3 import CnnPolicy as td3ddpgCnnPolicy
+from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, StopTrainingOnRewardThreshold
 
-# from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
-# from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
-# from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
-# from gym_pybullet_drones.envs.single_agent_rl.TuneAviary import TuneAviary
-# from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
+from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
+from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
+from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
+from gym_pybullet_drones.envs.single_agent_rl.TuneAviary import TuneAviary
+from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 
-# import shared_constants
+import shared_constants
 
-# EPISODE_REWARD_THRESHOLD = -0 # Upperbound: rewards are always negative, but non-zero
+EPISODE_REWARD_THRESHOLD = -0 # Upperbound: rewards are always negative, but non-zero
 # """float: Reward threshold to halt the script."""
 
-# DEFAULT_ENV = 'hover'
-# DEFAULT_ALGO = 'ppo'
-# DEFAULT_OBS = ObservationType('kin')
-# DEFAULT_ACT = ActionType('one_d_rpm')
-# DEFAULT_CPU = 1
-# DEFAULT_STEPS = 35000
-# DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_ENV = 'hover'
+DEFAULT_ALGO = 'ppo'
+DEFAULT_OBS = ObservationType('kin')
+DEFAULT_ACT = ActionType('one_d_rpm')
+DEFAULT_CPU = 1
+DEFAULT_STEPS = 35000
+DEFAULT_OUTPUT_FOLDER = 'results'
 
-# def run(
-#     env=DEFAULT_ENV,
-#     algo=DEFAULT_ALGO,
-#     obs=DEFAULT_OBS,
-#     act=DEFAULT_ACT,
-#     cpu=DEFAULT_CPU,
-#     steps=DEFAULT_STEPS,
-#     output_folder=DEFAULT_OUTPUT_FOLDER
-# ):
+def run(
+    env=DEFAULT_ENV,
+    algo=DEFAULT_ALGO,
+    obs=DEFAULT_OBS,
+    act=DEFAULT_ACT,
+    cpu=DEFAULT_CPU,
+    steps=DEFAULT_STEPS,
+    output_folder=DEFAULT_OUTPUT_FOLDER
+):
 
 #     #### Save directory ########################################
 #     filename = os.path.join(output_folder, 'save-'+env+'-'+algo+'-'+obs.value+'-'+act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))

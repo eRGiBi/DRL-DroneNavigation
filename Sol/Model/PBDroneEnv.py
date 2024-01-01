@@ -11,6 +11,7 @@ from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
 from Sol.PyBullet.GymPybulletDronesMain import *
 from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
 from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
+from gymnasium.spaces.space import Space
 
 
 class PBDroneEnv(
@@ -33,6 +34,7 @@ class PBDroneEnv(
                  obs: ObservationType = ObservationType.KIN,
                  act: ActionType = ActionType.RPM,
                  vision_attributes=False,
+                 user_debug_gui=False,
                  obstacles=False,
                  ):
 
@@ -59,7 +61,7 @@ class PBDroneEnv(
                          gui=gui,
                          record=record,
                          obstacles=obstacles,
-                         # user_debug_gui=False,
+                         user_debug_gui=user_debug_gui,
                          # vision_attributes=vision_attributes,
                          )
 
@@ -286,7 +288,7 @@ class PBDroneEnv(
         """
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
-            return -3000
+            return -300
             # -10 * (len(self._target_points) - self._current_target_index)) #  * np.linalg.norm(velocity)
 
         reward = 0.0
@@ -307,10 +309,11 @@ class PBDroneEnv(
             # reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
             reward += np.exp(-distance_to_target * 5) * 50
             # Additional reward for progressing towards the target
-            reward += (self._prev_distance_to_target - distance_to_target) * 300
+            reward += (self._prev_distance_to_target - distance_to_target) * 30
+            # self.reward += max(3.0 * self.waypoints.progress_to_target(), 0.0)
 
             # Add a negative reward for spinning too fast
-            reward += -np.linalg.norm(self.ang_v)
+            # reward += -np.linalg.norm(self.ang_v) / 3
 
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
@@ -326,17 +329,17 @@ class PBDroneEnv(
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 1_000_000.0  # * self._discount ** self._steps/10
+                reward += 1_000_00  # * self._discount ** self._steps/10
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 5000 * (self._discount ** (self._steps / 10))
+                reward += 500 * (self._discount ** (self._steps / 10))
 
                 if self.GUI:
                     self.remove_target()
-        else:
-            reward *= self._discount ** (self.steps_since_last_target / 2)
-            self._steps_since_last_target += 1
+        # else:
+        #     reward *= self._discount ** (self.steps_since_last_target / 10)
+        #     self._steps_since_last_target += 1
 
         # #####################################
         #

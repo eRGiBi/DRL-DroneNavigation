@@ -3,6 +3,7 @@ import os
 import random
 import time
 from datetime import datetime
+import argparse
 # import sync, str2bool
 
 from typing import Callable
@@ -20,7 +21,7 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecEnv, VecCheckNan, VecNormalize, VecTransposeImage
 
 from stable_baselines3.common.policies import ActorCriticPolicy
-from stable_baselines3 import PPO, SAC, DDPG
+from stable_baselines3 import PPO, SAC, DDPG, HerReplayBuffer
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
     StopTrainingOnNoModelImprovement
 
@@ -66,8 +67,8 @@ class PBDroneSimulator:
     def __init__(self, targets, target_factor=0,
                  plot=True,
                  discount=0.999,
-                 threshold=0.1,
-                 max_steps=10000,
+                 threshold=0.3,
+                 max_steps=5000,
                  num_cpu=24):
 
         self.plot = plot
@@ -101,7 +102,7 @@ class PBDroneSimulator:
                 aviary_dim=aviary_dim,
             )
             env.reset(seed=seed + rank)
-            env = Monitor(env)
+            # env = Monitor(env)
             return env
 
         if multi:
@@ -140,14 +141,14 @@ class PBDroneSimulator:
         # action = np.array([0, 0, 0, 0], dtype=np.float32)
         plot_3d_targets(self.targets)
 
-        drone_environment = self.make_env(gui=True,  #initial_xyzs=np.array([[0, 0, 0.5]]),
+        drone_environment = self.make_env(gui=True,  # initial_xyzs=np.array([[0, 0, 0.5]]),
                                           aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
         print(drone_environment.G)
 
         print(drone_environment.INIT_XYZS)
 
         # It will check your custom environment and output additional warnings if needed
-        check_env(drone_environment, warn=True)
+        # check_env(drone_environment, warn=True)
 
         time_step = drone_environment.reset()
 
@@ -179,9 +180,9 @@ class PBDroneSimulator:
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.21.2023_11.50.57/best_model.zip")
-        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.28.2023_19.24.42/best_model.zip",
-                         env=drone_environment)
+        model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.29.2023_11.55.59/best_model.zip")
+        # model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\sa/best_model.zip",
+        #                  env=drone_environment)
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
 
@@ -235,42 +236,44 @@ class PBDroneSimulator:
             os.makedirs(filename + '/')
 
         train_env = self.make_env(multi=False, gui=False)
-        check_env(train_env, warn=True, skip_render_check=True)
+        # check_env(train_env, warn=True, skip_render_check=True)
 
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
                                    range(self.num_cpu)])
-        train_env = VecCheckNan(train_env)
-        # train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
-        #                          clip_obs=1)
+        # train_env = VecCheckNan(train_env)
+        train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
+                                 clip_obs=10)
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
         #
         eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=False,
                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
-        eval_env = VecCheckNan(eval_env)
-        # eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
-        #                         clip_obs=1)
+        # eval_env = VecCheckNan(eval_env)
+        eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
+                                clip_obs=10)
 
-        onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
-                               net_arch=dict(vf=[512, 512, 256, 128],
-                                             pi=[512, 512, 256, 128]))
+        # onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
+        #                        net_arch=dict(vf=[512, 512, 256, 128],
+        #                                      pi=[512, 512, 256, 128]))
         # onpolicy_kwargs = dict(net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])])
 
-        # model = PPO("MlpPolicy",
-        #             train_env,
-        #             verbose=1,
-        #             n_steps=2048,
-        #             batch_size=2048,
-        #             ent_coef=0.01,
-        #             clip_range=0.1,
-        #             learning_rate=3e-4,
-        #             tensorboard_log="./logs/ppo_tensorboard/",
-        #             device="auto",
-        #             policy_kwargs=onpolicy_kwargs
-        #             # dict(net_arch=[256, 256, 256], activation_fn=th.nn.Tanh,),
-        #             )
+        model = PPO("MlpPolicy",
+                    train_env,
+                    verbose=1,
+                    n_steps=2048,
+                    batch_size=49152,
+                    ent_coef=0.01,
+                    # use_sde=True,
+                    # sde_sample_freq=4,
+                    clip_range=0.2,
+                    learning_rate=1e-3,
+                    tensorboard_log="./logs/ppo_tensorboard/",
+                    device="auto",
+                    policy_kwargs=  # onpolicy_kwargs
+                    dict(net_arch=[256, 256, 256], activation_fn=th.nn.Tanh, ),
+                    )
 
         # tensorboard --logdir ./logs/ppo_tensorboard/
 
@@ -281,25 +284,25 @@ class PBDroneSimulator:
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
 
-        model = SAC(
-            "MlpPolicy",
-            train_env,
-            # replay_buffer_class=HerReplayBuffer,
-            # replay_buffer_kwargs=dict(
-            #     n_sampled_goal=len(targets),
-            #     goal_selection_strategy="future",
-            # ),
-            verbose=1,
-            tensorboard_log="./logs/SAC_tensorboard/",
-            train_freq=1,
-            gradient_steps=2,
-            buffer_size=int(3e6),
-            learning_rate=1e-3,
-            # gamma=0.95,
-            batch_size=2048,
-            policy_kwargs=dict(net_arch=[256, 256, 256]),
-            device="auto",
-        )
+        # model = SAC(
+        #     "MultiInputPolicy",
+        #     train_env,
+        #     replay_buffer_class=HerReplayBuffer,
+        #     replay_buffer_kwargs=dict(
+        #         n_sampled_goal=len(self.targets),
+        #         goal_selection_strategy="future",
+        #     ),
+        #     verbose=0,
+        #     tensorboard_log="./logs/SAC_tensorboard/",
+        #     train_freq=1,
+        #     gradient_steps=2,
+        #     buffer_size=int(3e6),
+        #     learning_rate=1e-3,
+        #     # gamma=0.95,
+        #     batch_size=2048,
+        #     policy_kwargs=dict(net_arch=[256, 256, 256]),
+        #     device="auto",
+        # )
         # train_env = make_vec_env(make_env(multi=False), n_envs=12)
 
         # model = DDPG("MlpPolicy",
@@ -312,6 +315,7 @@ class PBDroneSimulator:
         #              device="auto",
         #              policy_kwargs=dict(net_arch=[64, 64])
         #              )
+        model.set_random_seed(1)
 
         # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
         # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
@@ -319,7 +323,7 @@ class PBDroneSimulator:
         # train_env = stable_baselines3.common.monitor.Monitor(train_env)
         # eval_env = stable_baselines3.common.monitor.Monitor(eval_env)
 
-        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=20000,
+        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000,
                                                          verbose=1)
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
@@ -331,7 +335,7 @@ class PBDroneSimulator:
                                      best_model_save_path=filename + '/',
                                      log_path=filename + '/',
                                      eval_freq=int(2000 / self.num_cpu),
-                                     deterministic=True,
+                                     deterministic=False,
                                      render=False
                                      )
 
@@ -344,6 +348,11 @@ class PBDroneSimulator:
                     )
 
         model.save(os.curdir + filename + '/success_model.zip')
+
+        stats_path = os.path.join(filename, "vec_normalize.pkl")
+        eval_env.save(stats_path)
+
+        # Test the model #########################################
 
         test_env = self.make_env(multi=False)
         test_env_nogui = self.make_env(multi=False)
@@ -411,20 +420,80 @@ class PBDroneSimulator:
         print(end - start)
 
 
+def parse_args():
+    """Parse arguments from the command line."""
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--gym-id', type=str, default='PBDroneEnv')
+    parser.add_argument('--env', type=str, default='default')
+    parser.add_argument('--env-config', type=str, default='default')
+    parser.add_argument('--env-kwargs', type=str, default='{}')
+    parser.add_argument('--log-dir', type=str, default='logs')
+    parser.add_argument('--exp-name', type=str, default='test')
+    parser.add_argument('--seed', '-s', type=int, default=1)
+    parser.add_argument('--cuda', action='store_true', default=False)
+    parser.add_argument('--capture-video', action='store_true', default=False)
+    parser.add_argument('--save-buffer', action='store_true', default=False)
+    parser.add_argument('--save-model', action='store_true', default=True)
+    parser.add_argument('--save-obs', action='store_true', default=False)
+    parser.add_argument('--save-video', action='store_true', default=False)
+    parser.add_argument('--save-dir', type=str, default='')
+    parser.add_argument('--checkpoint-freq', type=int, default=100)
+    parser.add_argument('--checkpoint-at-end', action='store_true', default=False)
+    parser.add_argument('--restore-agent', action='store_true', default=False)
+    parser.add_argument('--restore-buffer', action='store_true', default=False)
+    parser.add_argument('--restore-optimizer', action='store_true', default=False)
+    parser.add_argument('--restore', type=str, default=None)
+    parser.add_argument('--num-cpus', type=int, default=1)
+    parser.add_argument('--num-workers', type=int, default=0)
+    parser.add_argument('--num-envs', type=int, default=1)
+    parser.add_argument('--num-timesteps', type=int, default=1e7)
+    parser.add_argument('--agent', type=str, default='PPO')
+    parser.add_argument('--agent-config', type=str, default='default')
+    parser.add_argument('--policy', type=str, default='default')
+    parser.add_argument('--policy-config', type=str, default='default')
+    parser.add_argument('--eval-criterion', type=str, default='default')
+    parser.add_argument('--eval-criterion-config', type=str, default='default')
+    parser.add_argument('--metric', type=str, default='default')
+    parser.add_argument('--metric-config', type=str, default='default')
+    parser.add_argument('--optimizer', type=str, default='default')
+    parser.add_argument('--optimizer-config', type=str, default='default')
+    parser.add_argument('--criterion', type=str, default='default')
+    parser.add_argument('--criterion-config', type=str, default='default')
+
+    # #### Define and parse (optional) arguments for the script ##
+    # parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
+    # parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI (default: True)',
+    #                     metavar='')
+    # parser.add_argument('--record_video', default=DEFAULT_RECORD_VIDEO, type=str2bool,
+    #                     help='Whether to record a video (default: False)', metavar='')
+    # parser.add_argument('--output_folder', default=DEFAULT_OUTPUT_FOLDER, type=str,
+    #                     help='Folder where to save logs (default: "results")', metavar='')
+    # parser.add_argument('--colab', default=DEFAULT_COLAB, type=bool,
+    #                     help='Whether example is being run by a notebook (default: "False")', metavar='')
+    #
+    # run(**vars(ARGS))
+
+    return args
+
+
 if __name__ == "__main__":
     # args = parse_args()
-    # run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
+    # print(args)
     #
-    # # seeding
-    # random.seed(args.seed)
-    # np.random.seed(args.seed)
-    # th.manual_seed(args.seed)
-    # th.backends.cudnn.deterministic = args.torch_deterministic
+    # run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
+    # ## seeding
+    # seed = args.seed
+    # random.seed(seed)
+    # np.random.seed(seed)
+    # th.manual_seed(seed)
+    # th.backends.cudnn.deterministic = False
     #
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
 
     # targets = Waypoints.up_circle()
-    targets = Waypoints.half_up_forward()
+    targets = Waypoints.rnd()
 
     sim = PBDroneSimulator(targets, target_factor=0)
 
@@ -439,21 +508,6 @@ if __name__ == "__main__":
     #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
     #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",
     #                    ))
-
-
-#     #### Define and parse (optional) arguments for the script ##
-#     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
-#     parser.add_argument('--gui', default=DEFAULT_GUI, type=str2bool, help='Whether to use PyBullet GUI (default: True)',
-#                         metavar='')
-#     parser.add_argument('--record_video', default=DEFAULT_RECORD_VIDEO, type=str2bool,
-#                         help='Whether to record a video (default: False)', metavar='')
-#     parser.add_argument('--output_folder', default=DEFAULT_OUTPUT_FOLDER, type=str,
-#                         help='Folder where to save logs (default: "results")', metavar='')
-#     parser.add_argument('--colab', default=DEFAULT_COLAB, type=bool,
-#                         help='Whether example is being run by a notebook (default: "False")', metavar='')
-#     ARGS = parser.parse_args()
-#
-#     run(**vars(ARGS))
 
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:

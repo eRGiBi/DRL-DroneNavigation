@@ -39,7 +39,7 @@ class BaseAviary(gym.Env):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True,
+                 user_debug_gui=False,
                  vision_attributes=False,
                  output_folder='results'
                  ):
@@ -257,6 +257,8 @@ class BaseAviary(gym.Env):
         """
 
         # TODO : initialize random number generator with seed
+
+        super().reset(seed=seed)
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################

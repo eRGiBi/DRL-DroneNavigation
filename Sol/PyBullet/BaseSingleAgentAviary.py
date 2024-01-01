@@ -23,6 +23,7 @@ class BaseSingleAgentAviary(BaseAviary):
                  pyb_freq: int = 240,
                  ctrl_freq: int = 240,
                  gui=False,
+                 user_debug_gui=False,
                  record=False,
                  vision_attributes=False,
                  obs: ObservationType=ObservationType.KIN,
@@ -82,7 +83,7 @@ class BaseSingleAgentAviary(BaseAviary):
                          gui=gui,
                          record=record, 
                          obstacles=obstacles,  # Add obstacles for RGB observations and/or FlyThruGate
-                         user_debug_gui=True,  # Remove of RPM sliders from all single agent learning aviaries
+                         user_debug_gui=user_debug_gui,  # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes
                          )
         #### Set a limit on the maximum target speed ###############
