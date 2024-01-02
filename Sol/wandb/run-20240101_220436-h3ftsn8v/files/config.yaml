@@ -1,0 +1,43 @@
+wandb_version: 1
+
+env_name:
+  desc: null
+  value: default
+policy_type:
+  desc: null
+  value: default
+total_timesteps:
+  desc: null
+  value: 5000000.0
+_wandb:
+  desc: null
+  value:
+    code_path: code/Sol/Model/pybullet_drone_simulator.py
+    python_version: 3.8.18
+    cli_version: 0.16.1
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1704143076.612278
+    t:
+      1:
+      - 1
+      - 2
+      - 3
+      - 55
+      2:
+      - 1
+      - 2
+      - 3
+      - 55
+      3:
+      - 16
+      - 22
+      - 23
+      - 35
+      4: 3.8.18
+      5: 0.16.1
+      8:
+      - 3
+      - 5
+      13: windows-amd64

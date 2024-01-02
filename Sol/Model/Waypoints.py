@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -71,6 +73,36 @@ def rnd():
         # np.array([0.5, 0.2, 0.2]),
         # np.array([0.0, 0.0, 0.2]),
     ]
+
+def generate_random_targets(num_targets: int) -> np.ndarray:
+    """Generates random targets for the drone to navigate to.
+
+    The targets are generated in a random order and are evenly distributed
+    around the origin. The z-coordinate of the targets is randomly chosen
+    between 0.1 and 1.0, but is capped at 0.1 if it is below that value.
+
+    Args:
+        num_targets: The number of targets to generate.
+
+    Returns:
+        A numpy array of shape (num_targets, 3) containing the x, y, and z
+        coordinates of the targets.
+    """
+
+    targets = np.zeros(shape=(num_targets, 3))
+    thetas = np.random.uniform(0.0, 2.0 * math.pi, size=(num_targets,))
+    phis = np.random.uniform(0.0, 2.0 * math.pi, size=(num_targets,))
+    for i, theta, phi in zip(range(num_targets), thetas, phis):
+        dist = np.random.uniform(low=1.0, high=1 * 0.9)
+        x = dist * math.sin(phi) * math.cos(theta)
+        y = dist * math.sin(phi) * math.sin(theta)
+        z = abs(dist * math.cos(phi))
+
+        # check for floor of z
+        targets[i] = np.array([x, y, z if z > 0.1 else 0.1])
+
+    print(targets)
+    return targets
 
 
 if __name__ == '__main__':

@@ -29,7 +29,6 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from stable_baselines3.common.utils import set_random_seed
-from torch.utils.tensorboard import SummaryWriter
 
 from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
 # from PyBullet import BaseAviary
@@ -439,8 +438,6 @@ def parse_args():
     parser.add_argument('--exp-name', type=str, default='test')
     parser.add_argument('--seed', '-s', type=int, default=1)
     parser.add_argument('--cuda', action='store_true', default=False)
-    parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI (default: True)',
-                        metavar='')
     parser.add_argument('--capture-video', action='store_true', default=False)
     parser.add_argument('--save-buffer', action='store_true', default=False)
     parser.add_argument('--save-model', action='store_true', default=True)
@@ -470,13 +467,6 @@ def parse_args():
     parser.add_argument('--criterion', type=str, default='default')
     parser.add_argument('--criterion-config', type=str, default='default')
 
-    parser.add_argument("--wandb-project-name", type=str, default="ppo-implementation-details",
-                        help="the wandb's project name")
-    parser.add_argument("--wandb-entity", type=str, default=None,
-                        help="the entity (team) of wandb's project")
-    parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
-                        help="weather to capture videos of the agent performances (check out `videos` folder)")
-
     # #### Define and parse (optional) arguments for the script ##
     # parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
     # parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI (default: True)',
@@ -497,36 +487,18 @@ def parse_args():
 
 def init_wandb(args):
 
-    run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
-    print(f"Starting run {run_name} with `wandb`...")
-
     config = {
         "env_name": args.env,
         "policy_type": args.policy,
         "total_timesteps": args.num_steps,
-        "policy_config": args.policy_config,
-        "env_config": args.env_config,
-        "seed": args.seed,
-        "agent": args.agent,
-        "agent_config": args.agent_config,
-        "metric": args.metric,
-        "metric_config": args.metric_config,
-        "optimizer": args.optimizer,
-        "optimizer_config": args.optimizer_config,
-        "criterion": args.criterion,
+
     }
     run = wandb.init(
         project="rl",
-        config=args,
-        name=args.exp_name,
+        config=config,
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         monitor_gym=True,  # auto-upload the videos of agents playing the game
         save_code=True,  # optional
-    )
-    writer = SummaryWriter(f"runs/{run_name}")
-    writer.add_text(
-        "hyperparameters",
-        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
     )
 
 
@@ -535,7 +507,7 @@ if __name__ == "__main__":
     args = parse_args()
     print(args)
     #
-
+    # run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
     # ## seeding
     # seed = args.seed
     # random.seed(seed)
@@ -611,6 +583,36 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 #
 # imageio.mimsave("lander_a2c.gif", [np.array(img) for i, img in enumerate(images) if i%2 == 0], fps=29)
 
+
+def generate_random_targets(num_targets: int) -> np.ndarray:
+    """Generates random targets for the drone to navigate to.
+
+    The targets are generated in a random order and are evenly distributed
+    around the origin. The z-coordinate of the targets is randomly chosen
+    between 0.1 and 1.0, but is capped at 0.1 if it is below that value.
+
+    Args:
+        num_targets: The number of targets to generate.
+
+    Returns:
+        A numpy array of shape (num_targets, 3) containing the x, y, and z
+        coordinates of the targets.
+    """
+
+    targets = np.zeros(shape=(num_targets, 3))
+    thetas = np.random.uniform(0.0, 2.0 * math.pi, size=(num_targets,))
+    phis = np.random.uniform(0.0, 2.0 * math.pi, size=(num_targets,))
+    for i, theta, phi in zip(range(num_targets), thetas, phis):
+        dist = np.random.uniform(low=1.0, high=1 * 0.9)
+        x = dist * math.sin(phi) * math.cos(theta)
+        y = dist * math.sin(phi) * math.sin(theta)
+        z = abs(dist * math.cos(phi))
+
+        # check for floor of z
+        targets[i] = np.array([x, y, z if z > 0.1 else 0.1])
+
+    print(targets)
+    return targets
 
 
 def manual_pb_env():

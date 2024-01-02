@@ -1,19 +1,3 @@
-import os
-import math
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-import pybullet as p
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
-from gymnasium.spaces.space import Space
-
-
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,
@@ -66,7 +50,6 @@ class PBDroneEnv(
                          )
 
         self._current_position = self.INIT_XYZS[0]
-        self._last_position = None
         self._steps = 0
         self.steps_since_last_target = 0
         self._last_action = np.zeros(4, dtype=np.float64)
@@ -95,7 +78,6 @@ class PBDroneEnv(
 
         self._steps += 1
         self._last_action = action
-        self._last_position = self._current_position
         self._current_position = self.pos[0]
 
         return obs, reward, terminated, truncated, info
@@ -320,12 +302,6 @@ class PBDroneEnv(
             # # Penalize large actions to avoid erratic behavior
             # reward -= 0.01 * np.linalg.norm(self._last_action)
 
-            if self._current_target_index > 0:
-                # Additional reward for progressing towards the target
-                reward += self.calculate_progress_reward(self._current_position, self._last_position,
-                                                         self._target_points[self._current_target_index - 1],
-                                                         self._target_points[self._current_target_index])
-
         except ZeroDivisionError:
             # Give a high reward if the drone is at the target (avoiding division by zero)
             reward += 100
@@ -368,18 +344,40 @@ class PBDroneEnv(
         self._prev_distance_to_target = distance_to_target
         return reward
 
-    def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
-        def s(p):
-            g_diff = g2 - g1
-            return np.dot(p - g1, g_diff) / np.linalg.norm(g_diff) ** 2
-
-        if pc_t_minus_1 is None:
-            # Handle the edge case for the first gate
-            rp_t = s(pc_t)
-        else:
-            rp_t = s(pc_t) - s(pc_t_minus_1)
-
-        return rp_t
+    # quad_pt = np.array(
+    #     list((self.state["position"].x_val, self.state["position"].y_val, self.state["position"].z_val,)))
+    #
+    # if self.state["collision"]:
+    #     reward = -100
+    # else:
+    #     dist = 10000000
+    #     for i in range(0, len(pts) - 1):
+    #         dist = min(dist, np.linalg.norm(np.cross((quad_pt - pts[i]), (quad_pt - pts[i + 1]))) / np.linalg.norm(
+    #             pts[i] - pts[i + 1]))
+    #
+    #     if dist > thresh_dist:
+    #         reward = -10
+    #     else:
+    #         reward_dist = math.exp(-beta * dist) - 0.5
+    #         reward_speed = (np.linalg.norm(
+    #             [self.state["velocity"].x_val, self.state["velocity"].y_val, self.state["velocity"].z_val, ]) - 0.5)
+    #         reward = reward_dist + reward_speed
+    #
+    # def interpret_action(self, action):
+    #     if action == 0:
+    #         quad_offset = (self.step_length, 0, 0)
+    #     elif action == 1:
+    #         quad_offset = (0, self.step_length, 0)
+    #     elif action == 2:
+    #         quad_offset = (0, 0, self.step_length)
+    #     elif action == 3:
+    #         quad_offset = (-self.step_length, 0, 0)
+    #     elif action == 4:
+    #         quad_offset = (0, -self.step_length, 0)
+    #     elif action == 5:
+    #         quad_offset = (0, 0, -self.step_length)
+    #     else:
+    #         quad_offset = (0, 0, 0)
 
     def reset(self,
               seed: int = None,
@@ -497,6 +495,7 @@ class PBDroneEnv(
         if len(self.target_visual) > 0:
             p.removeBody(self.target_visual[0])
             self.target_visual = self.target_visual[1:]
+
 
     # def _computeReward(self):
     #

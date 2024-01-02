@@ -3,7 +3,7 @@ import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import load_results
 from stable_baselines3.common.results_plotter import ts2xy
-
+import wandb
 
 class FoundTargetsCallback(BaseCallback):
     """
@@ -29,6 +29,6 @@ class FoundTargetsCallback(BaseCallback):
             if episode_rewards is not None:
                 self.episode_rewards.append(episode_rewards[-1])
                 self.logger.record('train/found_targets', episode_rewards[-1])
+                wandb.log({'found_targets': episode_rewards[-1]})
                 print("Found targets: ", episode_rewards[-1])
-        return True
 
