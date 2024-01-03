@@ -1,0 +1,682 @@
+diff --git a/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc b/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc
+index b4c8856..f6a481e 100644
+Binary files a/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc and b/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc differ
+diff --git a/Sol/Model/__pycache__/Waypoints.cpython-38.pyc b/Sol/Model/__pycache__/Waypoints.cpython-38.pyc
+index 21580fb..5f8a111 100644
+Binary files a/Sol/Model/__pycache__/Waypoints.cpython-38.pyc and b/Sol/Model/__pycache__/Waypoints.cpython-38.pyc differ
+diff --git a/Sol/Model/learn_cp.py b/Sol/Model/learn_cp.py
+index 9389ae7..5482eea 100644
+--- a/Sol/Model/learn_cp.py
++++ b/Sol/Model/learn_cp.py
+@@ -29,13 +29,6 @@ print("Working dir:", os.getcwd())
+ from stable_baselines3.common.env_util import make_vec_env
+ from stable_baselines3 import PPO
+ 
+-# from gym_pybullet_drones.utils.Logger import Logger
+-# from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
+-# from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
+-# from gym_pybullet_drones.utils.utils import sync, str2bool
+-
+-
+-sys.path.append('C:\Files\Egyetem\Szakdolgozat\RL\Sol')
+ 
+ from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
+ from Sol.PyBullet.GymPybulletDronesMain import *
+@@ -120,8 +113,6 @@ if __name__ == "__main__":
+ 
+ #     $ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
+ 
+-# Notes
+-# -----
+ # Use:
+ 
+ #     $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/
+@@ -201,52 +192,30 @@ def run(
+     #             f.write(str(git_commit))
+ 
+     #### Warning ###############################################
+-    if env == 'tune' and act != ActionType.TUN:
+-        print("\n\n\n[WARNING] TuneAviary is intended for use with ActionType.TUN\n\n\n")
++    i
+     if act == ActionType.ONE_D_RPM or act == ActionType.ONE_D_DYN or act == ActionType.ONE_D_PID:
+         print("\n\n\n[WARNING] Simplified 1D problem for debugging purposes\n\n\n")
+         #### Errors ################################################
+         if not env in ['takeoff', 'hover']:
+             print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary")
+             exit()
+-    if act == ActionType.TUN and env != 'tune':
+-        print("[ERROR] ActionType.TUN is only compatible with TuneAviary")
+-        exit()
++
+     if algo in ['sac', 'td3', 'ddpg'] and cpu != 1:
+         print("[ERROR] The selected algorithm does not support multiple environments")
+         exit()
+ 
+-    #### Uncomment to debug slurm scripts ######################
+-    # exit()
+-
+     env_name = env + "-aviary-v0"
+     # sa_env_kwargs = dict(aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act)
+     # train_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act) # single environment instead of a vectorized one
+     train_env = gym.make(env_name, obs=obs, act=act)  # single environment instead of a vectorized one
+-    #     if env_name == "takeoff-aviary-v0":
+-    #         train_env = make_vec_env(TakeoffAviary,
+-    #                                  env_kwargs=sa_env_kwargs,
+-    #                                  n_envs=cpu,
+-    #                                  seed=0
+-    #                                  )
+-    #     if env_name == "hover-aviary-v0":
+-    #         train_env = make_vec_env(HoverAviary,
+-    #                                  env_kwargs=sa_env_kwargs,
+-    #                                  n_envs=cpu,
+-    #                                  seed=0
+-    #                                  )
++
+     if env_name == "flythrugate-aviary-v0":
+         train_env = make_vec_env(FlyThruGateAviary,
+                                  # env_kwargs=sa_env_kwargs,
+                                  n_envs=cpu,
+                                  seed=0
+                                  )
+-    #     if env_name == "tune-aviary-v0":
+-    #         train_env = make_vec_env(TuneAviary,
+-    #                                  env_kwargs=sa_env_kwargs,
+-    #                                  n_envs=cpu,
+-    #                                  seed=0
+-    #                                  )
++
+     print("[INFO] Action space:", train_env.action_space)
+     print("[INFO] Observation space:", train_env.observation_space)
+     check_env(train_env, warn=True, skip_render_check=True)
+@@ -255,18 +224,18 @@ def run(
+     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
+                            net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]
+                            )  # or None
+-    #     if algo == 'a2c':
+-    #         model = A2C(a2cppoMlpPolicy,
+-    #                     train_env,
+-    #                     policy_kwargs=onpolicy_kwargs,
+-    #                     tensorboard_log=filename+'/tb/',
+-    #                     verbose=1
+-    #                     ) if obs == ObservationType.KIN else A2C(a2cppoCnnPolicy,
+-    #                                                                   train_env,
+-    #                                                                   policy_kwargs=onpolicy_kwargs,
+-    #                                                                   tensorboard_log=filename+'/tb/',
+-    #                                                                   verbose=1
+-    #                                                                   )
++    if algo == 'a2c':
++        model = A2C(a2cppoMlpPolicy,
++                    train_env,
++                    policy_kwargs=onpolicy_kwargs,
++                    tensorboard_log=filename+'/tb/',
++                    verbose=1
++                    ) if obs == ObservationType.KIN else A2C(a2cppoCnnPolicy,
++                                                                  train_env,
++                                                                  policy_kwargs=onpolicy_kwargs,
++                                                                  tensorboard_log=filename+'/tb/',
++                                                                  verbose=1
++                                                                  )
+     if algo == 'ppo':
+         model = PPO(a2cppoMlpPolicy,
+                     train_env,
+@@ -280,46 +249,46 @@ def run(
+                                                              verbose=1
+                                                              )
+ 
+-    #     #### Off-policy algorithms #################################
+-    #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
+-    #                             net_arch=[512, 512, 256, 128]
+-    #                             ) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
+-    #     if algo == 'sac':
+-    #         model = SAC(sacMlpPolicy,
+-    #                     train_env,
+-    #                     policy_kwargs=offpolicy_kwargs,
+-    #                     tensorboard_log=filename+'/tb/',
+-    #                     verbose=1
+-    #                     ) if obs==ObservationType.KIN else SAC(sacCnnPolicy,
+-    #                                                                 train_env,
+-    #                                                                 policy_kwargs=offpolicy_kwargs,
+-    #                                                                 tensorboard_log=filename+'/tb/',
+-    #                                                                 verbose=1
+-    #                                                                 )
+-    #     if algo == 'td3':
+-    #         model = TD3(td3ddpgMlpPolicy,
+-    #                     train_env,
+-    #                     policy_kwargs=offpolicy_kwargs,
+-    #                     tensorboard_log=filename+'/tb/',
+-    #                     verbose=1
+-    #                     ) if obs==ObservationType.KIN else TD3(td3ddpgCnnPolicy,
+-    #                                                                 train_env,
+-    #                                                                 policy_kwargs=offpolicy_kwargs,
+-    #                                                                 tensorboard_log=filename+'/tb/',
+-    #                                                                 verbose=1
+-    #                                                                 )
+-    #     if algo == 'ddpg':
+-    #         model = DDPG(td3ddpgMlpPolicy,
+-    #                     train_env,
+-    #                     policy_kwargs=offpolicy_kwargs,
+-    #                     tensorboard_log=filename+'/tb/',
+-    #                     verbose=1
+-    #                     ) if obs==ObservationType.KIN else DDPG(td3ddpgCnnPolicy,
+-    #                                                                 train_env,
+-    #                                                                 policy_kwargs=offpolicy_kwargs,
+-    #                                                                 tensorboard_log=filename+'/tb/',
+-    #                                                                 verbose=1
+-    #                                                                 )
++    #### Off-policy algorithms #################################
++    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
++                                net_arch=[512, 512, 256, 128]
++                                ) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
++    if algo == 'sac':
++        model = SAC(sacMlpPolicy,
++                    train_env,
++                    policy_kwargs=offpolicy_kwargs,
++                    tensorboard_log=filename+'/tb/',
++                    verbose=1
++                    ) if obs==ObservationType.KIN else SAC(sacCnnPolicy,
++                                                                train_env,
++                                                                policy_kwargs=offpolicy_kwargs,
++                                                                tensorboard_log=filename+'/tb/',
++                                                                verbose=1
++                                                                )
++    if algo == 'td3':
++        model = TD3(td3ddpgMlpPolicy,
++                    train_env,
++                    policy_kwargs=offpolicy_kwargs,
++                    tensorboard_log=filename+'/tb/',
++                    verbose=1
++                    ) if obs==ObservationType.KIN else TD3(td3ddpgCnnPolicy,
++                                                                train_env,
++                                                                policy_kwargs=offpolicy_kwargs,
++                                                                tensorboard_log=filename+'/tb/',
++                                                                verbose=1
++                                                                )
++    if algo == 'ddpg':
++        model = DDPG(td3ddpgMlpPolicy,
++                    train_env,
++                    policy_kwargs=offpolicy_kwargs,
++                    tensorboard_log=filename+'/tb/',
++                    verbose=1
++                    ) if obs==ObservationType.KIN else DDPG(td3ddpgCnnPolicy,
++                                                                train_env,
++                                                                policy_kwargs=offpolicy_kwargs,
++                                                                tensorboard_log=filename+'/tb/',
++                                                                verbose=1
++                                                                )
+ 
+     #### Create eveluation environment #########################
+     if obs == ObservationType.KIN:
+@@ -328,35 +297,25 @@ def run(
+                             obs=obs,
+                             act=act
+                             )
+-        #     elif obs == ObservationType.RGB:
+-        #         if env_name == "takeoff-aviary-v0":
+-        #             eval_env = make_vec_env(TakeoffAviary,
+-        #                                     env_kwargs=sa_env_kwargs,
+-        #                                     n_envs=1,
+-        #                                     seed=0
+-        #                                     )
+-        #         if env_name == "hover-aviary-v0":
+-        #             eval_env = make_vec_env(HoverAviary,
+-        #                                     env_kwargs=sa_env_kwargs,
+-        #                                     n_envs=1,
+-        #                                     seed=0
+-        #                                     )
++    elif obs == ObservationType.RGB:
++        if env_name == "takeoff-aviary-v0":
++            eval_env = make_vec_env(env_name,
++                                    # env_kwargs=sa_env_kwargs,
++                                    n_envs=1,
++                                    seed=0
++                                    )
++
+         if env_name == "flythrugate-aviary-v0":
+             eval_env = make_vec_env(FlyThruGateAviary,
+                                     # env_kwargs=sa_env_kwargs,
+                                     n_envs=1,
+                                     seed=0
+                                     )
+-        #         if env_name == "tune-aviary-v0":
+-        #             eval_env = make_vec_env(TuneAviary,
+-        #                                     env_kwargs=sa_env_kwargs,
+-        #                                     n_envs=1,
+-        #                                     seed=0
+-        #                                     )
++
+         eval_env = VecTransposeImage(eval_env)
+ 
+     #### Train the model #######################################
+-    # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
++    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
+     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD,
+                                                      verbose=1
+                                                      )
+diff --git a/Sol/Model/pybullet_drone_simulator.py b/Sol/Model/pybullet_drone_simulator.py
+index 55e78f6..7784051 100644
+--- a/Sol/Model/pybullet_drone_simulator.py
++++ b/Sol/Model/pybullet_drone_simulator.py
+@@ -4,6 +4,7 @@ import random
+ import time
+ from datetime import datetime
+ import argparse
++from distutils.util import strtobool
+ # import sync, str2bool
+ 
+ from typing import Callable
+@@ -232,7 +233,7 @@ class PBDroneSimulator:
+ 
+             time.sleep(1. / 240.)
+ 
+-    def run_full(self):
++    def run_full(self, args):
+         start = time.perf_counter()
+ 
+         filename = os.path.join("./model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+@@ -247,16 +248,16 @@ class PBDroneSimulator:
+                                    range(self.num_cpu)])
+         # train_env = VecCheckNan(train_env)
+         train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
+-                                 clip_obs=10)
++                                 clip_obs=1)
+ 
+         # eval_env = make_env(multi=False, gui=False, rank=0)
+         #
+-        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=False,
++        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=True,
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
+         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
+         # eval_env = VecCheckNan(eval_env)
+         eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
+-                                clip_obs=10)
++                                clip_obs=1)
+ 
+         # onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
+         #                        net_arch=dict(vf=[512, 512, 256, 128],
+@@ -267,7 +268,7 @@ class PBDroneSimulator:
+                     train_env,
+                     verbose=1,
+                     n_steps=2048,
+-                    batch_size=49152,
++                    batch_size=49152 // self.num_cpu,
+                     ent_coef=0.01,
+                     # use_sde=True,
+                     # sde_sample_freq=4,
+@@ -276,7 +277,7 @@ class PBDroneSimulator:
+                     tensorboard_log="./logs/ppo_tensorboard/",
+                     device="auto",
+                     policy_kwargs=  # onpolicy_kwargs
+-                    dict(net_arch=[256, 256, 256], activation_fn=th.nn.Tanh, ),
++                    dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
+                     )
+ 
+         # tensorboard --logdir ./logs/ppo_tensorboard/
+@@ -333,7 +334,7 @@ class PBDroneSimulator:
+ 
+         found_tar_callback = Callbacks.FoundTargetsCallback(log_dir=filename + '/')
+ 
+-        wandb_callback = WandbCallback(gradient_save_freq=100, model_save_path=filename + '/', verbose=2,)
++        wandb_callback = WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2,)
+ 
+         eval_callback = EvalCallback(eval_env,
+                                      # callback_on_new_best=callback_on_best,
+@@ -345,9 +346,10 @@ class PBDroneSimulator:
+                                      render=False
+                                      )
+ 
+-        model.learn(total_timesteps=int(1e7),
++        model.learn(total_timesteps=int(5e6),
+                     callback=[eval_callback,
+-                              found_tar_callback
++                              found_tar_callback,
++                              wandb_callback
+                               # AimCallback(repo='.Aim/', experiment_name='sb3_test')
+                               ],
+                     log_interval=1000,
+@@ -441,7 +443,6 @@ def parse_args():
+     parser.add_argument('--cuda', action='store_true', default=False)
+     parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI (default: True)',
+                         metavar='')
+-    parser.add_argument('--capture-video', action='store_true', default=False)
+     parser.add_argument('--save-buffer', action='store_true', default=False)
+     parser.add_argument('--save-model', action='store_true', default=True)
+     parser.add_argument('--save-obs', action='store_true', default=False)
+@@ -450,17 +451,23 @@ def parse_args():
+     parser.add_argument('--checkpoint-freq', type=int, default=100)
+     parser.add_argument('--checkpoint-at-end', action='store_true', default=False)
+     parser.add_argument('--restore-agent', action='store_true', default=False)
+-    parser.add_argument('--restore-buffer', action='store_true', default=False)
+-    parser.add_argument('--restore-optimizer', action='store_true', default=False)
+-    parser.add_argument('--restore', type=str, default=None)
++
++
+     parser.add_argument('--num-cpus', type=int, default=1)
+     parser.add_argument('--num-workers', type=int, default=0)
+     parser.add_argument('--num_envs', type=int, default=1)
+-    parser.add_argument('--num_steps', type=int, default=5e6)
++    parser.add_argument('--max_steps', type=int, default=5e6)
+     parser.add_argument('--agent', type=str, default='PPO')
+     parser.add_argument('--agent-config', type=str, default='default')
+     parser.add_argument('--policy', type=str, default='default')
+     parser.add_argument('--policy-config', type=str, default='default')
++    parser.add_argument('--discount', type=int, default=0.999)
++    parser.add_argument('--threshold', type=int, default=0.3)
++    parser.add_argument('--batch-size', type=int, default=2048)
++    parser.add_argument('--num-steps', type=int, default=2048)
++
++
++
+     parser.add_argument('--eval-criterion', type=str, default='default')
+     parser.add_argument('--eval-criterion-config', type=str, default='default')
+     parser.add_argument('--metric', type=str, default='default')
+@@ -552,7 +559,7 @@ if __name__ == "__main__":
+ 
+     init_wandb(args)
+ 
+-    sim.run_full()
++    sim.run_full(args)
+     #
+     # sim.run_test()
+ 
+diff --git a/Sol/model_chkpts/save-01.01.2024_22.04.46/evaluations.npz b/Sol/model_chkpts/save-01.01.2024_22.04.46/evaluations.npz
+index bd702c8..52c53b0 100644
+Binary files a/Sol/model_chkpts/save-01.01.2024_22.04.46/evaluations.npz and b/Sol/model_chkpts/save-01.01.2024_22.04.46/evaluations.npz differ
+diff --git a/Sol/wandb/run-20240101_220436-h3ftsn8v/files/output.log b/Sol/wandb/run-20240101_220436-h3ftsn8v/files/output.log
+index 3dcacd6..42a3430 100644
+--- a/Sol/wandb/run-20240101_220436-h3ftsn8v/files/output.log
++++ b/Sol/wandb/run-20240101_220436-h3ftsn8v/files/output.log
+@@ -23548,3 +23548,100 @@ Episode length: 650.00 +/- 123.72
+ |    mean_reward     | 715      |
+ | time/              |          |
+ |    total_timesteps | 4938168  |
++---------------------------------
++Eval num_timesteps=4940160, episode_reward=795.07 +/- 415.59
++Episode length: 704.00 +/- 234.64
++---------------------------------
++| eval/              |          |
++|    mean_ep_length  | 704      |
++|    mean_reward     | 795      |
++| time/              |          |
++|    total_timesteps | 4940160  |
++---------------------------------
++Eval num_timesteps=4942152, episode_reward=705.99 +/- 175.21
++Episode length: 517.60 +/- 42.69
++---------------------------------
++| eval/              |          |
++|    mean_ep_length  | 518      |
++|    mean_reward     | 706      |
++| time/              |          |
++|    total_timesteps | 4942152  |
++---------------------------------
++Eval num_timesteps=4944144, episode_reward=718.82 +/- 217.27
++Episode length: 565.60 +/- 51.15
++---------------------------------
++| eval/              |          |
++|    mean_ep_length  | 566      |
++|    mean_reward     | 719      |
++| time/              |          |
++|    total_timesteps | 4944144  |
++---------------------------------
++Eval num_timesteps=4946136, episode_reward=701.38 +/- 78.75
++Episode length: 565.20 +/- 27.25
++---------------------------------
++| eval/              |          |
++|    mean_ep_length  | 565      |
++|    mean_reward     | 701      |
++| time/              |          |
++|    total_timesteps | 4946136  |
++---------------------------------
++Eval num_timesteps=4948128, episode_reward=938.23 +/- 451.31
++Episode length: 635.40 +/- 241.57
++---------------------------------
++| eval/              |          |
++|    mean_ep_length  | 635      |
++|    mean_reward     | 938      |
++| time/              |          |
++|    total_timesteps | 4948128  |
++---------------------------------
++Eval num_timesteps=4950120, episode_reward=684.02 +/- 115.19
++Episode length: 618.40 +/- 97.45
++---------------------------------
++| eval/              |          |
++|    mean_ep_length  | 618      |
++|    mean_reward     | 684      |
++| time/              |          |
++|    total_timesteps | 4950120  |
++---------------------------------
++Eval num_timesteps=4952112, episode_reward=760.04 +/- 147.09
++Episode length: 551.00 +/- 75.17
++---------------------------------
++| eval/              |          |
++|    mean_ep_length  | 551      |
++|    mean_reward     | 760      |
++| time/              |          |
++|    total_timesteps | 4952112  |
++---------------------------------
++Traceback (most recent call last):
++  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 527, in <module>
++    writer.add_text(
++  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 347, in run_full
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py", line 315, in learn
++    return super().learn(
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 277, in learn
++    continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 200, in collect_rollouts
++    if not callback.on_step():
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
++    return self._on_step()
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 219, in _on_step
++    continue_training = callback.on_step() and continue_training
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
++    return self._on_step()
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 460, in _on_step
++    episode_rewards, episode_lengths = evaluate_policy(
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\evaluation.py", line 94, in evaluate_policy
++    new_observations, rewards, dones, infos = env.step(actions)
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\base_vec_env.py", line 206, in step
++    return self.step_wait()
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\vec_normalize.py", line 181, in step_wait
++    obs, rewards, dones, infos = self.venv.step_wait()
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in step_wait
++    results = [remote.recv() for remote in self.remotes]
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in <listcomp>
++    results = [remote.recv() for remote in self.remotes]
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 250, in recv
++    buf = self._recv_bytes()
++  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 305, in _recv_bytes
++    waitres = _winapi.WaitForMultipleObjects(
++KeyboardInterrupt
+\ No newline at end of file
+diff --git a/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug-internal.log b/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug-internal.log
+index 980c8d8..3cb8eda 100644
+--- a/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug-internal.log
++++ b/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug-internal.log
+@@ -7884,3 +7884,176 @@ _info {
+ 2024-01-02 01:37:55,400 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
+ 2024-01-02 01:38:00,246 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
+ 2024-01-02 01:38:00,593 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:05,632 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:08,308 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:08,324 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: internal_messages
++2024-01-02 01:38:10,206 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: stop_status
++2024-01-02 01:38:10,207 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: stop_status
++2024-01-02 01:38:11,024 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:11,384 DEBUG   SenderThread:28516 [sender.py:send():382] send: stats
++2024-01-02 01:38:12,351 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:16,445 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:18,415 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:21,700 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:23,333 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: internal_messages
++2024-01-02 01:38:24,490 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:25,218 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: stop_status
++2024-01-02 01:38:25,219 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: stop_status
++2024-01-02 01:38:27,475 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:32,506 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:32,539 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:37,896 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:38,343 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: internal_messages
++2024-01-02 01:38:38,581 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:40,225 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: stop_status
++2024-01-02 01:38:40,225 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: stop_status
++2024-01-02 01:38:41,390 DEBUG   SenderThread:28516 [sender.py:send():382] send: stats
++2024-01-02 01:38:41,840 DEBUG   SenderThread:28516 [sender.py:send():382] send: exit
++2024-01-02 01:38:41,840 INFO    SenderThread:28516 [sender.py:send_exit():589] handling exit code: 255
++2024-01-02 01:38:41,841 INFO    SenderThread:28516 [sender.py:send_exit():591] handling runtime: 12844
++2024-01-02 01:38:41,842 INFO    SenderThread:28516 [sender.py:_save_file():1392] saving file wandb-summary.json with policy end
++2024-01-02 01:38:41,842 INFO    SenderThread:28516 [sender.py:send_exit():597] send defer
++2024-01-02 01:38:41,843 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:41,843 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 0
++2024-01-02 01:38:41,844 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:41,844 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 0
++2024-01-02 01:38:41,844 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 1
++2024-01-02 01:38:41,845 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:41,845 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 1
++2024-01-02 01:38:41,845 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:41,845 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 1
++2024-01-02 01:38:41,845 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 2
++2024-01-02 01:38:41,846 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:41,846 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 2
++2024-01-02 01:38:41,846 INFO    HandlerThread:28516 [system_monitor.py:finish():203] Stopping system monitor
++2024-01-02 01:38:41,846 DEBUG   SystemMonitor:28516 [system_monitor.py:_start():179] Finished system metrics aggregation loop
++2024-01-02 01:38:41,847 DEBUG   SystemMonitor:28516 [system_monitor.py:_start():183] Publishing last batch of metrics
++2024-01-02 01:38:41,848 INFO    HandlerThread:28516 [interfaces.py:finish():202] Joined cpu monitor
++2024-01-02 01:38:41,849 INFO    HandlerThread:28516 [interfaces.py:finish():202] Joined disk monitor
++2024-01-02 01:38:41,936 INFO    HandlerThread:28516 [interfaces.py:finish():202] Joined gpu monitor
++2024-01-02 01:38:41,937 INFO    HandlerThread:28516 [interfaces.py:finish():202] Joined memory monitor
++2024-01-02 01:38:41,937 INFO    HandlerThread:28516 [interfaces.py:finish():202] Joined network monitor
++2024-01-02 01:38:41,938 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:41,938 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 2
++2024-01-02 01:38:41,938 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 3
++2024-01-02 01:38:41,938 DEBUG   SenderThread:28516 [sender.py:send():382] send: stats
++2024-01-02 01:38:41,938 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:41,938 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 3
++2024-01-02 01:38:41,939 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:41,939 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 3
++2024-01-02 01:38:41,939 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 4
++2024-01-02 01:38:41,939 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:41,939 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 4
++2024-01-02 01:38:42,611 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:42,612 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_created():271] file/dir created: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\wandb-summary.json
++2024-01-02 01:38:44,648 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:47,713 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: poll_exit
++2024-01-02 01:38:47,713 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:47,713 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:47,714 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 4
++2024-01-02 01:38:47,714 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 5
++2024-01-02 01:38:47,714 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: poll_exit
++2024-01-02 01:38:47,714 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:47,714 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 5
++2024-01-02 01:38:47,715 DEBUG   SenderThread:28516 [sender.py:send():382] send: summary
++2024-01-02 01:38:47,715 INFO    SenderThread:28516 [sender.py:_save_file():1392] saving file wandb-summary.json with policy end
++2024-01-02 01:38:47,715 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:47,716 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 5
++2024-01-02 01:38:47,716 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 6
++2024-01-02 01:38:47,716 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:47,716 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 6
++2024-01-02 01:38:47,716 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:47,716 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 6
++2024-01-02 01:38:47,716 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 7
++2024-01-02 01:38:47,716 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:47,717 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:47,717 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 7
++2024-01-02 01:38:47,717 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:47,717 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 7
++2024-01-02 01:38:47,953 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: keepalive
++2024-01-02 01:38:48,688 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\wandb-summary.json
++2024-01-02 01:38:49,882 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 8
++2024-01-02 01:38:49,883 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:49,883 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 8
++2024-01-02 01:38:49,883 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:49,883 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 8
++2024-01-02 01:38:49,883 INFO    SenderThread:28516 [job_builder.py:build():298] Attempting to build job artifact
++2024-01-02 01:38:49,884 INFO    SenderThread:28516 [job_builder.py:_get_source_type():428] is repo sourced job
++2024-01-02 01:38:50,296 INFO    SenderThread:28516 [job_builder.py:build():404] adding wandb-job metadata file
++2024-01-02 01:38:50,311 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 9
++2024-01-02 01:38:50,311 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:50,311 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 9
++2024-01-02 01:38:50,312 DEBUG   SenderThread:28516 [sender.py:send():382] send: artifact
++2024-01-02 01:38:50,694 INFO    Thread-16 :28516 [dir_watcher.py:_on_file_modified():288] file/dir modified: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:52,075 INFO    wandb-upload_2:28516 [upload_job.py:push():89] Uploaded file C:\Users\xx4qw\AppData\Local\wandb\wandb\artifacts\staging\tmpiogtg1kc
++2024-01-02 01:38:52,083 INFO    wandb-upload_1:28516 [upload_job.py:push():89] Uploaded file C:\Users\xx4qw\AppData\Local\wandb\wandb\artifacts\staging\tmpxbu9alae
++2024-01-02 01:38:52,115 INFO    wandb-upload_0:28516 [upload_job.py:push():89] Uploaded file C:\Users\xx4qw\AppData\Local\wandb\wandb\artifacts\staging\tmpq7pdrvkb
++2024-01-02 01:38:52,976 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: keepalive
++2024-01-02 01:38:53,502 INFO    SenderThread:28516 [sender.py:send_artifact():1470] sent artifact job-https___github.com_eRGiBi_RL.git_Sol_Model_pybullet_drone_simulator.py - {'id': 'QXJ0aWZhY3Q6Njc5MzkwOTE0', 'state': 'PENDING', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjEyNjc2ODU5NA==', 'latestArtifact': None}}
++2024-01-02 01:38:53,502 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:53,502 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 9
++2024-01-02 01:38:53,502 INFO    SenderThread:28516 [dir_watcher.py:finish():358] shutting down directory watcher
++2024-01-02 01:38:53,724 INFO    SenderThread:28516 [dir_watcher.py:finish():388] scan: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files
++2024-01-02 01:38:53,725 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\conda-environment.yaml conda-environment.yaml
++2024-01-02 01:38:53,725 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\config.yaml config.yaml
++2024-01-02 01:38:53,727 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\diff.patch diff.patch
++2024-01-02 01:38:53,728 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log output.log
++2024-01-02 01:38:53,731 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\requirements.txt requirements.txt
++2024-01-02 01:38:53,733 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\wandb-metadata.json wandb-metadata.json
++2024-01-02 01:38:53,734 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\wandb-summary.json wandb-summary.json
++2024-01-02 01:38:53,740 INFO    SenderThread:28516 [dir_watcher.py:finish():402] scan save: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\code\Sol\Model\pybullet_drone_simulator.py code/Sol/Model/pybullet_drone_simulator.py
++2024-01-02 01:38:53,741 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 10
++2024-01-02 01:38:53,741 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:53,741 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 10
++2024-01-02 01:38:53,741 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:53,741 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 10
++2024-01-02 01:38:53,741 INFO    SenderThread:28516 [file_pusher.py:finish():175] shutting down file pusher
++2024-01-02 01:38:54,127 INFO    wandb-upload_2:28516 [upload_job.py:push():131] Uploaded file C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\conda-environment.yaml
++2024-01-02 01:38:54,683 INFO    wandb-upload_0:28516 [upload_job.py:push():131] Uploaded file C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\config.yaml
++2024-01-02 01:38:55,138 INFO    wandb-upload_4:28516 [upload_job.py:push():131] Uploaded file C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\wandb-summary.json
++2024-01-02 01:38:55,149 INFO    wandb-upload_3:28516 [upload_job.py:push():131] Uploaded file C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\requirements.txt
++2024-01-02 01:38:55,742 INFO    wandb-upload_1:28516 [upload_job.py:push():131] Uploaded file C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\files\output.log
++2024-01-02 01:38:55,753 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: status_report
++2024-01-02 01:38:55,943 INFO    Thread-15 :28516 [sender.py:transition_state():617] send defer: 11
++2024-01-02 01:38:55,943 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:55,943 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 11
++2024-01-02 01:38:55,944 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:55,944 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 11
++2024-01-02 01:38:55,944 INFO    SenderThread:28516 [file_pusher.py:join():181] waiting for file pusher
++2024-01-02 01:38:55,944 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 12
++2024-01-02 01:38:55,944 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:55,944 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 12
++2024-01-02 01:38:55,944 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:55,944 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 12
++2024-01-02 01:38:55,944 INFO    SenderThread:28516 [file_stream.py:finish():595] file stream finish called
++2024-01-02 01:38:56,491 INFO    SenderThread:28516 [file_stream.py:finish():599] file stream finish is done
++2024-01-02 01:38:56,492 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 13
++2024-01-02 01:38:56,492 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:56,492 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 13
++2024-01-02 01:38:56,492 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:56,492 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 13
++2024-01-02 01:38:56,492 INFO    SenderThread:28516 [sender.py:transition_state():617] send defer: 14
++2024-01-02 01:38:56,493 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: defer
++2024-01-02 01:38:56,493 DEBUG   SenderThread:28516 [sender.py:send():382] send: final
++2024-01-02 01:38:56,493 INFO    HandlerThread:28516 [handler.py:handle_request_defer():172] handle defer: 14
++2024-01-02 01:38:56,493 DEBUG   SenderThread:28516 [sender.py:send():382] send: footer
++2024-01-02 01:38:56,493 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: defer
++2024-01-02 01:38:56,493 INFO    SenderThread:28516 [sender.py:send_request_defer():613] handle sender defer: 14
++2024-01-02 01:38:56,494 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: poll_exit
++2024-01-02 01:38:56,494 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: server_info
++2024-01-02 01:38:56,494 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: get_summary
++2024-01-02 01:38:56,494 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: poll_exit
++2024-01-02 01:38:56,494 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: sampled_history
++2024-01-02 01:38:56,494 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: server_info
++2024-01-02 01:38:56,494 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: internal_messages
++2024-01-02 01:38:56,497 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: job_info
++2024-01-02 01:38:56,668 DEBUG   SenderThread:28516 [sender.py:send_request():409] send_request: job_info
++2024-01-02 01:38:56,668 INFO    MainThread:28516 [wandb_run.py:_footer_history_summary_info():3837] rendering history
++2024-01-02 01:38:56,668 INFO    MainThread:28516 [wandb_run.py:_footer_history_summary_info():3869] rendering summary
++2024-01-02 01:38:56,668 INFO    MainThread:28516 [wandb_run.py:_footer_sync_info():3796] logging synced files
++2024-01-02 01:38:56,669 DEBUG   HandlerThread:28516 [handler.py:handle_request():146] handle_request: shutdown
++2024-01-02 01:38:56,669 INFO    HandlerThread:28516 [handler.py:finish():866] shutting down handler
++2024-01-02 01:38:57,512 INFO    WriterThread:28516 [datastore.py:close():294] close: C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240101_220436-h3ftsn8v\run-h3ftsn8v.wandb
++2024-01-02 01:38:57,672 INFO    SenderThread:28516 [sender.py:finish():1548] shutting down sender
++2024-01-02 01:38:57,672 INFO    SenderThread:28516 [file_pusher.py:finish():175] shutting down file pusher
++2024-01-02 01:38:57,672 INFO    SenderThread:28516 [file_pusher.py:join():181] waiting for file pusher
+diff --git a/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug.log b/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug.log
+index 3842217..8e534d9 100644
+--- a/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug.log
++++ b/Sol/wandb/run-20240101_220436-h3ftsn8v/logs/debug.log
+@@ -25,3 +25,4 @@ config: {'env_name': 'default', 'policy_type': 'default', 'total_timesteps': 500
+ 2024-01-01 22:04:46,195 INFO    MainThread:21080 [wandb_run.py:_redirect():2178] Redirects installed.
+ 2024-01-01 22:04:46,196 INFO    MainThread:21080 [wandb_init.py:init():841] run started, returning control to user process
+ 2024-01-01 22:05:30,175 INFO    MainThread:21080 [wandb_run.py:_tensorboard_callback():1498] tensorboard callback: ./logs/ppo_tensorboard/PPO_107, True
++2024-01-02 01:38:58,059 WARNING MsgRouterThr:21080 [router.py:message_loop():77] message_loop has been closed
+diff --git a/Sol/wandb/run-20240101_220436-h3ftsn8v/run-h3ftsn8v.wandb b/Sol/wandb/run-20240101_220436-h3ftsn8v/run-h3ftsn8v.wandb
+index 217af06..212f9b4 100644
+Binary files a/Sol/wandb/run-20240101_220436-h3ftsn8v/run-h3ftsn8v.wandb and b/Sol/wandb/run-20240101_220436-h3ftsn8v/run-h3ftsn8v.wandb differ

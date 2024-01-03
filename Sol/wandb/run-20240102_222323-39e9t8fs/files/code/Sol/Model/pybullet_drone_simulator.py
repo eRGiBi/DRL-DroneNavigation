@@ -142,11 +142,9 @@ class PBDroneSimulator:
         # action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
         # action = np.array([.9, .9, .9, .9], dtype=np.float32)
         action = np.array([-1, -1, -1, -1], dtype=np.float32)
-        action *= -1/10
+        action *= -1
         # action = np.array([0, 0, 0, 0], dtype=np.float32)
-
         plot_3d_targets(self.targets)
-        self.targets = Waypoints.up()
 
         drone_environment = self.make_env(gui=True,  # initial_xyzs=np.array([[0, 0, 0.5]]),
                                           aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
@@ -440,6 +438,7 @@ def parse_args():
     parser.add_argument('--env-config', type=str, default='default')
     parser.add_argument('--env-kwargs', type=str, default='{}')
     parser.add_argument('--log-dir', type=str, default='logs')
+    parser.add_argument('--exp-name', type=str, default='test')
     parser.add_argument('--seed', '-s', type=int, default=1)
     parser.add_argument('--cuda', action='store_true', default=False)
     parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI (default: True)',
@@ -466,9 +465,7 @@ def parse_args():
     parser.add_argument('--threshold', type=int, default=0.3)
     parser.add_argument('--batch-size', type=int, default=2048)
     parser.add_argument('--num-steps', type=int, default=2048)
-    parser.add_argument('--ent_coef', type=int, default=0)
-    parser.add_argument('--learning-rate', type=int, default=1e-3)
-    parser.add_argument('--clip_range', type=int, default=0.2)
+
 
 
     parser.add_argument('--eval-criterion', type=str, default='default')
@@ -479,8 +476,6 @@ def parse_args():
     parser.add_argument('--optimizer-config', type=str, default='default')
     parser.add_argument('--criterion', type=str, default='default')
     parser.add_argument('--criterion-config', type=str, default='default')
-
-    parser.add_argument('--wandb', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,)
 
     parser.add_argument("--wandb-project-name", type=str, default="ppo-implementation-details",
                         help="the wandb's project name")
@@ -508,29 +503,29 @@ def parse_args():
 
 
 def init_wandb(args):
-    run_name = f"{args.gym_id}__{args.agent}__{int(time.time())}"
+
+    run_name = f"{args.gym_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
     print(f"Starting run {run_name} with `wandb`...")
 
     config = {
         "env_name": args.env,
-        "agent": args.agent,
         "policy_type": args.policy,
         "total_timesteps": args.num_steps,
         "policy_config": args.policy_config,
         "env_config": args.env_config,
         "seed": args.seed,
+        "agent": args.agent,
         "agent_config": args.agent_config,
         "metric": args.metric,
         "metric_config": args.metric_config,
         "optimizer": args.optimizer,
         "optimizer_config": args.optimizer_config,
         "criterion": args.criterion,
-
     }
     run = wandb.init(
         project="rl",
         config=args,
-        name=run_name,
+        name=args.exp_name,
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         monitor_gym=True,  # auto-upload the videos of agents playing the game
         save_code=True,  # optional

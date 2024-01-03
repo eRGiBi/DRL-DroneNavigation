@@ -25,3 +25,4 @@ config: {'env_name': 'default', 'policy_type': 'default', 'total_timesteps': 500
 2024-01-01 22:04:46,195 INFO    MainThread:21080 [wandb_run.py:_redirect():2178] Redirects installed.
 2024-01-01 22:04:46,196 INFO    MainThread:21080 [wandb_init.py:init():841] run started, returning control to user process
 2024-01-01 22:05:30,175 INFO    MainThread:21080 [wandb_run.py:_tensorboard_callback():1498] tensorboard callback: ./logs/ppo_tensorboard/PPO_107, True
+2024-01-02 01:38:58,059 WARNING MsgRouterThr:21080 [router.py:message_loop():77] message_loop has been closed

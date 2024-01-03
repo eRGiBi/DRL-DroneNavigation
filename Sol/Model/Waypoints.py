@@ -21,24 +21,34 @@ def parametric_eq(num_points=5):
     return [np.array([x[i], y[i], z[i]]) for i in range(num_points)]
 
 
+def up():
+    return [
+        np.array([0.0, 0.0, 0.1]),
+        np.array([0.0, 0.0, 0.2]),
+        np.array([0.0, 0.0, 0.5]),
+        np.array([0.0, 0.0, 0.7]),
+        np.array([0.0, 0.0, 1]),
+    ]
+
+
 def half_up_forward():
     return [
         # np.array([0.0, 0.0, 0.1]),
-    #         np.array([0.0, 0.0, 0.2]),
-            np.array([0., 0., 0.5]),
-            # np.array([0., 0., 0.4]),
-            np.array([0., 0., 1]),
-            # np.array([0., 0.1, 0.5]),
-            np.array([0., 1, 1.5]),
-            # np.array([0., 0.3, 0.5]),
-            # np.array([0., 0.4, 0.5]),
-            # np.array([0., 0.5, 0.5]),
-            np.array([0.5, 1.5, 1.5]),
-            # np.array([0.2, 0.5, 0.5]),
-            # np.array([0.3, 0.5, 0.5]),
-            # np.array([0.4, 0.5, 0.5]),
-            np.array([1.5, 1.5, 1.5]),
-            ]
+        #         np.array([0.0, 0.0, 0.2]),
+        np.array([0., 0., 0.5]),
+        # np.array([0., 0., 0.4]),
+        np.array([0., 0., 1]),
+        # np.array([0., 0.1, 0.5]),
+        np.array([0., 1, 1.5]),
+        # np.array([0., 0.3, 0.5]),
+        # np.array([0., 0.4, 0.5]),
+        # np.array([0., 0.5, 0.5]),
+        np.array([0.5, 1.5, 1.5]),
+        # np.array([0.2, 0.5, 0.5]),
+        # np.array([0.3, 0.5, 0.5]),
+        # np.array([0.4, 0.5, 0.5]),
+        np.array([1.5, 1.5, 1.5]),
+    ]
 
 
 def up_circle():
@@ -57,22 +67,24 @@ def up_circle():
         np.array([0.0, 0.0, 0.2]),
     ]
 
+
 def rnd():
     return [
         # np.array([0.5, 0.5, 0.5]),
         # np.array([0.5, 0.0, 0.3]),
-        np.array([-1, 0.2, 0.7]),
-        np.array([0.3, 0.5, 1.5]),
-        np.array([1.5, 1., 1.5]),
+        np.array([-1, 0.2, 1]),
+        np.array([0.3, 0.5, 0.7]),
+        np.array([1, 0.5, 1]),
         # np.array([1., 0., 1.5]),
         # np.array([.2, 1., .5]),
         # np.array([1.8, 1.5, -1]),
-        np.array([1.5, 1., .5]),
+        np.array([1.5, 1., 1.5]),
         # np.array([1.5, 0.5, 1]),
         # np.array([1, 0.5, 0.5]),
         # np.array([0.5, 0.2, 0.2]),
         # np.array([0.0, 0.0, 0.2]),
     ]
+
 
 def generate_random_targets(num_targets: int) -> np.ndarray:
     """Generates random targets for the drone to navigate to.

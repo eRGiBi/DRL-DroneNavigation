@@ -1,20 +1,3 @@
-import os
-import math
-import copy
-
-import inspect
-
-from gymnasium import spaces
-import numpy as np
-import pybullet as p
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
-from gymnasium.spaces.space import Space
-
-
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,
@@ -96,7 +79,7 @@ class PBDroneEnv(
 
         self._steps += 1
         self._last_action = action
-        self._last_position = copy.deepcopy(self._current_position)
+        self._last_position = self._current_position
         self._current_position = self.pos[0]
 
         return obs, reward, terminated, truncated, info
@@ -310,9 +293,9 @@ class PBDroneEnv(
             # Reward based on distance to target
 
             # reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
-            # reward += np.exp(-distance_to_target * 5) * 50
+            reward += np.exp(-distance_to_target * 5) * 50
             # Additional reward for progressing towards the target
-            # reward += (self._prev_distance_to_target - distance_to_target) * 30
+            reward += (self._prev_distance_to_target - distance_to_target) * 30
             # self.reward += max(3.0 * self.waypoints.progress_to_target(), 0.0)
 
             # Add a negative reward for spinning too fast
@@ -325,7 +308,7 @@ class PBDroneEnv(
                 # Additional reward for progressing towards the target
                 reward += self.calculate_progress_reward(self._current_position, self._last_position,
                                                          self._target_points[self._current_target_index - 1],
-                                                         self._target_points[self._current_target_index]) * 1000
+                                                         self._target_points[self._current_target_index])
 
         except ZeroDivisionError:
             # Give a high reward if the drone is at the target (avoiding division by zero)
@@ -367,15 +350,9 @@ class PBDroneEnv(
         #         #####################################
 
         self._prev_distance_to_target = distance_to_target
-        self._last_position = self._current_position
         return reward
 
     def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
-        """
-        Calculates the progress reward for the current and previous positions of the drone and the current and previous
-        gate positions.
-
-        """
         def s(p):
             g_diff = g2 - g1
             return np.dot(p - g1, g_diff) / np.linalg.norm(g_diff) ** 2

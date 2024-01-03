@@ -1,0 +1,29 @@
+2024-01-02 15:11:44,310 INFO    MainThread:17172 [wandb_setup.py:_flush():76] Current SDK version is 0.16.1
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_setup.py:_flush():76] Configure stats pid to 17172
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_setup.py:_flush():76] Loading settings from C:\Users\xx4qw\.config\wandb\settings
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_setup.py:_flush():76] Loading settings from C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\settings
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_setup.py:_flush():76] Applying setup settings: {'_disable_service': False}
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'Sol\\Model\\pybullet_drone_simulator.py', 'program_abspath': 'C:\\Files\\Egyetem\\Szakdolgozat\\RL\\Sol\\Model\\pybullet_drone_simulator.py', 'program': 'C:\\Files\\Egyetem\\Szakdolgozat\\RL\\Sol\\Model\\pybullet_drone_simulator.py'}
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_init.py:_log_setup():524] Logging user logs to C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240102_151144-auil7kkk\logs\debug.log
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_init.py:_log_setup():525] Logging internal logs to C:\Files\Egyetem\Szakdolgozat\RL\Sol\wandb\run-20240102_151144-auil7kkk\logs\debug-internal.log
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_init.py:init():564] calling init triggers
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_init.py:init():571] wandb.init called with sweep_config: {}
+config: {'gym_id': 'PBDroneEnv', 'env': 'default', 'env_config': 'default', 'env_kwargs': '{}', 'log_dir': 'logs', 'exp_name': 'test', 'seed': 1, 'cuda': False, 'gui': True, 'save_buffer': False, 'save_model': True, 'save_obs': False, 'save_video': False, 'save_dir': '', 'checkpoint_freq': 100, 'checkpoint_at_end': False, 'restore_agent': False, 'restore_buffer': False, 'restore_optimizer': False, 'restore': None, 'num_cpus': 1, 'num_workers': 0, 'num_envs': 1, 'num_steps': 5000000.0, 'agent': 'PPO', 'agent_config': 'default', 'policy': 'default', 'policy_config': 'default', 'eval_criterion': 'default', 'eval_criterion_config': 'default', 'metric': 'default', 'metric_config': 'default', 'optimizer': 'default', 'optimizer_config': 'default', 'criterion': 'default', 'criterion_config': 'default', 'wandb_project_name': 'ppo-implementation-details', 'wandb_entity': None, 'capture_video': False}
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_init.py:init():614] starting backend
+2024-01-02 15:11:44,311 INFO    MainThread:17172 [wandb_init.py:init():618] setting up manager
+2024-01-02 15:11:44,314 INFO    MainThread:17172 [backend.py:_multiprocessing_setup():105] multiprocessing start_methods=spawn, using: spawn
+2024-01-02 15:11:44,316 INFO    MainThread:17172 [wandb_init.py:init():624] backend started and connected
+2024-01-02 15:11:44,321 INFO    MainThread:17172 [wandb_init.py:init():716] updated telemetry
+2024-01-02 15:11:44,359 INFO    MainThread:17172 [wandb_init.py:init():749] communicating run to backend with 90.0 second timeout
+2024-01-02 15:11:45,142 INFO    MainThread:17172 [wandb_run.py:_on_init():2254] communicating current version
+2024-01-02 15:11:45,595 INFO    MainThread:17172 [wandb_run.py:_on_init():2263] got version response 
+2024-01-02 15:11:45,595 INFO    MainThread:17172 [wandb_init.py:init():800] starting run threads in backend
+2024-01-02 15:11:52,507 INFO    MainThread:17172 [wandb_run.py:_console_start():2233] atexit reg
+2024-01-02 15:11:52,507 INFO    MainThread:17172 [wandb_run.py:_redirect():2088] redirect: wrap_raw
+2024-01-02 15:11:52,508 INFO    MainThread:17172 [wandb_run.py:_redirect():2153] Wrapping output streams.
+2024-01-02 15:11:52,508 INFO    MainThread:17172 [wandb_run.py:_redirect():2178] Redirects installed.
+2024-01-02 15:11:52,508 INFO    MainThread:17172 [wandb_init.py:init():841] run started, returning control to user process
+2024-01-02 15:11:52,509 INFO    MainThread:17172 [wandb_run.py:_tensorboard_callback():1498] tensorboard callback: runs/PBDroneEnv__test__1__1704204701, True
+2024-01-02 15:12:31,167 INFO    MainThread:17172 [wandb_run.py:_tensorboard_callback():1498] tensorboard callback: ./logs/ppo_tensorboard/PPO_108, True
+2024-01-02 22:02:48,940 WARNING MsgRouterThr:17172 [router.py:message_loop():77] message_loop has been closed

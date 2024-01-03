@@ -23548,3 +23548,100 @@ Episode length: 650.00 +/- 123.72
 |    mean_reward     | 715      |
 | time/              |          |
 |    total_timesteps | 4938168  |
+---------------------------------
+Eval num_timesteps=4940160, episode_reward=795.07 +/- 415.59
+Episode length: 704.00 +/- 234.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 704      |
+|    mean_reward     | 795      |
+| time/              |          |
+|    total_timesteps | 4940160  |
+---------------------------------
+Eval num_timesteps=4942152, episode_reward=705.99 +/- 175.21
+Episode length: 517.60 +/- 42.69
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 518      |
+|    mean_reward     | 706      |
+| time/              |          |
+|    total_timesteps | 4942152  |
+---------------------------------
+Eval num_timesteps=4944144, episode_reward=718.82 +/- 217.27
+Episode length: 565.60 +/- 51.15
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 566      |
+|    mean_reward     | 719      |
+| time/              |          |
+|    total_timesteps | 4944144  |
+---------------------------------
+Eval num_timesteps=4946136, episode_reward=701.38 +/- 78.75
+Episode length: 565.20 +/- 27.25
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 565      |
+|    mean_reward     | 701      |
+| time/              |          |
+|    total_timesteps | 4946136  |
+---------------------------------
+Eval num_timesteps=4948128, episode_reward=938.23 +/- 451.31
+Episode length: 635.40 +/- 241.57
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 635      |
+|    mean_reward     | 938      |
+| time/              |          |
+|    total_timesteps | 4948128  |
+---------------------------------
+Eval num_timesteps=4950120, episode_reward=684.02 +/- 115.19
+Episode length: 618.40 +/- 97.45
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 618      |
+|    mean_reward     | 684      |
+| time/              |          |
+|    total_timesteps | 4950120  |
+---------------------------------
+Eval num_timesteps=4952112, episode_reward=760.04 +/- 147.09
+Episode length: 551.00 +/- 75.17
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 551      |
+|    mean_reward     | 760      |
+| time/              |          |
+|    total_timesteps | 4952112  |
+---------------------------------
+Traceback (most recent call last):
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 527, in <module>
+    writer.add_text(
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 347, in run_full
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py", line 315, in learn
+    return super().learn(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 277, in learn
+    continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 200, in collect_rollouts
+    if not callback.on_step():
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
+    return self._on_step()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 219, in _on_step
+    continue_training = callback.on_step() and continue_training
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
+    return self._on_step()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 460, in _on_step
+    episode_rewards, episode_lengths = evaluate_policy(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\evaluation.py", line 94, in evaluate_policy
+    new_observations, rewards, dones, infos = env.step(actions)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\base_vec_env.py", line 206, in step
+    return self.step_wait()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\vec_normalize.py", line 181, in step_wait
+    obs, rewards, dones, infos = self.venv.step_wait()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in step_wait
+    results = [remote.recv() for remote in self.remotes]
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in <listcomp>
+    results = [remote.recv() for remote in self.remotes]
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 250, in recv
+    buf = self._recv_bytes()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 305, in _recv_bytes
+    waitres = _winapi.WaitForMultipleObjects(
+KeyboardInterrupt

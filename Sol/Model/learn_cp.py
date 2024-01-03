@@ -29,13 +29,6 @@ print("Working dir:", os.getcwd())
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import PPO
 
-# from gym_pybullet_drones.utils.Logger import Logger
-# from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
-# from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
-# from gym_pybullet_drones.utils.utils import sync, str2bool
-
-
-sys.path.append('C:\Files\Egyetem\Szakdolgozat\RL\Sol')
 
 from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
 from Sol.PyBullet.GymPybulletDronesMain import *
@@ -120,8 +113,6 @@ if __name__ == "__main__":
 
 #     $ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
 
-# Notes
-# -----
 # Use:
 
 #     $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/
@@ -201,52 +192,30 @@ def run(
     #             f.write(str(git_commit))
 
     #### Warning ###############################################
-    if env == 'tune' and act != ActionType.TUN:
-        print("\n\n\n[WARNING] TuneAviary is intended for use with ActionType.TUN\n\n\n")
+    i
     if act == ActionType.ONE_D_RPM or act == ActionType.ONE_D_DYN or act == ActionType.ONE_D_PID:
         print("\n\n\n[WARNING] Simplified 1D problem for debugging purposes\n\n\n")
         #### Errors ################################################
         if not env in ['takeoff', 'hover']:
             print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary")
             exit()
-    if act == ActionType.TUN and env != 'tune':
-        print("[ERROR] ActionType.TUN is only compatible with TuneAviary")
-        exit()
+
     if algo in ['sac', 'td3', 'ddpg'] and cpu != 1:
         print("[ERROR] The selected algorithm does not support multiple environments")
         exit()
-
-    #### Uncomment to debug slurm scripts ######################
-    # exit()
 
     env_name = env + "-aviary-v0"
     # sa_env_kwargs = dict(aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act)
     # train_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act) # single environment instead of a vectorized one
     train_env = gym.make(env_name, obs=obs, act=act)  # single environment instead of a vectorized one
-    #     if env_name == "takeoff-aviary-v0":
-    #         train_env = make_vec_env(TakeoffAviary,
-    #                                  env_kwargs=sa_env_kwargs,
-    #                                  n_envs=cpu,
-    #                                  seed=0
-    #                                  )
-    #     if env_name == "hover-aviary-v0":
-    #         train_env = make_vec_env(HoverAviary,
-    #                                  env_kwargs=sa_env_kwargs,
-    #                                  n_envs=cpu,
-    #                                  seed=0
-    #                                  )
+
     if env_name == "flythrugate-aviary-v0":
         train_env = make_vec_env(FlyThruGateAviary,
                                  # env_kwargs=sa_env_kwargs,
                                  n_envs=cpu,
                                  seed=0
                                  )
-    #     if env_name == "tune-aviary-v0":
-    #         train_env = make_vec_env(TuneAviary,
-    #                                  env_kwargs=sa_env_kwargs,
-    #                                  n_envs=cpu,
-    #                                  seed=0
-    #                                  )
+
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
     check_env(train_env, warn=True, skip_render_check=True)
@@ -255,18 +224,18 @@ def run(
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
                            net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]
                            )  # or None
-    #     if algo == 'a2c':
-    #         model = A2C(a2cppoMlpPolicy,
-    #                     train_env,
-    #                     policy_kwargs=onpolicy_kwargs,
-    #                     tensorboard_log=filename+'/tb/',
-    #                     verbose=1
-    #                     ) if obs == ObservationType.KIN else A2C(a2cppoCnnPolicy,
-    #                                                                   train_env,
-    #                                                                   policy_kwargs=onpolicy_kwargs,
-    #                                                                   tensorboard_log=filename+'/tb/',
-    #                                                                   verbose=1
-    #                                                                   )
+    if algo == 'a2c':
+        model = A2C(a2cppoMlpPolicy,
+                    train_env,
+                    policy_kwargs=onpolicy_kwargs,
+                    tensorboard_log=filename+'/tb/',
+                    verbose=1
+                    ) if obs == ObservationType.KIN else A2C(a2cppoCnnPolicy,
+                                                                  train_env,
+                                                                  policy_kwargs=onpolicy_kwargs,
+                                                                  tensorboard_log=filename+'/tb/',
+                                                                  verbose=1
+                                                                  )
     if algo == 'ppo':
         model = PPO(a2cppoMlpPolicy,
                     train_env,
@@ -280,46 +249,46 @@ def run(
                                                              verbose=1
                                                              )
 
-    #     #### Off-policy algorithms #################################
-    #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
-    #                             net_arch=[512, 512, 256, 128]
-    #                             ) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
-    #     if algo == 'sac':
-    #         model = SAC(sacMlpPolicy,
-    #                     train_env,
-    #                     policy_kwargs=offpolicy_kwargs,
-    #                     tensorboard_log=filename+'/tb/',
-    #                     verbose=1
-    #                     ) if obs==ObservationType.KIN else SAC(sacCnnPolicy,
-    #                                                                 train_env,
-    #                                                                 policy_kwargs=offpolicy_kwargs,
-    #                                                                 tensorboard_log=filename+'/tb/',
-    #                                                                 verbose=1
-    #                                                                 )
-    #     if algo == 'td3':
-    #         model = TD3(td3ddpgMlpPolicy,
-    #                     train_env,
-    #                     policy_kwargs=offpolicy_kwargs,
-    #                     tensorboard_log=filename+'/tb/',
-    #                     verbose=1
-    #                     ) if obs==ObservationType.KIN else TD3(td3ddpgCnnPolicy,
-    #                                                                 train_env,
-    #                                                                 policy_kwargs=offpolicy_kwargs,
-    #                                                                 tensorboard_log=filename+'/tb/',
-    #                                                                 verbose=1
-    #                                                                 )
-    #     if algo == 'ddpg':
-    #         model = DDPG(td3ddpgMlpPolicy,
-    #                     train_env,
-    #                     policy_kwargs=offpolicy_kwargs,
-    #                     tensorboard_log=filename+'/tb/',
-    #                     verbose=1
-    #                     ) if obs==ObservationType.KIN else DDPG(td3ddpgCnnPolicy,
-    #                                                                 train_env,
-    #                                                                 policy_kwargs=offpolicy_kwargs,
-    #                                                                 tensorboard_log=filename+'/tb/',
-    #                                                                 verbose=1
-    #                                                                 )
+    #### Off-policy algorithms #################################
+    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
+                                net_arch=[512, 512, 256, 128]
+                                ) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
+    if algo == 'sac':
+        model = SAC(sacMlpPolicy,
+                    train_env,
+                    policy_kwargs=offpolicy_kwargs,
+                    tensorboard_log=filename+'/tb/',
+                    verbose=1
+                    ) if obs==ObservationType.KIN else SAC(sacCnnPolicy,
+                                                                train_env,
+                                                                policy_kwargs=offpolicy_kwargs,
+                                                                tensorboard_log=filename+'/tb/',
+                                                                verbose=1
+                                                                )
+    if algo == 'td3':
+        model = TD3(td3ddpgMlpPolicy,
+                    train_env,
+                    policy_kwargs=offpolicy_kwargs,
+                    tensorboard_log=filename+'/tb/',
+                    verbose=1
+                    ) if obs==ObservationType.KIN else TD3(td3ddpgCnnPolicy,
+                                                                train_env,
+                                                                policy_kwargs=offpolicy_kwargs,
+                                                                tensorboard_log=filename+'/tb/',
+                                                                verbose=1
+                                                                )
+    if algo == 'ddpg':
+        model = DDPG(td3ddpgMlpPolicy,
+                    train_env,
+                    policy_kwargs=offpolicy_kwargs,
+                    tensorboard_log=filename+'/tb/',
+                    verbose=1
+                    ) if obs==ObservationType.KIN else DDPG(td3ddpgCnnPolicy,
+                                                                train_env,
+                                                                policy_kwargs=offpolicy_kwargs,
+                                                                tensorboard_log=filename+'/tb/',
+                                                                verbose=1
+                                                                )
 
     #### Create eveluation environment #########################
     if obs == ObservationType.KIN:
@@ -328,35 +297,25 @@ def run(
                             obs=obs,
                             act=act
                             )
-        #     elif obs == ObservationType.RGB:
-        #         if env_name == "takeoff-aviary-v0":
-        #             eval_env = make_vec_env(TakeoffAviary,
-        #                                     env_kwargs=sa_env_kwargs,
-        #                                     n_envs=1,
-        #                                     seed=0
-        #                                     )
-        #         if env_name == "hover-aviary-v0":
-        #             eval_env = make_vec_env(HoverAviary,
-        #                                     env_kwargs=sa_env_kwargs,
-        #                                     n_envs=1,
-        #                                     seed=0
-        #                                     )
+    elif obs == ObservationType.RGB:
+        if env_name == "takeoff-aviary-v0":
+            eval_env = make_vec_env(env_name,
+                                    # env_kwargs=sa_env_kwargs,
+                                    n_envs=1,
+                                    seed=0
+                                    )
+
         if env_name == "flythrugate-aviary-v0":
             eval_env = make_vec_env(FlyThruGateAviary,
                                     # env_kwargs=sa_env_kwargs,
                                     n_envs=1,
                                     seed=0
                                     )
-        #         if env_name == "tune-aviary-v0":
-        #             eval_env = make_vec_env(TuneAviary,
-        #                                     env_kwargs=sa_env_kwargs,
-        #                                     n_envs=1,
-        #                                     seed=0
-        #                                     )
+
         eval_env = VecTransposeImage(eval_env)
 
     #### Train the model #######################################
-    # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
+    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD,
                                                      verbose=1
                                                      )
