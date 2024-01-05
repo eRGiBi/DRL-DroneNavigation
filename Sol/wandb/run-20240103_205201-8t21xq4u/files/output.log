@@ -1,0 +1,336 @@
+AVIARY DIM [-1 -1  0  1  1  1]
+Attempting to open: C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources
+[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:
+[INFO] m 0.027000, L 0.039700,
+[INFO] ixx 0.000014, iyy 0.000014, izz 0.000022,
+[INFO] kf 0.000000, km 0.000000,
+[INFO] t2w 2.250000, max_speed_kmh 30.000000,
+[INFO] gnd_eff_coeff 11.368590, prop_radius 0.023135,
+[INFO] drag_xy_coeff 0.000001, drag_z_coeff 0.000001,
+[INFO] dw_coeff_1 2267.180000, dw_coeff_2 0.160000, dw_coeff_3 -0.110000
+Using cuda device
+Logging to ./logs/ppo_tensorboard/PPO_112
+wandb: WARNING When using several event log directories, please call `wandb.tensorboard.patch(root_logdir="...")` before `wandb.init`
+Eval num_timesteps=1992, episode_reward=-300.00 +/- 0.00
+Episode length: 221.80 +/- 71.41
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 222      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 1992     |
+---------------------------------
+New best mean reward!
+Eval num_timesteps=3984, episode_reward=-300.00 +/- 0.00
+Episode length: 190.60 +/- 28.16
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 191      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 3984     |
+---------------------------------
+Eval num_timesteps=5976, episode_reward=-300.00 +/- 0.00
+Episode length: 217.00 +/- 39.23
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 217      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 5976     |
+---------------------------------
+Eval num_timesteps=7968, episode_reward=-300.00 +/- 0.00
+Episode length: 214.20 +/- 60.92
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 214      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 7968     |
+---------------------------------
+Eval num_timesteps=9960, episode_reward=-300.00 +/- 0.00
+Episode length: 229.80 +/- 48.45
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 230      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 9960     |
+---------------------------------
+Eval num_timesteps=11952, episode_reward=-300.00 +/- 0.00
+Episode length: 202.40 +/- 40.70
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 202      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 11952    |
+---------------------------------
+Eval num_timesteps=13944, episode_reward=-300.00 +/- 0.00
+Episode length: 221.60 +/- 45.14
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 222      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 13944    |
+---------------------------------
+Eval num_timesteps=15936, episode_reward=-300.00 +/- 0.00
+Episode length: 210.40 +/- 31.50
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 210      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 15936    |
+---------------------------------
+Eval num_timesteps=17928, episode_reward=-300.00 +/- 0.00
+Episode length: 196.20 +/- 32.75
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 196      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 17928    |
+---------------------------------
+Eval num_timesteps=19920, episode_reward=-300.00 +/- 0.00
+Episode length: 209.60 +/- 56.33
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 210      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 19920    |
+---------------------------------
+Eval num_timesteps=21912, episode_reward=-300.00 +/- 0.00
+Episode length: 246.80 +/- 74.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 247      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 21912    |
+---------------------------------
+Eval num_timesteps=23904, episode_reward=-300.00 +/- 0.00
+Episode length: 207.40 +/- 61.06
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 207      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 23904    |
+---------------------------------
+Eval num_timesteps=25896, episode_reward=-300.00 +/- 0.00
+Episode length: 229.60 +/- 44.55
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 230      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 25896    |
+---------------------------------
+Eval num_timesteps=27888, episode_reward=-300.00 +/- 0.00
+Episode length: 238.40 +/- 62.80
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 238      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 27888    |
+---------------------------------
+Eval num_timesteps=29880, episode_reward=-300.00 +/- 0.00
+Episode length: 209.20 +/- 80.75
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 209      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 29880    |
+---------------------------------
+Eval num_timesteps=31872, episode_reward=-300.00 +/- 0.00
+Episode length: 235.20 +/- 47.27
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 235      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 31872    |
+---------------------------------
+Eval num_timesteps=33864, episode_reward=-300.00 +/- 0.00
+Episode length: 182.80 +/- 43.12
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 183      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 33864    |
+---------------------------------
+Eval num_timesteps=35856, episode_reward=-300.00 +/- 0.00
+Episode length: 243.20 +/- 56.72
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 243      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 35856    |
+---------------------------------
+Eval num_timesteps=37848, episode_reward=-300.00 +/- 0.00
+Episode length: 216.80 +/- 64.87
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 217      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 37848    |
+---------------------------------
+Eval num_timesteps=39840, episode_reward=-300.00 +/- 0.00
+Episode length: 248.80 +/- 85.83
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 249      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 39840    |
+---------------------------------
+Eval num_timesteps=41832, episode_reward=-300.00 +/- 0.00
+Episode length: 220.80 +/- 30.47
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 221      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 41832    |
+---------------------------------
+Eval num_timesteps=43824, episode_reward=-300.00 +/- 0.00
+Episode length: 215.00 +/- 52.15
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 215      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 43824    |
+---------------------------------
+Eval num_timesteps=45816, episode_reward=-300.00 +/- 0.00
+Episode length: 193.80 +/- 37.51
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 194      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 45816    |
+---------------------------------
+Eval num_timesteps=47808, episode_reward=-300.00 +/- 0.00
+Episode length: 206.40 +/- 37.72
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 206      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 47808    |
+---------------------------------
+Eval num_timesteps=49800, episode_reward=-300.00 +/- 0.00
+Episode length: 254.80 +/- 38.02
+------------------------------------------
+| eval/                   |              |
+|    mean_ep_length       | 255          |
+|    mean_reward          | -300         |
+| time/                   |              |
+|    total_timesteps      | 49800        |
+| train/                  |              |
+|    approx_kl            | 0.0038497185 |
+|    clip_fraction        | 0.0307       |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -5.73        |
+|    explained_variance   | -8.39e-05    |
+|    learning_rate        | 0.001        |
+|    loss                 | 1.14e+03     |
+|    n_updates            | 10           |
+|    policy_gradient_loss | -0.00219     |
+|    std                  | 1.02         |
+|    value_loss           | 2.65e+03     |
+------------------------------------------
+Eval num_timesteps=51792, episode_reward=-300.00 +/- 0.00
+Episode length: 210.60 +/- 34.83
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 211      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 51792    |
+---------------------------------
+Eval num_timesteps=53784, episode_reward=-300.00 +/- 0.00
+Episode length: 191.60 +/- 35.04
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 192      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 53784    |
+---------------------------------
+Eval num_timesteps=55776, episode_reward=-300.00 +/- 0.00
+Episode length: 198.60 +/- 56.87
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 199      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 55776    |
+---------------------------------
+Eval num_timesteps=57768, episode_reward=-300.00 +/- 0.00
+Episode length: 212.00 +/- 21.40
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 212      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 57768    |
+---------------------------------
+Eval num_timesteps=59760, episode_reward=-300.00 +/- 0.00
+Episode length: 199.40 +/- 17.23
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 199      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 59760    |
+---------------------------------
+Eval num_timesteps=61752, episode_reward=-300.00 +/- 0.00
+Episode length: 219.80 +/- 15.32
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 220      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 61752    |
+---------------------------------
+Traceback (most recent call last):
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 567, in <module>
+    sim.run_full(args)
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 351, in run_full
+    model.learn(total_timesteps=int(5e6),
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py", line 315, in learn
+    return super().learn(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 277, in learn
+    continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 200, in collect_rollouts
+    if not callback.on_step():
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
+    return self._on_step()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 219, in _on_step
+    continue_training = callback.on_step() and continue_training
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
+    return self._on_step()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 460, in _on_step
+    episode_rewards, episode_lengths = evaluate_policy(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\evaluation.py", line 94, in evaluate_policy
+    new_observations, rewards, dones, infos = env.step(actions)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\base_vec_env.py", line 206, in step
+    return self.step_wait()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in step_wait
+    results = [remote.recv() for remote in self.remotes]
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in <listcomp>
+    results = [remote.recv() for remote in self.remotes]
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 250, in recv
+    buf = self._recv_bytes()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 305, in _recv_bytes
+    waitres = _winapi.WaitForMultipleObjects(

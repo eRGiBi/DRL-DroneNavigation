@@ -1,0 +1,5 @@
+setup.py
+Sol.egg-info/PKG-INFO
+Sol.egg-info/SOURCES.txt
+Sol.egg-info/dependency_links.txt
+Sol.egg-info/top_level.txt

@@ -1,0 +1,103 @@
+diff --git a/Sol/Model/PBDroneEnv.py b/Sol/Model/PBDroneEnv.py
+index a249810..6a185fc 100644
+--- a/Sol/Model/PBDroneEnv.py
++++ b/Sol/Model/PBDroneEnv.py
+@@ -307,25 +307,28 @@ class PBDroneEnv(
+ 
+         try:
+             # reward -= distance_to_target ** 2
+-            # Reward based on distance to target
+-
+-            # reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
+-            # reward += np.exp(-distance_to_target * 5) * 50
+-            # Additional reward for progressing towards the target
+-            # reward += (self._prev_distance_to_target - distance_to_target) * 30
+-            # self.reward += max(3.0 * self.waypoints.progress_to_target(), 0.0)
+-
+-            # Add a negative reward for spinning too fast
+-            # reward += -np.linalg.norm(self.ang_v) / 3
+-
+-            # # Penalize large actions to avoid erratic behavior
+-            # reward -= 0.01 * np.linalg.norm(self._last_action)
+ 
+             if self._current_target_index > 0:
+                 # Additional reward for progressing towards the target
+                 reward += self.calculate_progress_reward(self._current_position, self._last_position,
+                                                          self._target_points[self._current_target_index - 1],
+                                                          self._target_points[self._current_target_index]) * 1000
++            else:
++
++                # Reward based on distance to target
++
++                reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
++                reward += np.exp(-distance_to_target * 5) * 50
++                # Additional reward for progressing towards the target
++                reward += (self._prev_distance_to_target - distance_to_target) * 30
++
++                # self.reward += max(3.0 * self.waypoints.progress_to_target(), 0.0)
++
++                # Add a negative reward for spinning too fast
++                reward += -np.linalg.norm(self.ang_v) / 3
++
++                # Penalize large actions to avoid erratic behavior
++                reward -= 0.01 * np.linalg.norm(self._last_action)
+ 
+         except ZeroDivisionError:
+             # Give a high reward if the drone is at the target (avoiding division by zero)
+@@ -384,6 +387,9 @@ class PBDroneEnv(
+             # Handle the edge case for the first gate
+             rp_t = s(pc_t)
+         else:
++            print("pc_t", pc_t)
++            print("pc_t_minus_1", pc_t_minus_1)
++            print(s(pc_t), s(pc_t_minus_1))
+             rp_t = s(pc_t) - s(pc_t_minus_1)
+ 
+         return rp_t
+diff --git a/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc b/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc
+index 75c6ef1..0b0b4f3 100644
+Binary files a/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc and b/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc differ
+diff --git a/Sol/Model/pybullet_drone_simulator.py b/Sol/Model/pybullet_drone_simulator.py
+index bbe4ae1..5388f27 100644
+--- a/Sol/Model/pybullet_drone_simulator.py
++++ b/Sol/Model/pybullet_drone_simulator.py
+@@ -249,8 +249,8 @@ class PBDroneSimulator:
+                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
+                                    range(self.num_cpu)])
+         # train_env = VecCheckNan(train_env)
+-        train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
+-                                 clip_obs=1)
++        # train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
++        #                          clip_obs=1)
+ 
+         # eval_env = make_env(multi=False, gui=False, rank=0)
+         #
+@@ -258,12 +258,12 @@ class PBDroneSimulator:
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
+         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
+         # eval_env = VecCheckNan(eval_env)
+-        eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
+-                                clip_obs=1)
++        # eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
++        #                         clip_obs=1)
+ 
+-        # onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
+-        #                        net_arch=dict(vf=[512, 512, 256, 128],
+-        #                                      pi=[512, 512, 256, 128]))
++        onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
++                               net_arch=dict(vf=[512, 512, 256, 128],
++                                             pi=[512, 512, 256, 128]))
+         # onpolicy_kwargs = dict(net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])])
+ 
+         model = PPO("MlpPolicy",
+@@ -278,8 +278,8 @@ class PBDroneSimulator:
+                     learning_rate=1e-3,
+                     tensorboard_log="./logs/ppo_tensorboard/",
+                     device="auto",
+-                    policy_kwargs=  # onpolicy_kwargs
+-                    dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
++                    policy_kwargs=   onpolicy_kwargs
++                    # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
+                     )
+ 
+         # tensorboard --logdir ./logs/ppo_tensorboard/

@@ -307,25 +307,28 @@ class PBDroneEnv(
 
         try:
             # reward -= distance_to_target ** 2
-            # Reward based on distance to target
-
-            # reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
-            # reward += np.exp(-distance_to_target * 5) * 50
-            # Additional reward for progressing towards the target
-            # reward += (self._prev_distance_to_target - distance_to_target) * 30
-            # self.reward += max(3.0 * self.waypoints.progress_to_target(), 0.0)
-
-            # Add a negative reward for spinning too fast
-            # reward += -np.linalg.norm(self.ang_v) / 3
-
-            # # Penalize large actions to avoid erratic behavior
-            # reward -= 0.01 * np.linalg.norm(self._last_action)
 
             if self._current_target_index > 0:
                 # Additional reward for progressing towards the target
                 reward += self.calculate_progress_reward(self._current_position, self._last_position,
                                                          self._target_points[self._current_target_index - 1],
-                                                         self._target_points[self._current_target_index]) * 1000
+                                                         self._target_points[self._current_target_index]) * 2000
+            else:
+
+                # Reward based on distance to target
+
+                reward += (1 / distance_to_target)  # * self._discount ** self._steps/10
+                reward += np.exp(-distance_to_target * 5) * 50
+                # Additional reward for progressing towards the target
+                reward += (self._prev_distance_to_target - distance_to_target) * 30
+
+                # self.reward += max(3.0 * self.waypoints.progress_to_target(), 0.0)
+
+                # Add a negative reward for spinning too fast
+                reward += -np.linalg.norm(self.ang_v) / 3
+
+                # Penalize large actions to avoid erratic behavior
+                reward -= 0.01 * np.linalg.norm(self._last_action)
 
         except ZeroDivisionError:
             # Give a high reward if the drone is at the target (avoiding division by zero)
@@ -342,7 +345,7 @@ class PBDroneEnv(
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 500 * (self._discount ** (self._steps / 10))
+                reward += 1000 * (self._discount ** (self._steps / 10))
 
                 if self.GUI:
                     self.remove_target()

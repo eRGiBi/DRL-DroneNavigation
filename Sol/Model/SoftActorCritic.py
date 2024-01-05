@@ -8,6 +8,7 @@ from tf_agents.environments import suite_pybullet
 from Sol.Model.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.enums import Physics
 
+
 class SoftAcorCritic():
 
     def __init__(self):
@@ -16,9 +17,7 @@ class SoftAcorCritic():
     def set_up_training(self, env):
         tempdir = tempfile.gettempdir()
 
-        # Use "num_iterations = 1e6" for better results (2 hrs)
-        # 1e5 is just so this doesn't take too long (1 hr)
-        num_iterations = 100000  # @param {type:"integer"}
+        num_iterations = 1e6  # @param {type:"integer"}
 
         initial_collect_steps = 10000  # @param {type:"integer"}
         collect_steps_per_iteration = 1  # @param {type:"integer"}
@@ -56,15 +55,13 @@ class SoftAcorCritic():
 
 
 if __name__ == '__main__':
-    drone_environment = PBDroneEnv(race_track=None,
-                                   target_points=[np.array([0.0, 0.0, 1.0]),
+    drone_environment = PBDroneEnv(target_points=[np.array([0.0, 0.0, 1.0]),
                                                   np.array([8.59735, -3.3286, -6.07256]),
                                                   np.array([1.5974, -5.0786, -4.32256]),
                                                   np.array([3.2474, 3.32137, -2.5725]),
                                                   np.array([1.3474, 1.6714, -2.07256]), ],
                                    threshold=1,
                                    discount=1,
-                                   drone=None,
                                    physics=Physics.PYB,
                                    gui=True,
                                    initial_xyzs=np.array([[0, 0, 0]])

@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
-from stable_baselines3.common.logger import HParam
+from stable_baselines3.common.logger import HParam, TensorBoardOutputFormat
 from stable_baselines3.common.monitor import load_results
 from stable_baselines3.common.results_plotter import ts2xy
 import wandb
+from torch.utils.tensorboard import SummaryWriter
+
 
 class FoundTargetsCallback(BaseCallback):
     """
@@ -38,61 +40,47 @@ class HParamCallback(BaseCallback):
     """
     Saves the hyperparameters and metrics at the start of the training, and logs them to TensorBoard.
     """
-
     def _on_training_start(self) -> None:
-        hparam_dict = {
-            "algorithm": self.model.__class__.__name__,
-            "learning rate": self.model.learning_rate,
-            "gamma": self.model.gamma,
-            "batch_size": self.model.batch_size,
-            "ent_coef": self.model.ent_coef,
-            "clip_range": self.model.clip_range,
-            "n_epochs": self.model.n_epochs,
-            "n_steps": self.model.n_steps,
-            "vf_coef": self.model.vf_coef,
-            "max_grad_norm": self.model.max_grad_norm,
-            "gae_lambda": self.model.gae_lambda,
-            "policy_kwargs": self.model.policy_kwargs,
-            "policy": self.model.policy,
-            "n_envs": self.model.n_envs,
+        self.hparams = self.model.get_parameters()
 
-        }
-        # define the metrics that will appear in the `HPARAMS` Tensorboard tab by referencing their tag
-        # Tensorbaord will find & display metrics from the `SCALARS` tab
-        metric_dict = {
-            "rollout/ep_len_mean": 0,
-            "train/value_loss": 0.0,
-            "train/entropy_loss": 0.0,
-            "train/policy_loss": 0.0,
-            "train/approx_kl": 0.0,
-            "train/clip_fraction": 0.0,
-            "train/clip_range": 0.0,
-            "train/n_updates_total": 0,
-            "train/learning_rate": 0.0,
-            "train/found_targets": 0.0,
-            "train/ep_rew_mean": 0.0,
-            "train/ep_rew_std": 0.0,
-            "train/ep_len_mean": 0.0,
-            "train/ep_len_std": 0.0,
-            "train/success_rate": 0.0,
-            "train/success_rate_std": 0.0,
-            "train/success_rate_mean": 0.0,
-            "train/episodes": 0.0,
-            "train/time_elapsed": 0.0,
-            "train/total_timesteps": 0.0,
-            "train/total_updates": 0.0,
-            "train/explained_variance": 0.0,
-            "train/n_updates": 0.0,
-            "train/serial_timesteps": 0.0,
-            "train/serial_episodes": 0.0,
-            "train/ep_rew_max": 0.0,
-            "train/ep_rew_min": 0.0,
-        }
-        self.logger.record(
-            "hparams",
-            HParam(hparam_dict, metric_dict),
-            exclude=("stdout", "log", "json", "csv"),
-        )
+        # Create a TensorBoard writer
+        log_dir = self.model.tensorboard_log
+        self.writer = SummaryWriter(log_dir)
+
+        # Log hyperparameters
+        for key, value in self.hparams.items():
+            self.writer.add_text("hyperparameters", f"{key}: {value}")
 
     def _on_step(self) -> bool:
+        return True
+
+    def _on_training_end(self) -> None:
+        """
+        This method is called when the training ends.
+        It closes the TensorBoard writer.
+        """
+        if self.writer is not None:
+            self.writer.close()
+
+
+class SummaryWriterCallback(BaseCallback):
+
+    def _on_training_start(self):
+        self._log_freq = 1000  # log every 1000 calls
+
+        output_formats = self.logger.output_formats
+        # Save reference to tensorboard formatter object
+        # note: the failure case (not formatter found) is not handled here, should be done with try/except.
+        self.tb_formatter = next(formatter for formatter in output_formats if isinstance(formatter, TensorBoardOutputFormat))
+
+    def _on_step(self) -> bool:
+        if self.n_calls % self._log_freq == 0:
+            # You can have access to info from the env using self.locals.
+            # for instance, when using one env (index 0 of locals["infos"]):
+            # lap_count = self.locals["infos"][0]["lap_count"]
+            # self.tb_formatter.writer.add_scalar("train/lap_count", lap_count, self.num_timesteps)
+
+            self.tb_formatter.writer.add_text("direct_access", "this is a value", self.num_timesteps)
+            self.tb_formatter.writer.flush()
+
         return True

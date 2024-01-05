@@ -1,0 +1,2330 @@
+AVIARY DIM [-1 -1  0  1  1  1]
+Attempting to open: C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources
+[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:
+[INFO] m 0.027000, L 0.039700,
+[INFO] ixx 0.000014, iyy 0.000014, izz 0.000022,
+[INFO] kf 0.000000, km 0.000000,
+[INFO] t2w 2.250000, max_speed_kmh 30.000000,
+[INFO] gnd_eff_coeff 11.368590, prop_radius 0.023135,
+[INFO] drag_xy_coeff 0.000001, drag_z_coeff 0.000001,
+[INFO] dw_coeff_1 2267.180000, dw_coeff_2 0.160000, dw_coeff_3 -0.110000
+Using cuda device
+Logging to ./logs/ppo_tensorboard/PPO_111
+wandb: WARNING When using several event log directories, please call `wandb.tensorboard.patch(root_logdir="...")` before `wandb.init`
+Eval num_timesteps=1992, episode_reward=-300.00 +/- 0.00
+Episode length: 216.00 +/- 67.31
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 216      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 1992     |
+---------------------------------
+New best mean reward!
+Eval num_timesteps=3984, episode_reward=-300.00 +/- 0.00
+Episode length: 218.80 +/- 34.58
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 219      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 3984     |
+---------------------------------
+Eval num_timesteps=5976, episode_reward=-300.00 +/- 0.00
+Episode length: 279.20 +/- 121.53
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 279      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 5976     |
+---------------------------------
+Eval num_timesteps=7968, episode_reward=-300.00 +/- 0.00
+Episode length: 210.80 +/- 19.14
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 211      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 7968     |
+---------------------------------
+Eval num_timesteps=9960, episode_reward=-300.00 +/- 0.00
+Episode length: 208.40 +/- 27.26
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 208      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 9960     |
+---------------------------------
+Eval num_timesteps=11952, episode_reward=-300.00 +/- 0.00
+Episode length: 263.40 +/- 76.69
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 263      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 11952    |
+---------------------------------
+Eval num_timesteps=13944, episode_reward=-300.00 +/- 0.00
+Episode length: 245.80 +/- 19.91
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 246      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 13944    |
+---------------------------------
+Eval num_timesteps=15936, episode_reward=-300.00 +/- 0.00
+Episode length: 219.60 +/- 40.42
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 220      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 15936    |
+---------------------------------
+Eval num_timesteps=17928, episode_reward=-300.00 +/- 0.00
+Episode length: 233.00 +/- 64.14
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 233      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 17928    |
+---------------------------------
+Eval num_timesteps=19920, episode_reward=-300.00 +/- 0.00
+Episode length: 239.60 +/- 58.13
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 240      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 19920    |
+---------------------------------
+Eval num_timesteps=21912, episode_reward=-300.00 +/- 0.00
+Episode length: 240.20 +/- 73.83
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 240      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 21912    |
+---------------------------------
+Eval num_timesteps=23904, episode_reward=-300.00 +/- 0.00
+Episode length: 297.00 +/- 67.56
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 297      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 23904    |
+---------------------------------
+Eval num_timesteps=25896, episode_reward=-300.00 +/- 0.00
+Episode length: 223.40 +/- 43.07
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 223      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 25896    |
+---------------------------------
+Eval num_timesteps=27888, episode_reward=-300.00 +/- 0.00
+Episode length: 202.00 +/- 46.50
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 202      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 27888    |
+---------------------------------
+Eval num_timesteps=29880, episode_reward=-300.00 +/- 0.00
+Episode length: 199.20 +/- 22.09
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 199      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 29880    |
+---------------------------------
+Eval num_timesteps=31872, episode_reward=-300.00 +/- 0.00
+Episode length: 182.60 +/- 56.87
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 183      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 31872    |
+---------------------------------
+Eval num_timesteps=33864, episode_reward=-300.00 +/- 0.00
+Episode length: 189.20 +/- 36.65
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 189      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 33864    |
+---------------------------------
+Eval num_timesteps=35856, episode_reward=-300.00 +/- 0.00
+Episode length: 188.20 +/- 36.48
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 188      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 35856    |
+---------------------------------
+Eval num_timesteps=37848, episode_reward=-300.00 +/- 0.00
+Episode length: 179.00 +/- 25.18
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 179      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 37848    |
+---------------------------------
+Eval num_timesteps=39840, episode_reward=-300.00 +/- 0.00
+Episode length: 284.60 +/- 84.16
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 285      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 39840    |
+---------------------------------
+Eval num_timesteps=41832, episode_reward=-300.00 +/- 0.00
+Episode length: 268.80 +/- 117.07
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 269      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 41832    |
+---------------------------------
+Eval num_timesteps=43824, episode_reward=-300.00 +/- 0.00
+Episode length: 177.80 +/- 24.26
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 178      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 43824    |
+---------------------------------
+Eval num_timesteps=45816, episode_reward=-300.00 +/- 0.00
+Episode length: 196.40 +/- 34.17
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 196      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 45816    |
+---------------------------------
+Eval num_timesteps=47808, episode_reward=-300.00 +/- 0.00
+Episode length: 245.40 +/- 52.44
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 245      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 47808    |
+---------------------------------
+Eval num_timesteps=49800, episode_reward=-300.00 +/- 0.00
+Episode length: 236.40 +/- 41.11
+------------------------------------------
+| eval/                   |              |
+|    mean_ep_length       | 236          |
+|    mean_reward          | -300         |
+| time/                   |              |
+|    total_timesteps      | 49800        |
+| train/                  |              |
+|    approx_kl            | 0.0043536215 |
+|    clip_fraction        | 0.0389       |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -5.71        |
+|    explained_variance   | 0.00861      |
+|    learning_rate        | 0.001        |
+|    loss                 | 0.549        |
+|    n_updates            | 10           |
+|    policy_gradient_loss | -0.000971    |
+|    std                  | 1.01         |
+|    value_loss           | 1.52         |
+------------------------------------------
+Eval num_timesteps=51792, episode_reward=-300.00 +/- 0.00
+Episode length: 205.00 +/- 19.54
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 205      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 51792    |
+---------------------------------
+Eval num_timesteps=53784, episode_reward=-300.00 +/- 0.00
+Episode length: 240.60 +/- 40.05
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 241      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 53784    |
+---------------------------------
+Eval num_timesteps=55776, episode_reward=-300.00 +/- 0.00
+Episode length: 288.00 +/- 11.88
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 288      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 55776    |
+---------------------------------
+Eval num_timesteps=57768, episode_reward=-300.00 +/- 0.00
+Episode length: 216.20 +/- 33.82
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 216      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 57768    |
+---------------------------------
+Eval num_timesteps=59760, episode_reward=-300.00 +/- 0.00
+Episode length: 215.60 +/- 31.23
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 216      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 59760    |
+---------------------------------
+Eval num_timesteps=61752, episode_reward=-300.00 +/- 0.00
+Episode length: 284.80 +/- 87.81
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 285      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 61752    |
+---------------------------------
+Eval num_timesteps=63744, episode_reward=-300.00 +/- 0.00
+Episode length: 217.60 +/- 30.37
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 218      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 63744    |
+---------------------------------
+Eval num_timesteps=65736, episode_reward=-300.00 +/- 0.00
+Episode length: 254.40 +/- 69.59
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 254      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 65736    |
+---------------------------------
+Eval num_timesteps=67728, episode_reward=-300.00 +/- 0.00
+Episode length: 248.80 +/- 65.83
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 249      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 67728    |
+---------------------------------
+Eval num_timesteps=69720, episode_reward=-300.00 +/- 0.00
+Episode length: 275.40 +/- 52.84
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 275      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 69720    |
+---------------------------------
+Eval num_timesteps=71712, episode_reward=-300.00 +/- 0.00
+Episode length: 234.00 +/- 31.69
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 234      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 71712    |
+---------------------------------
+Eval num_timesteps=73704, episode_reward=-300.00 +/- 0.00
+Episode length: 258.80 +/- 41.78
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 259      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 73704    |
+---------------------------------
+Eval num_timesteps=75696, episode_reward=-300.00 +/- 0.00
+Episode length: 234.20 +/- 64.38
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 234      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 75696    |
+---------------------------------
+Eval num_timesteps=77688, episode_reward=-300.00 +/- 0.00
+Episode length: 215.80 +/- 38.84
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 216      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 77688    |
+---------------------------------
+Eval num_timesteps=79680, episode_reward=-300.00 +/- 0.00
+Episode length: 228.40 +/- 62.89
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 228      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 79680    |
+---------------------------------
+Eval num_timesteps=81672, episode_reward=-300.00 +/- 0.00
+Episode length: 200.00 +/- 24.73
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 200      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 81672    |
+---------------------------------
+Eval num_timesteps=83664, episode_reward=-300.00 +/- 0.00
+Episode length: 305.60 +/- 101.48
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 306      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 83664    |
+---------------------------------
+Eval num_timesteps=85656, episode_reward=-300.00 +/- 0.00
+Episode length: 268.60 +/- 61.96
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 269      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 85656    |
+---------------------------------
+Eval num_timesteps=87648, episode_reward=-300.00 +/- 0.00
+Episode length: 203.00 +/- 37.00
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 203      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 87648    |
+---------------------------------
+Eval num_timesteps=89640, episode_reward=-300.00 +/- 0.00
+Episode length: 221.40 +/- 18.88
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 221      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 89640    |
+---------------------------------
+Eval num_timesteps=91632, episode_reward=-300.00 +/- 0.00
+Episode length: 254.20 +/- 87.97
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 254      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 91632    |
+---------------------------------
+Eval num_timesteps=93624, episode_reward=-300.00 +/- 0.00
+Episode length: 248.80 +/- 34.37
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 249      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 93624    |
+---------------------------------
+Eval num_timesteps=95616, episode_reward=-300.00 +/- 0.00
+Episode length: 209.20 +/- 20.41
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 209      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 95616    |
+---------------------------------
+Eval num_timesteps=97608, episode_reward=-300.00 +/- 0.00
+Episode length: 220.60 +/- 47.01
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 221      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 97608    |
+---------------------------------
+Eval num_timesteps=99600, episode_reward=-300.00 +/- 0.00
+Episode length: 215.40 +/- 53.98
+------------------------------------------
+| eval/                   |              |
+|    mean_ep_length       | 215          |
+|    mean_reward          | -300         |
+| time/                   |              |
+|    total_timesteps      | 99600        |
+| train/                  |              |
+|    approx_kl            | 0.0055958983 |
+|    clip_fraction        | 0.0467       |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -5.75        |
+|    explained_variance   | 0.718        |
+|    learning_rate        | 0.001        |
+|    loss                 | 0.107        |
+|    n_updates            | 20           |
+|    policy_gradient_loss | -0.00179     |
+|    std                  | 1.02         |
+|    value_loss           | 0.453        |
+------------------------------------------
+Eval num_timesteps=101592, episode_reward=-300.00 +/- 0.00
+Episode length: 249.60 +/- 52.50
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 250      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 101592   |
+---------------------------------
+Eval num_timesteps=103584, episode_reward=-300.00 +/- 0.00
+Episode length: 294.60 +/- 54.99
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 295      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 103584   |
+---------------------------------
+Eval num_timesteps=105576, episode_reward=-300.00 +/- 0.00
+Episode length: 218.20 +/- 31.33
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 218      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 105576   |
+---------------------------------
+Eval num_timesteps=107568, episode_reward=-300.00 +/- 0.00
+Episode length: 221.60 +/- 36.90
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 222      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 107568   |
+---------------------------------
+Eval num_timesteps=109560, episode_reward=-300.00 +/- 0.00
+Episode length: 207.20 +/- 20.26
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 207      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 109560   |
+---------------------------------
+Eval num_timesteps=111552, episode_reward=-300.00 +/- 0.00
+Episode length: 243.60 +/- 48.73
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 244      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 111552   |
+---------------------------------
+Eval num_timesteps=113544, episode_reward=-300.00 +/- 0.00
+Episode length: 269.60 +/- 96.01
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 270      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 113544   |
+---------------------------------
+Eval num_timesteps=115536, episode_reward=-300.00 +/- 0.00
+Episode length: 231.80 +/- 64.15
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 232      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 115536   |
+---------------------------------
+Eval num_timesteps=117528, episode_reward=-300.00 +/- 0.00
+Episode length: 303.60 +/- 143.30
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 304      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 117528   |
+---------------------------------
+Eval num_timesteps=119520, episode_reward=-300.00 +/- 0.00
+Episode length: 265.00 +/- 60.30
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 265      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 119520   |
+---------------------------------
+Eval num_timesteps=121512, episode_reward=-300.00 +/- 0.00
+Episode length: 224.00 +/- 31.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 224      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 121512   |
+---------------------------------
+Eval num_timesteps=123504, episode_reward=-300.00 +/- 0.00
+Episode length: 227.20 +/- 61.39
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 227      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 123504   |
+---------------------------------
+Eval num_timesteps=125496, episode_reward=-300.00 +/- 0.00
+Episode length: 225.80 +/- 50.33
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 226      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 125496   |
+---------------------------------
+Eval num_timesteps=127488, episode_reward=-300.00 +/- 0.00
+Episode length: 267.20 +/- 83.84
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 267      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 127488   |
+---------------------------------
+Eval num_timesteps=129480, episode_reward=-300.00 +/- 0.00
+Episode length: 280.80 +/- 33.26
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 281      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 129480   |
+---------------------------------
+Eval num_timesteps=131472, episode_reward=-300.00 +/- 0.00
+Episode length: 239.80 +/- 43.28
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 240      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 131472   |
+---------------------------------
+Eval num_timesteps=133464, episode_reward=-300.00 +/- 0.00
+Episode length: 225.40 +/- 66.45
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 225      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 133464   |
+---------------------------------
+Eval num_timesteps=135456, episode_reward=-300.00 +/- 0.00
+Episode length: 211.80 +/- 51.29
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 212      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 135456   |
+---------------------------------
+Eval num_timesteps=137448, episode_reward=-300.00 +/- 0.00
+Episode length: 253.40 +/- 60.07
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 253      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 137448   |
+---------------------------------
+Eval num_timesteps=139440, episode_reward=-300.00 +/- 0.00
+Episode length: 218.60 +/- 10.42
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 219      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 139440   |
+---------------------------------
+Eval num_timesteps=141432, episode_reward=-300.00 +/- 0.00
+Episode length: 243.60 +/- 69.08
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 244      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 141432   |
+---------------------------------
+Eval num_timesteps=143424, episode_reward=-300.00 +/- 0.00
+Episode length: 231.00 +/- 55.36
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 231      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 143424   |
+---------------------------------
+Eval num_timesteps=145416, episode_reward=-300.00 +/- 0.00
+Episode length: 237.60 +/- 24.10
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 238      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 145416   |
+---------------------------------
+Eval num_timesteps=147408, episode_reward=-300.00 +/- 0.00
+Episode length: 242.60 +/- 69.36
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 243      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 147408   |
+---------------------------------
+Eval num_timesteps=149400, episode_reward=-300.00 +/- 0.00
+Episode length: 214.20 +/- 44.25
+------------------------------------------
+| eval/                   |              |
+|    mean_ep_length       | 214          |
+|    mean_reward          | -300         |
+| time/                   |              |
+|    total_timesteps      | 149400       |
+| train/                  |              |
+|    approx_kl            | 0.0063298983 |
+|    clip_fraction        | 0.0606       |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -5.78        |
+|    explained_variance   | 0.89         |
+|    learning_rate        | 0.001        |
+|    loss                 | 0.0199       |
+|    n_updates            | 30           |
+|    policy_gradient_loss | -0.00259     |
+|    std                  | 1.03         |
+|    value_loss           | 0.233        |
+------------------------------------------
+Eval num_timesteps=151392, episode_reward=-300.00 +/- 0.00
+Episode length: 221.80 +/- 30.84
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 222      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 151392   |
+---------------------------------
+Eval num_timesteps=153384, episode_reward=-300.00 +/- 0.00
+Episode length: 291.80 +/- 49.77
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 292      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 153384   |
+---------------------------------
+Eval num_timesteps=155376, episode_reward=-300.00 +/- 0.00
+Episode length: 276.00 +/- 103.09
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 276      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 155376   |
+---------------------------------
+Eval num_timesteps=157368, episode_reward=-300.00 +/- 0.00
+Episode length: 216.40 +/- 51.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 216      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 157368   |
+---------------------------------
+Eval num_timesteps=159360, episode_reward=-300.00 +/- 0.00
+Episode length: 243.60 +/- 56.05
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 244      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 159360   |
+---------------------------------
+Eval num_timesteps=161352, episode_reward=-300.00 +/- 0.00
+Episode length: 228.60 +/- 44.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 229      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 161352   |
+---------------------------------
+Eval num_timesteps=163344, episode_reward=-300.00 +/- 0.00
+Episode length: 218.40 +/- 57.09
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 218      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 163344   |
+---------------------------------
+Eval num_timesteps=165336, episode_reward=-300.00 +/- 0.00
+Episode length: 247.40 +/- 80.88
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 247      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 165336   |
+---------------------------------
+Eval num_timesteps=167328, episode_reward=-300.00 +/- 0.00
+Episode length: 205.20 +/- 42.43
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 205      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 167328   |
+---------------------------------
+Eval num_timesteps=169320, episode_reward=-300.00 +/- 0.00
+Episode length: 257.80 +/- 39.89
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 258      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 169320   |
+---------------------------------
+Eval num_timesteps=171312, episode_reward=-300.00 +/- 0.00
+Episode length: 255.40 +/- 32.15
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 255      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 171312   |
+---------------------------------
+Eval num_timesteps=173304, episode_reward=-300.00 +/- 0.00
+Episode length: 242.40 +/- 88.50
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 242      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 173304   |
+---------------------------------
+Eval num_timesteps=175296, episode_reward=-300.00 +/- 0.00
+Episode length: 219.00 +/- 35.86
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 219      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 175296   |
+---------------------------------
+Eval num_timesteps=177288, episode_reward=-300.00 +/- 0.00
+Episode length: 252.80 +/- 67.74
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 253      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 177288   |
+---------------------------------
+Eval num_timesteps=179280, episode_reward=-300.00 +/- 0.00
+Episode length: 270.60 +/- 77.40
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 271      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 179280   |
+---------------------------------
+Eval num_timesteps=181272, episode_reward=-300.00 +/- 0.00
+Episode length: 186.60 +/- 32.67
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 187      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 181272   |
+---------------------------------
+Eval num_timesteps=183264, episode_reward=-300.00 +/- 0.00
+Episode length: 239.20 +/- 78.85
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 239      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 183264   |
+---------------------------------
+Eval num_timesteps=185256, episode_reward=-300.00 +/- 0.00
+Episode length: 256.40 +/- 87.76
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 256      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 185256   |
+---------------------------------
+Eval num_timesteps=187248, episode_reward=-300.00 +/- 0.00
+Episode length: 271.00 +/- 87.07
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 271      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 187248   |
+---------------------------------
+Eval num_timesteps=189240, episode_reward=-300.00 +/- 0.00
+Episode length: 281.40 +/- 75.14
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 281      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 189240   |
+---------------------------------
+Eval num_timesteps=191232, episode_reward=-300.00 +/- 0.00
+Episode length: 208.20 +/- 39.40
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 208      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 191232   |
+---------------------------------
+Eval num_timesteps=193224, episode_reward=-300.00 +/- 0.00
+Episode length: 196.00 +/- 22.06
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 196      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 193224   |
+---------------------------------
+Eval num_timesteps=195216, episode_reward=-300.00 +/- 0.00
+Episode length: 186.40 +/- 22.77
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 186      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 195216   |
+---------------------------------
+Eval num_timesteps=197208, episode_reward=-300.00 +/- 0.00
+Episode length: 260.00 +/- 51.68
+-----------------------------------------
+| eval/                   |             |
+|    mean_ep_length       | 260         |
+|    mean_reward          | -300        |
+| time/                   |             |
+|    total_timesteps      | 197208      |
+| train/                  |             |
+|    approx_kl            | 0.008146976 |
+|    clip_fraction        | 0.0759      |
+|    clip_range           | 0.2         |
+|    entropy_loss         | -5.82       |
+|    explained_variance   | 0.942       |
+|    learning_rate        | 0.001       |
+|    loss                 | -0.0224     |
+|    n_updates            | 40          |
+|    policy_gradient_loss | -0.00407    |
+|    std                  | 1.04        |
+|    value_loss           | 0.131       |
+-----------------------------------------
+Eval num_timesteps=199200, episode_reward=-300.00 +/- 0.00
+Episode length: 248.20 +/- 60.71
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 248      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 199200   |
+---------------------------------
+Eval num_timesteps=201192, episode_reward=-300.00 +/- 0.00
+Episode length: 222.20 +/- 41.47
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 222      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 201192   |
+---------------------------------
+Eval num_timesteps=203184, episode_reward=-300.00 +/- 0.00
+Episode length: 298.00 +/- 66.28
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 298      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 203184   |
+---------------------------------
+Eval num_timesteps=205176, episode_reward=-300.00 +/- 0.00
+Episode length: 220.60 +/- 44.27
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 221      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 205176   |
+---------------------------------
+Eval num_timesteps=207168, episode_reward=-300.00 +/- 0.00
+Episode length: 233.00 +/- 64.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 233      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 207168   |
+---------------------------------
+Eval num_timesteps=209160, episode_reward=-300.00 +/- 0.00
+Episode length: 305.00 +/- 100.93
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 305      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 209160   |
+---------------------------------
+Eval num_timesteps=211152, episode_reward=-300.00 +/- 0.00
+Episode length: 271.60 +/- 71.91
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 272      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 211152   |
+---------------------------------
+Eval num_timesteps=213144, episode_reward=-300.00 +/- 0.00
+Episode length: 235.60 +/- 45.44
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 236      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 213144   |
+---------------------------------
+Eval num_timesteps=215136, episode_reward=-300.00 +/- 0.00
+Episode length: 225.40 +/- 81.22
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 225      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 215136   |
+---------------------------------
+Eval num_timesteps=217128, episode_reward=-300.00 +/- 0.00
+Episode length: 212.20 +/- 19.38
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 212      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 217128   |
+---------------------------------
+Eval num_timesteps=219120, episode_reward=-300.00 +/- 0.00
+Episode length: 224.20 +/- 24.28
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 224      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 219120   |
+---------------------------------
+Eval num_timesteps=221112, episode_reward=-300.00 +/- 0.00
+Episode length: 278.00 +/- 81.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 278      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 221112   |
+---------------------------------
+Eval num_timesteps=223104, episode_reward=-300.00 +/- 0.00
+Episode length: 247.80 +/- 69.71
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 248      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 223104   |
+---------------------------------
+Eval num_timesteps=225096, episode_reward=-300.00 +/- 0.00
+Episode length: 222.20 +/- 36.43
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 222      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 225096   |
+---------------------------------
+Eval num_timesteps=227088, episode_reward=-300.00 +/- 0.00
+Episode length: 244.40 +/- 15.72
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 244      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 227088   |
+---------------------------------
+Eval num_timesteps=229080, episode_reward=-300.00 +/- 0.00
+Episode length: 334.20 +/- 65.57
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 334      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 229080   |
+---------------------------------
+Eval num_timesteps=231072, episode_reward=-300.00 +/- 0.00
+Episode length: 228.00 +/- 55.38
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 228      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 231072   |
+---------------------------------
+Eval num_timesteps=233064, episode_reward=-300.00 +/- 0.00
+Episode length: 247.20 +/- 28.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 247      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 233064   |
+---------------------------------
+Eval num_timesteps=235056, episode_reward=-300.00 +/- 0.00
+Episode length: 265.00 +/- 69.85
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 265      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 235056   |
+---------------------------------
+Eval num_timesteps=237048, episode_reward=-300.00 +/- 0.00
+Episode length: 258.60 +/- 40.56
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 259      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 237048   |
+---------------------------------
+Eval num_timesteps=239040, episode_reward=-300.00 +/- 0.00
+Episode length: 282.80 +/- 61.13
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 283      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 239040   |
+---------------------------------
+Eval num_timesteps=241032, episode_reward=-300.00 +/- 0.00
+Episode length: 268.00 +/- 51.23
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 268      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 241032   |
+---------------------------------
+Eval num_timesteps=243024, episode_reward=-300.00 +/- 0.00
+Episode length: 218.80 +/- 38.09
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 219      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 243024   |
+---------------------------------
+Eval num_timesteps=245016, episode_reward=-300.00 +/- 0.00
+Episode length: 286.80 +/- 46.40
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 287      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 245016   |
+---------------------------------
+Eval num_timesteps=247008, episode_reward=-300.00 +/- 0.00
+Episode length: 369.20 +/- 148.45
+-----------------------------------------
+| eval/                   |             |
+|    mean_ep_length       | 369         |
+|    mean_reward          | -300        |
+| time/                   |             |
+|    total_timesteps      | 247008      |
+| train/                  |             |
+|    approx_kl            | 0.011025883 |
+|    clip_fraction        | 0.119       |
+|    clip_range           | 0.2         |
+|    entropy_loss         | -5.86       |
+|    explained_variance   | 0.955       |
+|    learning_rate        | 0.001       |
+|    loss                 | -0.0424     |
+|    n_updates            | 50          |
+|    policy_gradient_loss | -0.00835    |
+|    std                  | 1.05        |
+|    value_loss           | 0.101       |
+-----------------------------------------
+Eval num_timesteps=249000, episode_reward=-300.00 +/- 0.00
+Episode length: 389.60 +/- 102.50
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 390      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 249000   |
+---------------------------------
+Eval num_timesteps=250992, episode_reward=-300.00 +/- 0.00
+Episode length: 352.20 +/- 75.39
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 352      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 250992   |
+---------------------------------
+Eval num_timesteps=252984, episode_reward=-300.00 +/- 0.00
+Episode length: 364.80 +/- 73.44
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 365      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 252984   |
+---------------------------------
+Eval num_timesteps=254976, episode_reward=-300.00 +/- 0.00
+Episode length: 340.40 +/- 61.77
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 340      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 254976   |
+---------------------------------
+Eval num_timesteps=256968, episode_reward=-300.00 +/- 0.00
+Episode length: 287.00 +/- 60.04
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 287      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 256968   |
+---------------------------------
+Eval num_timesteps=258960, episode_reward=-300.00 +/- 0.00
+Episode length: 389.40 +/- 74.58
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 389      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 258960   |
+---------------------------------
+Eval num_timesteps=260952, episode_reward=-300.00 +/- 0.00
+Episode length: 376.80 +/- 47.43
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 377      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 260952   |
+---------------------------------
+Eval num_timesteps=262944, episode_reward=-300.00 +/- 0.00
+Episode length: 286.80 +/- 48.55
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 287      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 262944   |
+---------------------------------
+Eval num_timesteps=264936, episode_reward=-300.00 +/- 0.00
+Episode length: 401.80 +/- 160.57
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 402      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 264936   |
+---------------------------------
+Eval num_timesteps=266928, episode_reward=-300.00 +/- 0.00
+Episode length: 346.60 +/- 89.85
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 347      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 266928   |
+---------------------------------
+Eval num_timesteps=268920, episode_reward=-300.00 +/- 0.00
+Episode length: 306.20 +/- 73.01
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 306      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 268920   |
+---------------------------------
+Eval num_timesteps=270912, episode_reward=-300.00 +/- 0.00
+Episode length: 385.20 +/- 57.29
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 385      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 270912   |
+---------------------------------
+Eval num_timesteps=272904, episode_reward=-300.00 +/- 0.00
+Episode length: 349.80 +/- 130.81
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 350      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 272904   |
+---------------------------------
+Eval num_timesteps=274896, episode_reward=-300.00 +/- 0.00
+Episode length: 331.80 +/- 99.55
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 332      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 274896   |
+---------------------------------
+Eval num_timesteps=276888, episode_reward=-300.00 +/- 0.00
+Episode length: 338.20 +/- 16.96
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 338      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 276888   |
+---------------------------------
+Eval num_timesteps=278880, episode_reward=-300.00 +/- 0.00
+Episode length: 353.20 +/- 62.94
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 353      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 278880   |
+---------------------------------
+Eval num_timesteps=280872, episode_reward=-300.00 +/- 0.00
+Episode length: 370.20 +/- 48.72
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 370      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 280872   |
+---------------------------------
+Eval num_timesteps=282864, episode_reward=-300.00 +/- 0.00
+Episode length: 344.00 +/- 99.54
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 344      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 282864   |
+---------------------------------
+Eval num_timesteps=284856, episode_reward=-300.00 +/- 0.00
+Episode length: 349.40 +/- 103.49
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 349      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 284856   |
+---------------------------------
+Eval num_timesteps=286848, episode_reward=-300.00 +/- 0.00
+Episode length: 387.40 +/- 132.11
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 387      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 286848   |
+---------------------------------
+Eval num_timesteps=288840, episode_reward=-300.00 +/- 0.00
+Episode length: 344.80 +/- 131.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 345      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 288840   |
+---------------------------------
+Eval num_timesteps=290832, episode_reward=-300.00 +/- 0.00
+Episode length: 299.80 +/- 51.11
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 300      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 290832   |
+---------------------------------
+Eval num_timesteps=292824, episode_reward=-300.00 +/- 0.00
+Episode length: 402.80 +/- 109.49
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 403      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 292824   |
+---------------------------------
+Eval num_timesteps=294816, episode_reward=-300.00 +/- 0.00
+Episode length: 439.80 +/- 172.43
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 440      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 294816   |
+---------------------------------
+Eval num_timesteps=296808, episode_reward=-300.00 +/- 0.00
+Episode length: 402.20 +/- 68.46
+---------------------------------------
+| eval/                   |           |
+|    mean_ep_length       | 402       |
+|    mean_reward          | -300      |
+| time/                   |           |
+|    total_timesteps      | 296808    |
+| train/                  |           |
+|    approx_kl            | 0.0133405 |
+|    clip_fraction        | 0.162     |
+|    clip_range           | 0.2       |
+|    entropy_loss         | -5.88     |
+|    explained_variance   | 0.96      |
+|    learning_rate        | 0.001     |
+|    loss                 | -0.0553   |
+|    n_updates            | 60        |
+|    policy_gradient_loss | -0.0109   |
+|    std                  | 1.05      |
+|    value_loss           | 0.0724    |
+---------------------------------------
+Eval num_timesteps=298800, episode_reward=-300.00 +/- 0.00
+Episode length: 453.20 +/- 106.29
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 453      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 298800   |
+---------------------------------
+Eval num_timesteps=300792, episode_reward=-300.00 +/- 0.00
+Episode length: 381.60 +/- 77.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 382      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 300792   |
+---------------------------------
+Eval num_timesteps=302784, episode_reward=-300.00 +/- 0.00
+Episode length: 546.60 +/- 207.57
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 547      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 302784   |
+---------------------------------
+Eval num_timesteps=304776, episode_reward=-300.00 +/- 0.00
+Episode length: 534.60 +/- 100.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 535      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 304776   |
+---------------------------------
+Eval num_timesteps=306768, episode_reward=-300.00 +/- 0.00
+Episode length: 381.80 +/- 90.65
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 382      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 306768   |
+---------------------------------
+Eval num_timesteps=308760, episode_reward=-300.00 +/- 0.00
+Episode length: 394.40 +/- 119.74
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 394      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 308760   |
+---------------------------------
+Eval num_timesteps=310752, episode_reward=-300.00 +/- 0.00
+Episode length: 466.00 +/- 137.97
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 466      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 310752   |
+---------------------------------
+Eval num_timesteps=312744, episode_reward=-300.00 +/- 0.00
+Episode length: 541.00 +/- 102.23
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 541      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 312744   |
+---------------------------------
+Eval num_timesteps=314736, episode_reward=-300.00 +/- 0.00
+Episode length: 504.00 +/- 46.93
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 504      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 314736   |
+---------------------------------
+Eval num_timesteps=316728, episode_reward=-300.00 +/- 0.00
+Episode length: 527.40 +/- 93.27
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 527      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 316728   |
+---------------------------------
+Eval num_timesteps=318720, episode_reward=-300.00 +/- 0.00
+Episode length: 477.60 +/- 35.00
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 478      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 318720   |
+---------------------------------
+Eval num_timesteps=320712, episode_reward=-300.00 +/- 0.00
+Episode length: 560.60 +/- 151.85
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 561      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 320712   |
+---------------------------------
+Eval num_timesteps=322704, episode_reward=-300.00 +/- 0.00
+Episode length: 551.00 +/- 190.96
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 551      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 322704   |
+---------------------------------
+Eval num_timesteps=324696, episode_reward=-300.00 +/- 0.00
+Episode length: 483.80 +/- 113.97
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 484      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 324696   |
+---------------------------------
+Eval num_timesteps=326688, episode_reward=-300.00 +/- 0.00
+Episode length: 472.80 +/- 77.45
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 473      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 326688   |
+---------------------------------
+Eval num_timesteps=328680, episode_reward=-300.00 +/- 0.00
+Episode length: 522.60 +/- 79.25
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 523      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 328680   |
+---------------------------------
+Eval num_timesteps=330672, episode_reward=-300.00 +/- 0.00
+Episode length: 496.00 +/- 54.80
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 496      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 330672   |
+---------------------------------
+Eval num_timesteps=332664, episode_reward=-300.00 +/- 0.00
+Episode length: 486.80 +/- 223.65
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 487      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 332664   |
+---------------------------------
+Eval num_timesteps=334656, episode_reward=-300.00 +/- 0.00
+Episode length: 436.20 +/- 74.55
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 436      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 334656   |
+---------------------------------
+Eval num_timesteps=336648, episode_reward=-300.00 +/- 0.00
+Episode length: 561.40 +/- 154.14
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 561      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 336648   |
+---------------------------------
+Eval num_timesteps=338640, episode_reward=-300.00 +/- 0.00
+Episode length: 471.20 +/- 60.89
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 471      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 338640   |
+---------------------------------
+Eval num_timesteps=340632, episode_reward=-300.00 +/- 0.00
+Episode length: 433.80 +/- 62.05
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 434      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 340632   |
+---------------------------------
+Eval num_timesteps=342624, episode_reward=-300.00 +/- 0.00
+Episode length: 607.20 +/- 142.50
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 607      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 342624   |
+---------------------------------
+Eval num_timesteps=344616, episode_reward=-300.00 +/- 0.00
+Episode length: 527.00 +/- 83.59
+-----------------------------------------
+| eval/                   |             |
+|    mean_ep_length       | 527         |
+|    mean_reward          | -300        |
+| time/                   |             |
+|    total_timesteps      | 344616      |
+| train/                  |             |
+|    approx_kl            | 0.014218907 |
+|    clip_fraction        | 0.18        |
+|    clip_range           | 0.2         |
+|    entropy_loss         | -5.91       |
+|    explained_variance   | 0.962       |
+|    learning_rate        | 0.001       |
+|    loss                 | -0.06       |
+|    n_updates            | 70          |
+|    policy_gradient_loss | -0.0126     |
+|    std                  | 1.06        |
+|    value_loss           | 0.0436      |
+-----------------------------------------
+Eval num_timesteps=346608, episode_reward=-300.00 +/- 0.00
+Episode length: 456.80 +/- 125.75
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 457      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 346608   |
+---------------------------------
+Eval num_timesteps=348600, episode_reward=-300.00 +/- 0.00
+Episode length: 515.40 +/- 139.15
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 515      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 348600   |
+---------------------------------
+Eval num_timesteps=350592, episode_reward=-300.00 +/- 0.00
+Episode length: 532.20 +/- 96.35
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 532      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 350592   |
+---------------------------------
+Eval num_timesteps=352584, episode_reward=-300.00 +/- 0.00
+Episode length: 515.60 +/- 105.73
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 516      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 352584   |
+---------------------------------
+Eval num_timesteps=354576, episode_reward=-300.00 +/- 0.00
+Episode length: 590.60 +/- 311.22
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 591      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 354576   |
+---------------------------------
+Eval num_timesteps=356568, episode_reward=-300.00 +/- 0.00
+Episode length: 596.00 +/- 90.40
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 596      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 356568   |
+---------------------------------
+Eval num_timesteps=358560, episode_reward=-300.00 +/- 0.00
+Episode length: 474.40 +/- 99.23
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 474      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 358560   |
+---------------------------------
+Eval num_timesteps=360552, episode_reward=-300.00 +/- 0.00
+Episode length: 658.20 +/- 103.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 658      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 360552   |
+---------------------------------
+Eval num_timesteps=362544, episode_reward=-300.00 +/- 0.00
+Episode length: 509.00 +/- 109.44
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 509      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 362544   |
+---------------------------------
+Eval num_timesteps=364536, episode_reward=-300.00 +/- 0.00
+Episode length: 603.80 +/- 113.01
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 604      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 364536   |
+---------------------------------
+Eval num_timesteps=366528, episode_reward=-300.00 +/- 0.00
+Episode length: 448.40 +/- 76.80
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 448      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 366528   |
+---------------------------------
+Eval num_timesteps=368520, episode_reward=-300.00 +/- 0.00
+Episode length: 492.80 +/- 89.25
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 493      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 368520   |
+---------------------------------
+Eval num_timesteps=370512, episode_reward=-300.00 +/- 0.00
+Episode length: 447.20 +/- 94.90
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 447      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 370512   |
+---------------------------------
+Eval num_timesteps=372504, episode_reward=-300.00 +/- 0.00
+Episode length: 439.60 +/- 105.57
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 440      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 372504   |
+---------------------------------
+Eval num_timesteps=374496, episode_reward=-300.00 +/- 0.00
+Episode length: 495.20 +/- 125.74
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 495      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 374496   |
+---------------------------------
+Eval num_timesteps=376488, episode_reward=-300.00 +/- 0.00
+Episode length: 481.40 +/- 164.92
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 481      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 376488   |
+---------------------------------
+Eval num_timesteps=378480, episode_reward=-300.00 +/- 0.00
+Episode length: 619.60 +/- 112.17
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 620      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 378480   |
+---------------------------------
+Eval num_timesteps=380472, episode_reward=-300.00 +/- 0.00
+Episode length: 461.80 +/- 132.06
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 462      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 380472   |
+---------------------------------
+Eval num_timesteps=382464, episode_reward=-300.00 +/- 0.00
+Episode length: 622.40 +/- 119.80
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 622      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 382464   |
+---------------------------------
+Eval num_timesteps=384456, episode_reward=-300.00 +/- 0.00
+Episode length: 524.20 +/- 129.31
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 524      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 384456   |
+---------------------------------
+Eval num_timesteps=386448, episode_reward=-300.00 +/- 0.00
+Episode length: 424.60 +/- 45.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 425      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 386448   |
+---------------------------------
+Eval num_timesteps=388440, episode_reward=-300.00 +/- 0.00
+Episode length: 576.80 +/- 205.22
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 577      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 388440   |
+---------------------------------
+Eval num_timesteps=390432, episode_reward=-300.00 +/- 0.00
+Episode length: 518.80 +/- 128.50
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 519      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 390432   |
+---------------------------------
+Eval num_timesteps=392424, episode_reward=-300.00 +/- 0.00
+Episode length: 516.80 +/- 82.08
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 517      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 392424   |
+---------------------------------
+Eval num_timesteps=394416, episode_reward=-300.00 +/- 0.00
+Episode length: 649.20 +/- 54.26
+------------------------------------------
+| eval/                   |              |
+|    mean_ep_length       | 649          |
+|    mean_reward          | -300         |
+| time/                   |              |
+|    total_timesteps      | 394416       |
+| train/                  |              |
+|    approx_kl            | 0.0126378015 |
+|    clip_fraction        | 0.162        |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -5.93        |
+|    explained_variance   | 0.932        |
+|    learning_rate        | 0.001        |
+|    loss                 | -0.0565      |
+|    n_updates            | 80           |
+|    policy_gradient_loss | -0.0106      |
+|    std                  | 1.07         |
+|    value_loss           | 0.115        |
+------------------------------------------
+Eval num_timesteps=396408, episode_reward=-300.00 +/- 0.00
+Episode length: 549.80 +/- 65.21
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 550      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 396408   |
+---------------------------------
+Eval num_timesteps=398400, episode_reward=-300.00 +/- 0.00
+Episode length: 602.80 +/- 75.87
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 603      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 398400   |
+---------------------------------
+Eval num_timesteps=400392, episode_reward=-300.00 +/- 0.00
+Episode length: 529.20 +/- 51.71
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 529      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 400392   |
+---------------------------------
+Eval num_timesteps=402384, episode_reward=-300.00 +/- 0.00
+Episode length: 582.00 +/- 125.63
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 582      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 402384   |
+---------------------------------
+Eval num_timesteps=404376, episode_reward=-300.00 +/- 0.00
+Episode length: 573.00 +/- 64.35
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 573      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 404376   |
+---------------------------------
+Eval num_timesteps=406368, episode_reward=-300.00 +/- 0.00
+Episode length: 538.00 +/- 110.73
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 538      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 406368   |
+---------------------------------
+Eval num_timesteps=408360, episode_reward=-300.00 +/- 0.00
+Episode length: 557.00 +/- 128.53
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 557      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 408360   |
+---------------------------------
+Eval num_timesteps=410352, episode_reward=-300.00 +/- 0.00
+Episode length: 727.00 +/- 245.08
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 727      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 410352   |
+---------------------------------
+Eval num_timesteps=412344, episode_reward=-300.00 +/- 0.00
+Episode length: 621.60 +/- 76.45
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 622      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 412344   |
+---------------------------------
+Eval num_timesteps=414336, episode_reward=-300.00 +/- 0.00
+Episode length: 600.20 +/- 151.01
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 600      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 414336   |
+---------------------------------
+Eval num_timesteps=416328, episode_reward=-300.00 +/- 0.00
+Episode length: 605.00 +/- 63.41
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 605      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 416328   |
+---------------------------------
+Eval num_timesteps=418320, episode_reward=-300.00 +/- 0.00
+Episode length: 573.20 +/- 107.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 573      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 418320   |
+---------------------------------
+Eval num_timesteps=420312, episode_reward=-300.00 +/- 0.00
+Episode length: 629.80 +/- 89.94
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 630      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 420312   |
+---------------------------------
+Eval num_timesteps=422304, episode_reward=-300.00 +/- 0.00
+Episode length: 622.00 +/- 45.91
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 622      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 422304   |
+---------------------------------
+Eval num_timesteps=424296, episode_reward=-300.00 +/- 0.00
+Episode length: 569.80 +/- 68.76
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 570      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 424296   |
+---------------------------------
+Eval num_timesteps=426288, episode_reward=-300.00 +/- 0.00
+Episode length: 585.60 +/- 85.08
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 586      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 426288   |
+---------------------------------
+Eval num_timesteps=428280, episode_reward=-300.00 +/- 0.00
+Episode length: 683.40 +/- 103.01
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 683      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 428280   |
+---------------------------------
+Eval num_timesteps=430272, episode_reward=-300.00 +/- 0.00
+Episode length: 436.20 +/- 119.26
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 436      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 430272   |
+---------------------------------
+Eval num_timesteps=432264, episode_reward=-300.00 +/- 0.00
+Episode length: 552.00 +/- 129.99
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 552      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 432264   |
+---------------------------------
+Eval num_timesteps=434256, episode_reward=-300.00 +/- 0.00
+Episode length: 579.80 +/- 150.09
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 580      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 434256   |
+---------------------------------
+Eval num_timesteps=436248, episode_reward=-300.00 +/- 0.00
+Episode length: 627.60 +/- 150.89
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 628      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 436248   |
+---------------------------------
+Eval num_timesteps=438240, episode_reward=-300.00 +/- 0.00
+Episode length: 607.60 +/- 179.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 608      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 438240   |
+---------------------------------
+Eval num_timesteps=440232, episode_reward=-300.00 +/- 0.00
+Episode length: 608.20 +/- 71.82
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 608      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 440232   |
+---------------------------------
+Eval num_timesteps=442224, episode_reward=-300.00 +/- 0.00
+Episode length: 567.00 +/- 50.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 567      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 442224   |
+---------------------------------
+Eval num_timesteps=444216, episode_reward=-300.00 +/- 0.00
+Episode length: 691.80 +/- 24.99
+-----------------------------------------
+| eval/                   |             |
+|    mean_ep_length       | 692         |
+|    mean_reward          | -300        |
+| time/                   |             |
+|    total_timesteps      | 444216      |
+| train/                  |             |
+|    approx_kl            | 0.014846419 |
+|    clip_fraction        | 0.184       |
+|    clip_range           | 0.2         |
+|    entropy_loss         | -5.97       |
+|    explained_variance   | 0.927       |
+|    learning_rate        | 0.001       |
+|    loss                 | -0.0543     |
+|    n_updates            | 90          |
+|    policy_gradient_loss | -0.00908    |
+|    std                  | 1.08        |
+|    value_loss           | 0.104       |
+-----------------------------------------
+Eval num_timesteps=446208, episode_reward=-300.00 +/- 0.00
+Episode length: 670.00 +/- 72.95
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 670      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 446208   |
+---------------------------------
+Eval num_timesteps=448200, episode_reward=-300.00 +/- 0.00
+Episode length: 675.20 +/- 136.29
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 675      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 448200   |
+---------------------------------
+Eval num_timesteps=450192, episode_reward=-300.00 +/- 0.00
+Episode length: 612.60 +/- 104.12
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 613      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 450192   |
+---------------------------------
+Eval num_timesteps=452184, episode_reward=-300.00 +/- 0.00
+Episode length: 688.80 +/- 120.98
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 689      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 452184   |
+---------------------------------
+Eval num_timesteps=454176, episode_reward=-300.00 +/- 0.00
+Episode length: 642.40 +/- 48.32
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 642      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 454176   |
+---------------------------------
+Eval num_timesteps=456168, episode_reward=-300.00 +/- 0.00
+Episode length: 567.20 +/- 41.57
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 567      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 456168   |
+---------------------------------
+Eval num_timesteps=458160, episode_reward=-300.00 +/- 0.00
+Episode length: 645.80 +/- 74.39
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 646      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 458160   |
+---------------------------------
+Eval num_timesteps=460152, episode_reward=-300.00 +/- 0.00
+Episode length: 669.20 +/- 56.39
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 669      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 460152   |
+---------------------------------
+Eval num_timesteps=462144, episode_reward=-300.00 +/- 0.00
+Episode length: 669.40 +/- 44.31
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 669      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 462144   |
+---------------------------------
+Eval num_timesteps=464136, episode_reward=-300.00 +/- 0.00
+Episode length: 742.60 +/- 85.07
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 743      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 464136   |
+---------------------------------
+Eval num_timesteps=466128, episode_reward=-300.00 +/- 0.00
+Episode length: 644.40 +/- 183.59
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 644      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 466128   |
+---------------------------------
+Eval num_timesteps=468120, episode_reward=-300.00 +/- 0.00
+Episode length: 689.80 +/- 76.70
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 690      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 468120   |
+---------------------------------
+Eval num_timesteps=470112, episode_reward=-300.00 +/- 0.00
+Episode length: 640.60 +/- 65.25
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 641      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 470112   |
+---------------------------------
+Eval num_timesteps=472104, episode_reward=-300.00 +/- 0.00
+Episode length: 728.60 +/- 119.49
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 729      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 472104   |
+---------------------------------
+Eval num_timesteps=474096, episode_reward=-300.00 +/- 0.00
+Episode length: 821.00 +/- 211.76
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 821      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 474096   |
+---------------------------------
+Eval num_timesteps=476088, episode_reward=-300.00 +/- 0.00
+Episode length: 650.80 +/- 100.71
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 651      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 476088   |
+---------------------------------
+Eval num_timesteps=478080, episode_reward=-300.00 +/- 0.00
+Episode length: 626.20 +/- 63.29
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 626      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 478080   |
+---------------------------------
+Eval num_timesteps=480072, episode_reward=-300.00 +/- 0.00
+Episode length: 746.00 +/- 86.04
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 746      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 480072   |
+---------------------------------
+Eval num_timesteps=482064, episode_reward=-300.00 +/- 0.00
+Episode length: 585.20 +/- 244.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 585      |
+|    mean_reward     | -300     |
+| time/              |          |
+|    total_timesteps | 482064   |
+---------------------------------
+Traceback (most recent call last):
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 567, in <module>
+    sim.run_full(args)
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 351, in run_full
+    model.learn(total_timesteps=int(5e6),
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py", line 315, in learn
+    return super().learn(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 277, in learn
+    continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 200, in collect_rollouts
+    if not callback.on_step():
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
+    return self._on_step()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 219, in _on_step
+    continue_training = callback.on_step() and continue_training
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 114, in on_step
+    return self._on_step()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\callbacks.py", line 460, in _on_step
+    episode_rewards, episode_lengths = evaluate_policy(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\evaluation.py", line 88, in evaluate_policy
+    actions, states = model.predict(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\base_class.py", line 553, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\policies.py", line 366, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\torch\autograd\grad_mode.py", line 83, in __exit__
+    torch.set_grad_enabled(self.prev)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\torch\autograd\grad_mode.py", line 183, in __init__
+    self.prev = torch.is_grad_enabled()
+KeyboardInterrupt

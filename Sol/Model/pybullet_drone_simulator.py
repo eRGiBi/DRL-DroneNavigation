@@ -7,6 +7,12 @@ import argparse
 from distutils.util import strtobool
 # import sync, str2bool
 
+import sys
+
+sys.path.append("../")
+sys.path.append("./")
+
+
 from typing import Callable
 
 import gym.wrappers
@@ -42,6 +48,7 @@ import Sol.Model.Waypoints as Waypoints
 
 from Sol.Utilities.Plotter import plot_learning_curve, plot_metrics, plot_3d_targets
 import Sol.Utilities.Callbacks as Callbacks
+from Sol.Model.SBActorCritic import CustomActorCriticPolicy
 
 # from tf_agents.environments import py_environment
 
@@ -107,7 +114,7 @@ class PBDroneSimulator:
                 aviary_dim=aviary_dim,
             )
             env.reset(seed=seed + rank)
-            env = Monitor(env) # record stats such as returns
+            env = Monitor(env)  # record stats such as returns
             return env
 
         if multi:
@@ -142,7 +149,7 @@ class PBDroneSimulator:
         # action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
         # action = np.array([.9, .9, .9, .9], dtype=np.float32)
         action = np.array([-1, -1, -1, -1], dtype=np.float32)
-        action *= -1/10
+        action *= -1 / 10
         # action = np.array([0, 0, 0, 0], dtype=np.float32)
 
         plot_3d_targets(self.targets)
@@ -187,9 +194,9 @@ class PBDroneSimulator:
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.29.2023_11.55.59/best_model.zip")
-        # model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\sa/best_model.zip",
-        #                  env=drone_environment)
+        # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\/best_model.zip")
+        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-01.03.2024_21.46.55/best_model.zip",
+                         env=drone_environment)
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
 
@@ -210,7 +217,7 @@ class PBDroneSimulator:
 
         for i in range(self.max_steps):
             action, _states = model.predict(obs,
-                                            deterministic=True
+                                            deterministic=False
                                             )
             obs, reward, terminated, truncated, info = drone_environment.step(action)
             print(i)
@@ -235,6 +242,43 @@ class PBDroneSimulator:
 
             time.sleep(1. / 240.)
 
+    def test_learning(self):
+
+        train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
+                                   range(1)])
+
+        # custom_policy = CustomActorCriticPolicy(train_env.observation_space, train_env.action_space,
+        #                                         net_arch=[512, 512, dict(vf=[256, 128],
+        #                                                                  pi=[256, 128])],
+        #                                         lr_schedule=linear_schedule(1e-3),
+        #                                         activation_fn=th.nn.Tanh)
+
+        onpolicy_kwargs = dict(net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])])
+
+        model = PPO("MlpPolicy",
+                    train_env,
+                    verbose=1,
+                    n_steps=2048,
+                    batch_size=49,
+                    device="auto",
+                    policy_kwargs=onpolicy_kwargs
+                    # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
+                    )
+        print(model.policy)
+
+        model.learn(total_timesteps=int(5e2), )
+
+        print("#############################################")
+
+        # model = PPO(custom_policy,
+        #             train_env,
+        #             verbose=1,
+        #             n_steps=2048,
+        #             batch_size=49
+        #             # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
+        #             )
+
     def run_full(self, args):
         start = time.perf_counter()
 
@@ -248,95 +292,106 @@ class PBDroneSimulator:
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
                                    range(self.num_cpu)])
-        # train_env = VecCheckNan(train_env)
-        train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
-                                 clip_obs=1)
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
-        #
+
         eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=True,
                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
-        # eval_env = VecCheckNan(eval_env)
-        eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
-                                clip_obs=1)
 
-        # onpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
-        #                        net_arch=dict(vf=[512, 512, 256, 128],
-        #                                      pi=[512, 512, 256, 128]))
+        if args.vec_check_nan:
+            train_env = VecCheckNan(train_env)
+            eval_env = VecCheckNan(eval_env)
+
+        if args.vec_normalize:
+            train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
+                                     clip_obs=1)
+            eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
+                                    clip_obs=1)
+
+        # On-policy algorithms #################################
+
+        onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
+                               share_features_extractor=True,
+                               net_arch=dict(vf=[512, 512, 256, 128],
+                                             pi=[512, 512, 256, 128]))
         # onpolicy_kwargs = dict(net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])])
 
-        model = PPO("MlpPolicy",
-                    train_env,
-                    verbose=1,
-                    n_steps=2048,
-                    batch_size=49152 // self.num_cpu,
-                    ent_coef=0.01,
-                    # use_sde=True,
-                    # sde_sample_freq=4,
-                    clip_range=0.2,
-                    learning_rate=1e-3,
-                    tensorboard_log="./logs/ppo_tensorboard/",
-                    device="auto",
-                    policy_kwargs=  # onpolicy_kwargs
-                    dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
-                    )
+        custom_policy = dict(net_arch=[dict(share=[512, 512], vf=[256, 128], pi=[256, 128])],
+                             activation_fn=th.nn.Tanh)
 
-        # tensorboard --logdir ./logs/ppo_tensorboard/
-
-        #### Off-policy algorithms #################################
-        #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
-        #                             net_arch=[512, 512, 256, 128]
+        # Off-policy algorithms #################################
+        offpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
+                                net_arch=[512, 512, 256, 128])
 
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
 
-        # model = SAC(
-        #     "MultiInputPolicy",
-        #     train_env,
-        #     replay_buffer_class=HerReplayBuffer,
-        #     replay_buffer_kwargs=dict(
-        #         n_sampled_goal=len(self.targets),
-        #         goal_selection_strategy="future",
-        #     ),
-        #     verbose=0,
-        #     tensorboard_log="./logs/SAC_tensorboard/",
-        #     train_freq=1,
-        #     gradient_steps=2,
-        #     buffer_size=int(3e6),
-        #     learning_rate=1e-3,
-        #     # gamma=0.95,
-        #     batch_size=2048,
-        #     policy_kwargs=dict(net_arch=[256, 256, 256]),
-        #     device="auto",
-        # )
-        # train_env = make_vec_env(make_env(multi=False), n_envs=12)
+        if args.agent == 'PPO':
+            model = PPO(ActorCriticPolicy,
+                        train_env,
+                        verbose=1,
+                        n_steps=2048,
+                        batch_size=49152 // self.num_cpu,
+                        ent_coef=0.01,
+                        # use_sde=True,
+                        # sde_sample_freq=4,
+                        clip_range=0.2,
+                        learning_rate=1e-3,
+                        tensorboard_log="./logs/ppo_tensorboard/",
+                        device="auto",
+                        policy_kwargs=onpolicy_kwargs
+                        # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
+                        )
 
-        # model = DDPG("MlpPolicy",
-        #              train_env,
-        #              verbose=1,
-        #              batch_size=1024,
-        #              learning_rate=1e-3,
-        #              train_freq=(10, "step"),
-        #              tensorboard_log="./logs/ddpg_tensorboard/",
-        #              device="auto",
-        #              policy_kwargs=dict(net_arch=[64, 64])
-        #              )
+        # tensorboard --logdir ./logs/ppo_tensorboard/
+
+        elif args.agent == 'SAC':
+
+            model = SAC(
+                "MlpPolicy",
+                train_env,
+                # replay_buffer_class=HerReplayBuffer,
+                # replay_buffer_kwargs=dict(
+                #     n_sampled_goal=len(self.targets),
+                #     goal_selection_strategy="future",
+                # ),
+                verbose=0,
+                tensorboard_log="./logs/SAC_tensorboard/",
+                train_freq=1,
+                gradient_steps=2,
+                buffer_size=int(4e6),
+                learning_rate=1e-3,
+                # gamma=0.95,
+                batch_size=49152 // self.num_cpu,
+                policy_kwargs=offpolicy_kwargs,  # dict(net_arch=[256, 256, 256]),
+                device="auto",
+            )
+            # train_env = make_vec_env(make_env(multi=False), n_envs=12)
+
+            # model = DDPG("MlpPolicy",
+            #              train_env,
+            #              verbose=1,
+            #              batch_size=1024,
+            #              learning_rate=1e-3,
+            #              train_freq=(10, "step"),
+            #              tensorboard_log="./logs/ddpg_tensorboard/",
+            #              device="auto",
+            #              policy_kwargs=dict(net_arch=[64, 64])
+            #              )
+
         model.set_random_seed(1)
 
         # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
         # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
 
-        # train_env = stable_baselines3.common.monitor.Monitor(train_env)
-        # eval_env = stable_baselines3.common.monitor.Monitor(eval_env)
+        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
 
-        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000,
-                                                         verbose=1)
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
         found_tar_callback = Callbacks.FoundTargetsCallback(log_dir=filename + '/')
 
-        wandb_callback = WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2,)
+        wandb_callback = WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2, )
 
         eval_callback = EvalCallback(eval_env,
                                      # callback_on_new_best=callback_on_best,
@@ -348,19 +403,22 @@ class PBDroneSimulator:
                                      render=False
                                      )
 
-        model.learn(total_timesteps=int(5e6),
+        model.learn(total_timesteps=int(args.max_steps),
                     callback=[eval_callback,
                               found_tar_callback,
                               wandb_callback
                               # AimCallback(repo='.Aim/', experiment_name='sb3_test')
                               ],
                     log_interval=1000,
+                    tb_log_name=args.agent + " " + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
                     )
 
         model.save(os.curdir + filename + '/success_model.zip')
 
         stats_path = os.path.join(filename, "vec_normalize.pkl")
         eval_env.save(stats_path)
+
+        wandb.finish()
 
         # Test the model #########################################
 
@@ -441,35 +499,39 @@ def parse_args():
     parser.add_argument('--env-kwargs', type=str, default='{}')
     parser.add_argument('--log-dir', type=str, default='logs')
     parser.add_argument('--seed', '-s', type=int, default=1)
-    parser.add_argument('--cuda', action='store_true', default=False)
-    parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI (default: True)',
-                        metavar='')
+    parser.add_argument('--cuda', action='store_true', default=True)
+    parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI for the eval env'
+                                                           '(default: True)')
+
+    parser.add_argument("--save-run", action="store_true", default=True,)
     parser.add_argument('--save-buffer', action='store_true', default=False)
     parser.add_argument('--save-model', action='store_true', default=True)
-    parser.add_argument('--save-obs', action='store_true', default=False)
-    parser.add_argument('--save-video', action='store_true', default=False)
     parser.add_argument('--save-dir', type=str, default='')
     parser.add_argument('--checkpoint-freq', type=int, default=100)
-    parser.add_argument('--checkpoint-at-end', action='store_true', default=False)
+
     parser.add_argument('--restore-agent', action='store_true', default=False)
 
+    # Wrapper specific arguments
+    parser.add_argument('--vec_check_nan', default=False, type=lambda x: bool(strtobool(x)))
+    parser.add_argument('--vec_normalize', default=False, type=lambda x: bool(strtobool(x)))
+    parser.add_argument('--ve_check_env', default=False, type=lambda x: bool(strtobool(x)))
 
     parser.add_argument('--num-cpus', type=int, default=1)
-    parser.add_argument('--num-workers', type=int, default=0)
-    parser.add_argument('--num_envs', type=int, default=1)
+
     parser.add_argument('--max_steps', type=int, default=5e6)
+
+    # RL Algorithm specific arguments
     parser.add_argument('--agent', type=str, default='PPO')
     parser.add_argument('--agent-config', type=str, default='default')
-    parser.add_argument('--policy', type=str, default='default')
-    parser.add_argument('--policy-config', type=str, default='default')
     parser.add_argument('--discount', type=int, default=0.999)
     parser.add_argument('--threshold', type=int, default=0.3)
     parser.add_argument('--batch-size', type=int, default=2048)
     parser.add_argument('--num-steps', type=int, default=2048)
-    parser.add_argument('--ent_coef', type=int, default=0)
     parser.add_argument('--learning-rate', type=int, default=1e-3)
-    parser.add_argument('--clip_range', type=int, default=0.2)
 
+    # PPO specific
+    parser.add_argument('--clip_range', type=int, default=0.2)
+    parser.add_argument('--ent_coef', type=int, default=0)
 
     parser.add_argument('--eval-criterion', type=str, default='default')
     parser.add_argument('--eval-criterion-config', type=str, default='default')
@@ -480,27 +542,16 @@ def parse_args():
     parser.add_argument('--criterion', type=str, default='default')
     parser.add_argument('--criterion-config', type=str, default='default')
 
-    parser.add_argument('--wandb', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,)
-
-    parser.add_argument("--wandb-project-name", type=str, default="ppo-implementation-details",
-                        help="the wandb's project name")
+    # Wandb specific arguments
+    parser.add_argument('--wandb', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True, )
     parser.add_argument("--wandb-entity", type=str, default=None,
                         help="the entity (team) of wandb's project")
+
     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="weather to capture videos of the agent performances (check out `videos` folder)")
 
-    # #### Define and parse (optional) arguments for the script ##
-    # parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
-    # parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI (default: True)',
-    #                     metavar='')
-    # parser.add_argument('--record_video', default=DEFAULT_RECORD_VIDEO, type=str2bool,
-    #                     help='Whether to record a video (default: False)', metavar='')
-    # parser.add_argument('--output_folder', default=DEFAULT_OUTPUT_FOLDER, type=str,
-    #                     help='Folder where to save logs (default: "results")', metavar='')
-    # parser.add_argument('--colab', default=DEFAULT_COLAB, type=bool,
-    #                     help='Whether example is being run by a notebook (default: "False")', metavar='')
-    #
-    # run(**vars(ARGS))
+    parser.add_argument('--output_folder', default=DEFAULT_OUTPUT_FOLDER, type=str,
+                        help='Folder where to save logs (default: "results")', metavar='')
 
     args = parser.parse_args()
 
@@ -514,9 +565,7 @@ def init_wandb(args):
     config = {
         "env_name": args.env,
         "agent": args.agent,
-        "policy_type": args.policy,
         "total_timesteps": args.num_steps,
-        "policy_config": args.policy_config,
         "env_config": args.env_config,
         "seed": args.seed,
         "agent_config": args.agent_config,
@@ -531,50 +580,17 @@ def init_wandb(args):
         project="rl",
         config=args,
         name=run_name,
+        tensorboard=True,
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         monitor_gym=True,  # auto-upload the videos of agents playing the game
         save_code=True,  # optional
+
     )
     writer = SummaryWriter(f"runs/{run_name}")
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
     )
-
-
-if __name__ == "__main__":
-
-    args = parse_args()
-    print(args)
-    #
-
-    # ## seeding
-    # seed = args.seed
-    # random.seed(seed)
-    # np.random.seed(seed)
-    # th.manual_seed(seed)
-    # th.backends.cudnn.deterministic = False
-    #
-    # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
-
-    # targets = Waypoints.up_circle()
-    targets = Waypoints.rnd()
-
-    sim = PBDroneSimulator(targets, target_factor=0)
-
-    init_wandb(args)
-
-    sim.run_full(args)
-    #
-    # sim.run_test()
-
-    # sim.test_saved()
-    #
-
-    # video_recorder.record_video(
-    #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
-    #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",
-    #                    ))
 
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
@@ -605,26 +621,6 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 # loaded_model.load_replay_buffer("sac_replay_buffer")
 
 
-# import imageio
-# import numpy as np
-#
-# from stable_baselines3 import A2C
-#
-# model = A2C("MlpPolicy", "LunarLander-v2").learn(100_000)
-#
-# images = []
-# obs = model.env.reset()
-# img = model.env.render(mode="rgb_array")
-# for i in range(350):
-#     images.append(img)
-#     action, _ = model.predict(obs)
-#     obs, _, _ ,_ = model.env.step(action)
-#     img = model.env.render(mode="rgb_array")
-#
-# imageio.mimsave("lander_a2c.gif", [np.array(img) for i, img in enumerate(images) if i%2 == 0], fps=29)
-
-
-
 def manual_pb_env():
     # Connect to the PyBullet physics server
     # physicsClient = p.connect(p.GUI)
@@ -647,3 +643,38 @@ def manual_pb_env():
     # print('time_step_spec.step_type:', tf_env.time_step_spec().step_type)
     # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    print(args)
+    #
+
+    # ## seeding
+    # seed = args.seed
+    # random.seed(seed)
+    # np.random.seed(seed)
+    # th.manual_seed(seed)
+    # th.backends.cudnn.deterministic = False
+    #
+    # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
+
+    # targets = Waypoints.up_circle()
+    targets = Waypoints.rnd()
+
+    sim = PBDroneSimulator(targets, target_factor=0)
+
+    init_wandb(args)
+
+    # sim.test_learning()
+    sim.run_full(args)
+    #
+    # sim.run_test()
+
+    # sim.test_saved()
+    #
+
+    # video_recorder.record_video(
+    #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
+    #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",
+    #                    ))
