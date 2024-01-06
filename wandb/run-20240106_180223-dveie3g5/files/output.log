@@ -11154,3 +11154,144 @@ Episode length: 768.60 +/- 161.85
 |    policy_gradient_loss | -0.000108      |
 |    std                  | 2.14           |
 |    value_loss           | 8.92e+03       |
+--------------------------------------------
+Eval num_timesteps=1076000, episode_reward=2901.11 +/- 692.88
+Episode length: 814.80 +/- 122.36
+-------------------------------------------
+| eval/                   |               |
+|    mean_ep_length       | 815           |
+|    mean_reward          | 2.9e+03       |
+| time/                   |               |
+|    total_timesteps      | 1076000       |
+| train/                  |               |
+|    approx_kl            | 1.8566614e-05 |
+|    clip_fraction        | 0             |
+|    clip_range           | 0.2           |
+|    entropy_loss         | -8.71         |
+|    explained_variance   | 0.817         |
+|    learning_rate        | 0.001         |
+|    loss                 | 5.69e+03      |
+|    n_updates            | 5250          |
+|    policy_gradient_loss | -0.000145     |
+|    std                  | 2.14          |
+|    value_loss           | 1.47e+04      |
+-------------------------------------------
+Eval num_timesteps=1078000, episode_reward=3006.97 +/- 462.92
+Episode length: 904.00 +/- 257.12
+-------------------------------------------
+| eval/                   |               |
+|    mean_ep_length       | 904           |
+|    mean_reward          | 3.01e+03      |
+| time/                   |               |
+|    total_timesteps      | 1078000       |
+| train/                  |               |
+|    approx_kl            | 5.2883173e-05 |
+|    clip_fraction        | 0             |
+|    clip_range           | 0.2           |
+|    entropy_loss         | -8.71         |
+|    explained_variance   | 0.967         |
+|    learning_rate        | 0.001         |
+|    loss                 | 370           |
+|    n_updates            | 5260          |
+|    policy_gradient_loss | -0.00029      |
+|    std                  | 2.14          |
+|    value_loss           | 955           |
+-------------------------------------------
+Eval num_timesteps=1080000, episode_reward=4174.82 +/- 2090.33
+Episode length: 1095.80 +/- 359.14
+-------------------------------------------
+| eval/                   |               |
+|    mean_ep_length       | 1.1e+03       |
+|    mean_reward          | 4.17e+03      |
+| time/                   |               |
+|    total_timesteps      | 1080000       |
+| train/                  |               |
+|    approx_kl            | 0.00019503015 |
+|    clip_fraction        | 0             |
+|    clip_range           | 0.2           |
+|    entropy_loss         | -8.71         |
+|    explained_variance   | 0.949         |
+|    learning_rate        | 0.001         |
+|    loss                 | 790           |
+|    n_updates            | 5270          |
+|    policy_gradient_loss | -0.000618     |
+|    std                  | 2.14          |
+|    value_loss           | 2.2e+03       |
+-------------------------------------------
+Eval num_timesteps=1082000, episode_reward=4090.58 +/- 4083.24
+Episode length: 1152.00 +/- 172.44
+-------------------------------------------
+| eval/                   |               |
+|    mean_ep_length       | 1.15e+03      |
+|    mean_reward          | 4.09e+03      |
+| time/                   |               |
+|    total_timesteps      | 1082000       |
+| train/                  |               |
+|    approx_kl            | 0.00012307728 |
+|    clip_fraction        | 0             |
+|    clip_range           | 0.2           |
+|    entropy_loss         | -8.72         |
+|    explained_variance   | 0.954         |
+|    learning_rate        | 0.001         |
+|    loss                 | 828           |
+|    n_updates            | 5280          |
+|    policy_gradient_loss | 2.28e-05      |
+|    std                  | 2.14          |
+|    value_loss           | 2.49e+03      |
+-------------------------------------------
+Eval num_timesteps=1084000, episode_reward=2460.60 +/- 839.10
+Episode length: 826.80 +/- 293.37
+------------------------------------------
+| eval/                   |              |
+|    mean_ep_length       | 827          |
+|    mean_reward          | 2.46e+03     |
+| time/                   |              |
+|    total_timesteps      | 1084000      |
+| train/                  |              |
+|    approx_kl            | 4.149601e-05 |
+|    clip_fraction        | 0            |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -8.72        |
+|    explained_variance   | 0.954        |
+|    learning_rate        | 0.001        |
+|    loss                 | 597          |
+|    n_updates            | 5290         |
+|    policy_gradient_loss | -0.000241    |
+|    std                  | 2.15         |
+|    value_loss           | 1.68e+03     |
+------------------------------------------
+Eval num_timesteps=1086000, episode_reward=3329.49 +/- 2297.73
+Episode length: 1220.60 +/- 373.38
+------------------------------------------
+| eval/                   |              |
+|    mean_ep_length       | 1.22e+03     |
+|    mean_reward          | 3.33e+03     |
+| time/                   |              |
+|    total_timesteps      | 1086000      |
+| train/                  |              |
+|    approx_kl            | 9.335598e-05 |
+|    clip_fraction        | 0            |
+|    clip_range           | 0.2          |
+|    entropy_loss         | -8.72        |
+|    explained_variance   | 0.945        |
+|    learning_rate        | 0.001        |
+|    loss                 | 427          |
+|    n_updates            | 5300         |
+|    policy_gradient_loss | -0.000376    |
+|    std                  | 2.15         |
+|    value_loss           | 1.22e+03     |
+------------------------------------------
+Traceback (most recent call last):
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 679, in <module>
+    elif args.run_type == "test":
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 417, in run_full
+    callback=[eval_callback,
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py", line 315, in learn
+    return super().learn(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 277, in learn
+    continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 223, in collect_rollouts
+    rollout_buffer.add(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\buffers.py", line 469, in add
+    self.observations[self.pos] = np.array(obs)
+FloatingPointError: underflow encountered in cast
