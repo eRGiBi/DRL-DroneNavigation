@@ -12,7 +12,6 @@ import sys
 sys.path.append("../")
 sys.path.append("./")
 
-
 from typing import Callable
 
 import gym.wrappers
@@ -144,7 +143,7 @@ class PBDroneSimulator:
 
         return dilated_points
 
-    def run_test(self):
+    def run_test(self, args):
         # action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
         # action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
         # action = np.array([.9, .9, .9, .9], dtype=np.float32)
@@ -191,12 +190,16 @@ class PBDroneSimulator:
         plot_learning_curve(rewards)
         plot_learning_curve(rewards_sum)
 
-    def test_saved(self):
+    def test_saved(self, args):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        # model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\/best_model.zip")
-        model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-01.03.2024_21.46.55/best_model.zip",
-                         env=drone_environment)
+        saved_filename = "C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.15.2023_17.09.00/best_model.zip"
+
+        if args.agent == "SAC":
+            model = SAC.load(saved_filename)
+        if args.agent == "PPO":
+            model = PPO.load(saved_filename)
+
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
 
@@ -242,7 +245,7 @@ class PBDroneSimulator:
 
             time.sleep(1. / 240.)
 
-    def test_learning(self):
+    def test_learning(self, args):
 
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
@@ -494,7 +497,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--gym-id', type=str, default='PBDroneEnv')
-    parser.add_argument('--env', type=str, default='default')
+    parser.add_argument('--run_type', type=str, default='full', choices=["full", "test", "saved", "learning"])
     parser.add_argument('--env-config', type=str, default='default')
     parser.add_argument('--env-kwargs', type=str, default='{}')
     parser.add_argument('--log-dir', type=str, default='logs')
@@ -507,6 +510,7 @@ def parse_args():
     parser.add_argument('--save-buffer', action='store_true', default=False)
     parser.add_argument('--save-model', action='store_true', default=True)
     parser.add_argument('--save-dir', type=str, default='')
+    parser.add_argument('--wandb_rootlog', type=str, default="/wandb")
     parser.add_argument('--checkpoint-freq', type=int, default=100)
 
     parser.add_argument('--restore-agent', action='store_true', default=False)
@@ -543,7 +547,7 @@ def parse_args():
     parser.add_argument('--criterion-config', type=str, default='default')
 
     # Wandb specific arguments
-    parser.add_argument('--wandb', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True, )
+    parser.add_argument('--wandb', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True, )
     parser.add_argument("--wandb-entity", type=str, default=None,
                         help="the entity (team) of wandb's project")
 
@@ -562,6 +566,8 @@ def init_wandb(args):
     run_name = f"{args.gym_id}__{args.agent}__{int(time.time())}"
     print(f"Starting run {run_name} with `wandb`...")
 
+    wandb.tensorboard.patch(root_logdir=args.wandb_rootlog)
+
     config = {
         "env_name": args.env,
         "agent": args.agent,
@@ -574,8 +580,8 @@ def init_wandb(args):
         "optimizer": args.optimizer,
         "optimizer_config": args.optimizer_config,
         "criterion": args.criterion,
-
     }
+
     run = wandb.init(
         project="rl",
         config=args,
@@ -646,16 +652,18 @@ def manual_pb_env():
 
 
 if __name__ == "__main__":
+    # C:\Users\xx4qw\anaconda3\envs\CondaDrone\python.exe C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py --agent SAC
+
     args = parse_args()
     print(args)
     #
 
-    # ## seeding
-    # seed = args.seed
-    # random.seed(seed)
-    # np.random.seed(seed)
-    # th.manual_seed(seed)
-    # th.backends.cudnn.deterministic = False
+    ## seeding
+    seed = args.seed
+    random.seed(seed)
+    np.random.seed(seed)
+    th.manual_seed(seed)
+    th.backends.cudnn.deterministic = False
     #
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
 
@@ -664,15 +672,17 @@ if __name__ == "__main__":
 
     sim = PBDroneSimulator(targets, target_factor=0)
 
-    init_wandb(args)
+    if args.wandb:
+        init_wandb(args)
 
-    # sim.test_learning()
-    sim.run_full(args)
-    #
-    # sim.run_test()
-
-    # sim.test_saved()
-    #
+    if args.run_type == "full":
+        sim.run_full(args)
+    elif args.run_type == "test":
+        sim.run_test(args)
+    elif args.run_type == "saved":
+        sim.test_saved(args)
+    elif args.run_type == "learning":
+        sim.test_learning(args)
 
     # video_recorder.record_video(
     #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
