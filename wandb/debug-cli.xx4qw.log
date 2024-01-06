@@ -1,0 +1,20 @@
+2024-01-06 13:38:03 INFO watching files in: C:\Users\xx4qw\AppData\Local\Temp\tmp6d3wr271\files
+2024-01-06 13:38:03 INFO run started: fn5rv6u3 with start time 0.0
+2024-01-06 13:38:17 INFO shutting down handler
+2024-01-06 13:38:17 INFO shutting down sender
+2024-01-06 13:38:17 INFO shutting down directory watcher
+2024-01-06 13:38:18 INFO scan: C:\Users\xx4qw\AppData\Local\Temp\tmp6d3wr271\wandb\run-20240106_133802-fn5rv6u3\files
+2024-01-06 13:38:18 INFO shutting down file pusher
+2024-01-06 13:38:18 INFO waiting for file pusher
+2024-01-06 13:38:18 INFO file stream finish called
+2024-01-06 13:38:19 INFO file stream finish is done
+2024-01-06 14:00:58 INFO watching files in: C:\Users\xx4qw\AppData\Local\Temp\tmpmu24kd5p\files
+2024-01-06 14:00:58 INFO run started: gnb2phu3 with start time 0.0
+2024-01-06 14:01:11 INFO shutting down handler
+2024-01-06 14:01:11 INFO shutting down sender
+2024-01-06 14:01:11 INFO shutting down directory watcher
+2024-01-06 14:01:12 INFO scan: C:\Users\xx4qw\AppData\Local\Temp\tmpmu24kd5p\wandb\run-20240106_140057-gnb2phu3\files
+2024-01-06 14:01:12 INFO shutting down file pusher
+2024-01-06 14:01:12 INFO waiting for file pusher
+2024-01-06 14:01:13 INFO file stream finish called
+2024-01-06 14:01:13 INFO file stream finish is done

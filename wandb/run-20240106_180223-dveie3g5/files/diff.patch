@@ -1,0 +1,401 @@
+diff --git a/Sol/Model/PBDroneEnv.py b/Sol/Model/PBDroneEnv.py
+index f3578d0..ab0b3a2 100644
+--- a/Sol/Model/PBDroneEnv.py
++++ b/Sol/Model/PBDroneEnv.py
+@@ -78,8 +78,7 @@ class PBDroneEnv(
+         self.CLIENT = self.CLIENT
+         self.target_visual = []
+ 
+-        if save_model:
+-            assert save_folder is not None
++        if save_folder is not None:
+             self.save_model(save_folder)
+ 
+         if gui:
+diff --git a/Sol/Model/Waypoints.py b/Sol/Model/Waypoints.py
+index 8a45918..3505130 100644
+--- a/Sol/Model/Waypoints.py
++++ b/Sol/Model/Waypoints.py
+@@ -72,7 +72,7 @@ def rnd():
+     return [
+         # np.array([0.5, 0.5, 0.5]),
+         # np.array([0.5, 0.0, 0.3]),
+-        np.array([-1, 0.2, 1]),
++        np.array([-0.2, 0.2, 0.5]),
+         np.array([0.3, 0.5, 0.7]),
+         np.array([1, 0.5, 1]),
+         # np.array([1., 0., 1.5]),
+diff --git a/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc b/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc
+index 4247b22..90f98cb 100644
+Binary files a/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc and b/Sol/Model/__pycache__/PBDroneEnv.cpython-38.pyc differ
+diff --git a/Sol/Model/__pycache__/Waypoints.cpython-38.pyc b/Sol/Model/__pycache__/Waypoints.cpython-38.pyc
+index a09a6ca..f9329cc 100644
+Binary files a/Sol/Model/__pycache__/Waypoints.cpython-38.pyc and b/Sol/Model/__pycache__/Waypoints.cpython-38.pyc differ
+diff --git a/Sol/Model/pybullet_drone_simulator.py b/Sol/Model/pybullet_drone_simulator.py
+index ae99192..9ed48b4 100644
+--- a/Sol/Model/pybullet_drone_simulator.py
++++ b/Sol/Model/pybullet_drone_simulator.py
+@@ -58,9 +58,8 @@ th.autograd.set_detect_anomaly(True)
+ 
+ np.seterr(all="raise")
+ 
+-DEFAULT_GUI = True
++DEFAULT_GUI = False
+ DEFAULT_RECORD_VIDEO = False
+-DEFAULT_OUTPUT_FOLDER = 'results'
+ DEFAULT_COLAB = False
+ 
+ register(
+@@ -68,14 +67,14 @@ register(
+     id="DroneEnv",
+     # path to the class for creating the env
+     # Note: entry_point also accept a class as input (and not only a string)
+-    entry_point="PBDroneEnv",
++    entry_point="PBDroneSimulator",
+     # Max number of steps per episode, using a `TimeLimitWrapper`
+     max_episode_steps=3000,
+ )
+ 
+ 
+ class PBDroneSimulator:
+-    def __init__(self, targets, target_factor=0,
++    def __init__(self, args, targets, target_factor=0,
+                  plot=True,
+                  discount=0.999,
+                  threshold=0.3,
+@@ -84,19 +83,20 @@ class PBDroneSimulator:
+ 
+         self.plot = plot
+         self.discount = discount
+-        self.threshold = threshold
+-        self.max_steps = max_steps
++        self.threshold = args.threshold
++        self.max_steps = args.max_steps
+ 
+         # self.max_reward = 100 + len(targets) * 10
+ 
+-        self.num_cpu = num_cpu
++        self.num_envs = args.num_envs
+         self.targets = self.dilate_targets(targets, target_factor)
+ 
+-    def make_env(self, multi=False, gui=False, initial_xyzs=None, aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
++    def make_env(self, multi=False, gui=False, initial_xyzs=None,
++                 aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
+                  rank: int = 0, seed: int = 0,
+-                 save_model: bool = False, save_path: str = None):
++                 save_path: str = None):
+         """
+-        Utility function for multiprocessed env.
++        Utility function for multi-processed env.
+         """
+ 
+         def _init():
+@@ -108,12 +108,19 @@ class PBDroneSimulator:
+                 physics=Physics.PYB,
+                 gui=gui,
+                 initial_xyzs=initial_xyzs,
+-                save_model=save_model,
+                 save_folder=save_path,
+                 aviary_dim=aviary_dim,
+             )
+             env.reset(seed=seed + rank)
+             env = Monitor(env)  # record stats such as returns
++            # env = gym.wrappers.RecordEpisodeStatistics(env)
++            # if args.capture_video:
++            #     env = gym.wrappers.RecordVideo(env, "results/videos/")
++            # env = gym.wrappers.ClipAction(env)
++            # env = gym.wrappers.NormalizeObservation(env)
++            # env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, -10, 10))
++            # env = gym.wrappers.NormalizeReward(env)
++            # env = gym.wrappers.TransformReward(env, lambda reward: np.clip(reward, -10, 10))
+             return env
+ 
+         if multi:
+@@ -143,7 +150,7 @@ class PBDroneSimulator:
+ 
+         return dilated_points
+ 
+-    def run_test(self, args):
++    def run_test(self):
+         # action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
+         # action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
+         # action = np.array([.9, .9, .9, .9], dtype=np.float32)
+@@ -190,7 +197,7 @@ class PBDroneSimulator:
+         plot_learning_curve(rewards)
+         plot_learning_curve(rewards_sum)
+ 
+-    def test_saved(self, args):
++    def test_saved(self):
+         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
+ 
+         saved_filename = "C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.15.2023_17.09.00/best_model.zip"
+@@ -245,7 +252,7 @@ class PBDroneSimulator:
+ 
+             time.sleep(1. / 240.)
+ 
+-    def test_learning(self, args):
++    def test_learning(self):
+ 
+         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
+                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
+@@ -282,7 +289,7 @@ class PBDroneSimulator:
+         #             # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
+         #             )
+ 
+-    def run_full(self, args):
++    def run_full(self):
+         start = time.perf_counter()
+ 
+         filename = os.path.join("./model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+@@ -294,11 +301,13 @@ class PBDroneSimulator:
+ 
+         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
+                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
+-                                   range(self.num_cpu)])
++                                   range(self.num_envs)])
+ 
+         # eval_env = make_env(multi=False, gui=False, rank=0)
+ 
+-        eval_env = SubprocVecEnv([self.make_env(multi=True, save_model=True, save_path=filename, gui=True,
++        eval_env = SubprocVecEnv([self.make_env(multi=True,
++                                                save_path=filename if args.savemodel else None,
++                                                gui=args.gui,
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
+         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
+ 
+@@ -335,7 +344,7 @@ class PBDroneSimulator:
+                         train_env,
+                         verbose=1,
+                         n_steps=2048,
+-                        batch_size=49152 // self.num_cpu,
++                        batch_size=49152 // self.num_envs,
+                         ent_coef=0.01,
+                         # use_sde=True,
+                         # sde_sample_freq=4,
+@@ -360,17 +369,16 @@ class PBDroneSimulator:
+                 #     goal_selection_strategy="future",
+                 # ),
+                 verbose=0,
+-                tensorboard_log="./logs/SAC_tensorboard/",
++                tensorboard_log="./logs/SAC_tensorboard/" if args.savemodel else None,
+                 train_freq=1,
+                 gradient_steps=2,
+-                buffer_size=int(4e6),
+-                learning_rate=1e-3,
++                buffer_size=int(1e6),
++                learning_rate=args.learnig_rate,
+                 # gamma=0.95,
+-                batch_size=49152 // self.num_cpu,
++                batch_size=49152 // self.num_envs,
+                 policy_kwargs=offpolicy_kwargs,  # dict(net_arch=[256, 256, 256]),
+                 device="auto",
+             )
+-            # train_env = make_vec_env(make_env(multi=False), n_envs=12)
+ 
+             # model = DDPG("MlpPolicy",
+             #              train_env,
+@@ -399,29 +407,30 @@ class PBDroneSimulator:
+         eval_callback = EvalCallback(eval_env,
+                                      # callback_on_new_best=callback_on_best,
+                                      verbose=1,
+-                                     best_model_save_path=filename + '/',
+-                                     log_path=filename + '/',
+-                                     eval_freq=int(2000 / self.num_cpu),
++                                     best_model_save_path=filename + '/' if args.savemodel else None,
++                                     log_path=filename + '/' if args.savemodel else None,
++                                     eval_freq=int(2000 / self.num_envs),
+                                      deterministic=False,
+                                      render=False
+                                      )
+ 
+         model.learn(total_timesteps=int(args.max_steps),
+                     callback=[eval_callback,
+-                              found_tar_callback,
+-                              wandb_callback
++                              found_tar_callback if args.savemodel else None,
++                              wandb_callback if args.wandb else None,
+                               # AimCallback(repo='.Aim/', experiment_name='sb3_test')
+                               ],
+                     log_interval=1000,
+                     tb_log_name=args.agent + " " + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
+                     )
+ 
+-        model.save(os.curdir + filename + '/success_model.zip')
++        if args.savemodel:
++            model.save(os.curdir + filename + '/success_model.zip')
+ 
+-        stats_path = os.path.join(filename, "vec_normalize.pkl")
+-        eval_env.save(stats_path)
++            stats_path = os.path.join(filename, "vec_normalize.pkl")
++            eval_env.save(stats_path)
+ 
+-        wandb.finish()
++            wandb.finish()
+ 
+         # Test the model #########################################
+ 
+@@ -496,33 +505,40 @@ def parse_args():
+ 
+     parser = argparse.ArgumentParser()
+ 
+-    parser.add_argument('--gym-id', type=str, default='PBDroneEnv')
++    parser.add_argument("--exp-name", type=str, default=os.path.basename(__file__).rstrip(".py"),
++                        help="the name of this experiment")
++    parser.add_argument('--gym_id', type=str, default='PBDroneEnv',
++                        help="the id of the gym environment")
+     parser.add_argument('--run_type', type=str, default='full', choices=["full", "test", "saved", "learning"])
+     parser.add_argument('--env-config', type=str, default='default')
+     parser.add_argument('--env-kwargs', type=str, default='{}')
+-    parser.add_argument('--log-dir', type=str, default='logs')
+-    parser.add_argument('--seed', '-s', type=int, default=1)
+-    parser.add_argument('--cuda', action='store_true', default=True)
++
++    parser.add_argument('--seed', '-s', type=int, default=1,
++                        help="seed of the experiment")
++    parser.add_argument('--cuda', action='store_true', default=True,
++                        help="if toggled, cuda will be enabled by default")
+     parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI for the eval env'
+-                                                           '(default: True)')
++                                                           '(default: False)')
+ 
+-    parser.add_argument("--save-run", action="store_true", default=True,)
+-    parser.add_argument('--save-buffer', action='store_true', default=False)
+-    parser.add_argument('--save-model', action='store_true', default=True)
+-    parser.add_argument('--save-dir', type=str, default='')
+-    parser.add_argument('--wandb_rootlog', type=str, default="/wandb")
++    # Saving
++    parser.add_argument('--savemodel', type=bool, default=True)
++    parser.add_argument('--logdir', type=str, default='logs')
++    parser.add_argument('--savedir', type=str, default='')
+     parser.add_argument('--checkpoint-freq', type=int, default=100)
+ 
+-    parser.add_argument('--restore-agent', action='store_true', default=False)
+-
+     # Wrapper specific arguments
+     parser.add_argument('--vec_check_nan', default=False, type=lambda x: bool(strtobool(x)))
+     parser.add_argument('--vec_normalize', default=False, type=lambda x: bool(strtobool(x)))
+     parser.add_argument('--ve_check_env', default=False, type=lambda x: bool(strtobool(x)))
+ 
+-    parser.add_argument('--num-cpus', type=int, default=1)
+-
+-    parser.add_argument('--max_steps', type=int, default=5e6)
++    parser.add_argument("--num-envs", type=int, default=1,
++                        help="the number of parallel game environments")
++    parser.add_argument('--max_steps', type=int, default=5e6,
++                        help="total timesteps of the experiments")
++    parser.add_argument('--max_env_steps', type=int, default=5000,
++                        help="total timesteps of one episode")
++    parser.add_argument("--learning-rate", type=float, default=1e-3,
++                        help="the learning rate of the optimizer")
+ 
+     # RL Algorithm specific arguments
+     parser.add_argument('--agent', type=str, default='PPO')
+@@ -531,7 +547,6 @@ def parse_args():
+     parser.add_argument('--threshold', type=int, default=0.3)
+     parser.add_argument('--batch-size', type=int, default=2048)
+     parser.add_argument('--num-steps', type=int, default=2048)
+-    parser.add_argument('--learning-rate', type=int, default=1e-3)
+ 
+     # PPO specific
+     parser.add_argument('--clip_range', type=int, default=0.2)
+@@ -547,16 +562,15 @@ def parse_args():
+     parser.add_argument('--criterion-config', type=str, default='default')
+ 
+     # Wandb specific arguments
+-    parser.add_argument('--wandb', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True, )
++    parser.add_argument("--wandb", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
++                        help="if toggled, this experiment will be tracked with Weights and Biases")
+     parser.add_argument("--wandb-entity", type=str, default=None,
+                         help="the entity (team) of wandb's project")
++    parser.add_argument('--wandb_rootlog', type=str, default="/wandb")
+ 
+     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+                         help="weather to capture videos of the agent performances (check out `videos` folder)")
+ 
+-    parser.add_argument('--output_folder', default=DEFAULT_OUTPUT_FOLDER, type=str,
+-                        help='Folder where to save logs (default: "results")', metavar='')
+-
+     args = parser.parse_args()
+ 
+     return args
+@@ -566,21 +580,7 @@ def init_wandb(args):
+     run_name = f"{args.gym_id}__{args.agent}__{int(time.time())}"
+     print(f"Starting run {run_name} with `wandb`...")
+ 
+-    wandb.tensorboard.patch(root_logdir=args.wandb_rootlog)
+-
+-    config = {
+-        "env_name": args.env,
+-        "agent": args.agent,
+-        "total_timesteps": args.num_steps,
+-        "env_config": args.env_config,
+-        "seed": args.seed,
+-        "agent_config": args.agent_config,
+-        "metric": args.metric,
+-        "metric_config": args.metric_config,
+-        "optimizer": args.optimizer,
+-        "optimizer_config": args.optimizer_config,
+-        "criterion": args.criterion,
+-    }
++    # wandb.tensorboard.patch(root_logdir=args.wandb_rootlog)
+ 
+     run = wandb.init(
+         project="rl",
+@@ -670,19 +670,19 @@ if __name__ == "__main__":
+     # targets = Waypoints.up_circle()
+     targets = Waypoints.rnd()
+ 
+-    sim = PBDroneSimulator(targets, target_factor=0)
++    sim = PBDroneSimulator(args, targets, target_factor=0)
+ 
+     if args.wandb:
+         init_wandb(args)
+ 
+     if args.run_type == "full":
+-        sim.run_full(args)
++        sim.run_full()
+     elif args.run_type == "test":
+-        sim.run_test(args)
++        sim.run_test()
+     elif args.run_type == "saved":
+-        sim.test_saved(args)
++        sim.test_saved()
+     elif args.run_type == "learning":
+-        sim.test_learning(args)
++        sim.test_learning()
+ 
+     # video_recorder.record_video(
+     #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
+diff --git a/requirements.txt b/requirements.txt
+new file mode 100644
+index 0000000..0982235
+--- /dev/null
++++ b/requirements.txt
+@@ -0,0 +1,26 @@
++gymnasium~=0.28.1
++numpy~=1.24.3
++matplotlib~=3.7.4
++pybullet~=3.25
++tensorflow~=2.10.1
++gym~=0.26.1
++pandas~=2.0.3
++pillow~=10.1.0
++wandb~=0.16.1
++pyflyt~=0.15.4
++cycler~=0.12.1
++scipy~=1.10.1
++setuptools~=68.2.2
++msgpack-python~=0.5.6
++airsim~=1.8.1
++numba~=0.58.1
++h5py~=3.10.0
++keras~=2.10.0
++six~=1.16.0
++wrapt~=1.16.0
++typing_extensions~=4.7.1
++cloudpickle~=2.2.1
++pettingzoo~=1.24.2
++yaml~=0.2.5
++pyyaml~=6.0.1
++tqdm~=4.65.0
+\ No newline at end of file

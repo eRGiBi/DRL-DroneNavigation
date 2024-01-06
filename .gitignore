@@ -1,8 +1,6 @@
 redtail-master
 Drone-Follow-Me-main.zip
 IsaacGymEnvs-main.zip
-Sol/results
-Sol/logs/
 Sol/PyBullet/__pycache__/
 .idea
 Sol/PyBullet/__pycache__/BaseAviary.cpython-38.pyc

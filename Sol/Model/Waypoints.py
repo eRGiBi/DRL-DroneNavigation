@@ -72,7 +72,7 @@ def rnd():
     return [
         # np.array([0.5, 0.5, 0.5]),
         # np.array([0.5, 0.0, 0.3]),
-        np.array([-1, 0.2, 1]),
+        np.array([-0.2, 0.2, 0.5]),
         np.array([0.3, 0.5, 0.7]),
         np.array([1, 0.5, 1]),
         # np.array([1., 0., 1.5]),

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 679, in <module>
+    sim.run_full()
+TypeError: run_full() missing 1 required positional argument: 'args'

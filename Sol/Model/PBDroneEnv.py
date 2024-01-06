@@ -78,8 +78,7 @@ class PBDroneEnv(
         self.CLIENT = self.CLIENT
         self.target_visual = []
 
-        if save_model:
-            assert save_folder is not None
+        if save_folder is not None:
             self.save_model(save_folder)
 
         if gui:
