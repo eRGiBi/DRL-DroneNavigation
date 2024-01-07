@@ -342,13 +342,13 @@ class PBDroneSimulator:
             model = PPO(ActorCriticPolicy,
                         train_env,
                         verbose=1,
-                        n_steps=2048 * self.nu,
+                        n_steps=2048 * self.num_envs,
                         batch_size=49152 // self.num_envs,
                         ent_coef=0.01,
                         # use_sde=True,
                         # sde_sample_freq=4,
                         clip_range=0.2,
-                        learning_rate=args.learnig_rate,
+                        learning_rate=args.learning_rate,
                         tensorboard_log="./logs/ppo_tensorboard/" if args.savemodel else None,
                         device="auto",
                         policy_kwargs=onpolicy_kwargs
@@ -372,7 +372,7 @@ class PBDroneSimulator:
                 train_freq=1,
                 gradient_steps=2,
                 buffer_size=int(1e6),
-                learning_rate=args.learnig_rate,
+                learning_rate=args.learning_rate,
                 # gamma=0.95,
                 batch_size=49152 // self.num_envs,
                 policy_kwargs=offpolicy_kwargs,  # dict(net_arch=[256, 256, 256]),
@@ -536,7 +536,7 @@ def parse_args():
                         help="total timesteps of the experiments")
     parser.add_argument('--max_env_steps', type=int, default=5000,
                         help="total timesteps of one episode")
-    parser.add_argument("--learning-rate", type=float, default=1e-3,
+    parser.add_argument("--learning_rate", type=float, default=1e-3,
                         help="the learning rate of the optimizer")
 
     # RL Algorithm specific arguments
