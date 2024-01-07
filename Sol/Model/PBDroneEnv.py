@@ -289,7 +289,7 @@ class PBDroneEnv(
         """
         if self._computeTerminated() and not self._is_done:
             # print("term and NOT DONE")
-            return -3000
+            return -300
             # -10 * (len(self._target_points) - self._current_target_index)) #  * np.linalg.norm(velocity)
 
         reward = 0.0
@@ -323,10 +323,10 @@ class PBDroneEnv(
                 # self.reward += max(3.0 * self.waypoints.progress_to_target(), 0.0)
 
                 # Add a negative reward for spinning too fast
-                reward += -np.linalg.norm(self.ang_v) / 3
+                reward += -np.linalg.norm(self.ang_v) / 30
 
                 # Penalize large actions to avoid erratic behavior
-                reward -= 0.01 * np.linalg.norm(self._last_action)
+                # reward -= 0.01 * np.linalg.norm(self._last_action)
 
         except ZeroDivisionError:
             # Give a high reward if the drone is at the target (avoiding division by zero)

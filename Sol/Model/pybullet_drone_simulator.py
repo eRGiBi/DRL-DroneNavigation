@@ -343,7 +343,7 @@ class PBDroneSimulator:
                         train_env,
                         verbose=1,
                         n_steps=2048 * self.num_envs,
-                        batch_size=49152 // self.num_envs,
+                        batch_size=49152 * self.num_envs,
                         ent_coef=0.01,
                         # use_sde=True,
                         # sde_sample_freq=4,
