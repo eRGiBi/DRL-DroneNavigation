@@ -1,11 +1,12 @@
 
-**Deep reinforcement learning for finding optimal paths in drone navigation**
+# Deep reinforcement learning Simulator and Algorithms for optimal path finding in autonomous drone navigation
 
-Based on Stable-Baseline3, PyBullet-drones, optimized for PPO and SAC
-
+### Based on Stable-Baseline3, PyBullet-drones, semi-optimized for PPO and SAC
 
 
 To install dependencies in a Conda or Poetry environment:
+
+
 
 ```
 $ pip install -r requirements.txt
