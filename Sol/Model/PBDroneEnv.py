@@ -71,6 +71,7 @@ class PBDroneEnv(
         self._steps = 0
         self.steps_since_last_target = 0
         self._last_action = np.zeros(4, dtype=np.float32)
+        self.eps = np.finfo(self._last_action.dtype).eps
         self._prev_distance_to_target = np.linalg.norm(self._current_position - target_points[0])
         self._current_target_index = 0
         self._is_done = False
@@ -96,7 +97,7 @@ class PBDroneEnv(
         self._steps += 1
         self._last_action = action
         self._last_position = copy.deepcopy(self._current_position)
-        self._current_position = np.array(self.pos[0], dtype=np.float32)
+        self._current_position = np.array(self.pos[0] + self.eps, dtype=np.float32) + self.eps
 
         return np.array(obs, dtype=np.float32), np.array(reward, dtype=np.float32), terminated, truncated, info
 
@@ -124,8 +125,8 @@ class PBDroneEnv(
         Kinematic observation of size 12.
 
         """
-
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        obs = obs + self.eps
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
         try:
             return ret.astype('float32')
@@ -505,3 +506,4 @@ class PBDroneEnv(
         if len(self.target_visual) > 0:
             p.removeBody(self.target_visual[0])
             self.target_visual = self.target_visual[1:]
+

@@ -84,7 +84,8 @@ class PBDroneSimulator:
         self.plot = plot
         self.discount = discount
         self.threshold = args.threshold
-        self.max_steps = args.max_steps
+        self.max_steps = int(float(args.max_steps))
+        self.env_steps = args.max_env_steps
 
         # self.max_reward = 100 + len(targets) * 10
 
@@ -104,7 +105,7 @@ class PBDroneSimulator:
                 target_points=self.targets,
                 threshold=self.threshold,
                 discount=self.discount,
-                max_steps=self.max_steps,
+                max_steps=self.env_steps,
                 physics=Physics.PYB,
                 gui=gui,
                 initial_xyzs=initial_xyzs,
@@ -269,8 +270,8 @@ class PBDroneSimulator:
         model = PPO("MlpPolicy",
                     train_env,
                     verbose=1,
-                    n_steps=2048,
-                    batch_size=49,
+                    n_steps=args.nums_steps,
+                    batch_size=args.batch_size,
                     device="auto",
                     policy_kwargs=onpolicy_kwargs
                     # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
@@ -292,7 +293,7 @@ class PBDroneSimulator:
     def run_full(self):
         start = time.perf_counter()
 
-        filename = os.path.join("./model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+        filename = os.path.join("./Sol/model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
         if not os.path.exists(filename):
             os.makedirs(filename + '/')
 
@@ -342,13 +343,13 @@ class PBDroneSimulator:
             model = PPO(ActorCriticPolicy,
                         train_env,
                         verbose=1,
-                        n_steps=2048 * self.num_envs,
-                        batch_size=49152 * self.num_envs,
+                        n_steps=args.num_steps * self.num_envs,
+                        batch_size=args.batch_size * self.num_envs,
                         ent_coef=0.01,
                         # use_sde=True,
                         # sde_sample_freq=4,
                         clip_range=0.2,
-                        learning_rate=args.learning_rate,
+                        learning_rate=int(args.learning_rate),
                         tensorboard_log="./logs/ppo_tensorboard/" if args.savemodel else None,
                         device="auto",
                         policy_kwargs=onpolicy_kwargs
@@ -374,7 +375,7 @@ class PBDroneSimulator:
                 buffer_size=int(1e6),
                 learning_rate=args.learning_rate,
                 # gamma=0.95,
-                batch_size=49152 // self.num_envs,
+                batch_size=args.batch_size,
                 policy_kwargs=offpolicy_kwargs,  # dict(net_arch=[256, 256, 256]),
                 device="auto",
             )
@@ -395,15 +396,18 @@ class PBDroneSimulator:
         # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
         # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
 
-        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
+        callbacks = []
 
+        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
-        found_tar_callback = Callbacks.FoundTargetsCallback(log_dir=filename + '/')
+        if args.savemodel:
+            callbacks.append(Callbacks.FoundTargetsCallback(log_dir=filename + '/'))
 
-        wandb_callback = WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2, )
+        if args.wandb:
+            callbacks.append(WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2, ))
 
-        eval_callback = EvalCallback(eval_env,
+        callbacks.append(EvalCallback(eval_env,
                                      # callback_on_new_best=callback_on_best,
                                      verbose=1,
                                      best_model_save_path=filename + '/' if args.savemodel else None,
@@ -412,13 +416,11 @@ class PBDroneSimulator:
                                      deterministic=False,
                                      render=False
                                      )
+                         )
+                # AimCallback(repo='.Aim/', experiment_name='sb3_test')
 
-        model.learn(total_timesteps=int(args.max_steps),
-                    callback=[eval_callback,
-                              found_tar_callback if args.savemodel else None,
-                              wandb_callback if args.wandb else None,
-                              # AimCallback(repo='.Aim/', experiment_name='sb3_test')
-                              ],
+        model.learn(total_timesteps=self.max_steps,
+                    callback=callbacks,
                     log_interval=1000,
                     tb_log_name=args.agent + " " + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
                     )
@@ -532,11 +534,11 @@ def parse_args():
 
     parser.add_argument("--num-envs", type=int, default=1,
                         help="the number of parallel game environments")
-    parser.add_argument('--max_steps', type=int, default=5e6,
+    parser.add_argument('--max_steps', type=str, default=5e6,
                         help="total timesteps of the experiments")
     parser.add_argument('--max_env_steps', type=int, default=5000,
                         help="total timesteps of one episode")
-    parser.add_argument("--learning_rate", type=float, default=1e-3,
+    parser.add_argument("--learning_rate", type=str, default=1e-3,
                         help="the learning rate of the optimizer")
 
     # RL Algorithm specific arguments
@@ -544,8 +546,8 @@ def parse_args():
     parser.add_argument('--agent-config', type=str, default='default')
     parser.add_argument('--discount', type=int, default=0.999)
     parser.add_argument('--threshold', type=int, default=0.3)
-    parser.add_argument('--batch-size', type=int, default=2048)
-    parser.add_argument('--num-steps', type=int, default=2048)
+    parser.add_argument('--batch_size', type=int, default=40960)
+    parser.add_argument('--num_steps', type=int, default=2048)
 
     # PPO specific
     parser.add_argument('--clip_range', type=int, default=0.2)
