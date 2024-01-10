@@ -13,8 +13,7 @@ $ pip install -r requirements.txt
 
 Example args:
 
-```azure
-your/python \RL\Sol\Model\pybullet_drone_simulator.py --agent PPO --run_type full --wandb
- False --savemodel False --max_steps 10000000
-
+```
+$ python RL\Sol\Model\pybullet_drone_simulator.py --agent PPO --run_type full --wandb
+ False --savemodel False --max_steps 10e6
 ```
