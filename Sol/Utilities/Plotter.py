@@ -50,7 +50,7 @@ def plot_metrics(episode_rewards, avg_rewards,
     plt.show()
 
 
-def plot_learning_curve(scores, title='Learning Curve'):
+def plot_learning_curve(scores, title='Rewards'):
     plt.figure(figsize=(10, 6))
     plt.plot(scores, label='Total Reward per Episode')
     plt.title(title)

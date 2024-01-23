@@ -9,6 +9,7 @@ from distutils.util import strtobool
 
 import sys
 
+# TODO
 sys.path.append("../")
 sys.path.append("./")
 
@@ -201,19 +202,26 @@ class PBDroneSimulator:
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        saved_filename = "C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.15.2023_17.09.00/best_model.zip"
+        saved_filename = "C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.21.2023_11.50.57/best_model.zip"
 
         if args.agent == "SAC":
             model = SAC.load(saved_filename)
+            # print(model.get_parameters())
+            print(model.actor)
+            print(model.critic)
+            print(model.replay_buffer_class)
+            print_sac_model_configuration(model)
+
         if args.agent == "PPO":
             model = PPO.load(saved_filename)
+            # print(model.get_parameters())
+            print_ppo_model_configuration(model)
 
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
 
         rewards = []
         rewards_sum = []
-        images = []
         obs, info = drone_environment.reset()
 
         # drone_environment = gym.wrappers.RecordEpisodeStatistics(drone_environment)
@@ -226,32 +234,34 @@ class PBDroneSimulator:
         #         for j in range(data['timesteps'].shape[0]):
         #             print(str(data['timesteps'][j])+","+str(data['results'][j][0]))
 
-        for i in range(self.max_steps):
-            action, _states = model.predict(obs,
-                                            deterministic=False
-                                            )
-            obs, reward, terminated, truncated, info = drone_environment.step(action)
-            print(i)
-            print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
-                  truncated)
-            print("rpy", drone_environment.rpy)
-            print("pos", drone_environment.pos[0])
-            rewards.append(reward)
-            rewards_sum.append(sum(rewards))
-            # images.append(img)
+        for _ in range(5):
+            for b in [True, False]:
 
-            if terminated:
-                plot_learning_curve(rewards)
-                plot_learning_curve(rewards_sum, title="Cumulative Rewards")
-                print("cum", sum(rewards))
+                for i in range(self.max_steps):
+                    action, _states = model.predict(obs,
+                                                    deterministic=b
+                                                    )
+                    obs, reward, terminated, truncated, info = drone_environment.step(action)
+                    print(i)
+                    print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated,
+                          "\tTruncated:",
+                          truncated)
+                    print("rpy", drone_environment.rpy)
+                    print("pos", drone_environment.pos[0])
+                    rewards.append(reward)
+                    rewards_sum.append(sum(rewards))
 
-                # imageio.mimsave("save-12.03.2023_20.10.04.gif",
-                #                 [np.array(img) for i, img in enumerate(images) if i % 2 == 0],
-                #                 duration=0.58*(1000 * 1/50))
+                    if terminated:
+                        plot_learning_curve(rewards)
+                        plot_learning_curve(rewards_sum, title="Cumulative Rewards")
+                        print("Cumulative Rewards", sum(rewards))
 
-                drone_environment.reset()
+                        drone_environment.reset()
+                        rewards.clear()
+                        rewards_sum.clear()
+                        break
 
-            time.sleep(1. / 240.)
+                    # time.sleep(1. / 240.)
 
     def test_learning(self):
 
@@ -270,7 +280,7 @@ class PBDroneSimulator:
         model = PPO("MlpPolicy",
                     train_env,
                     verbose=1,
-                    n_steps=args.nums_steps,
+                    n_steps=args.max_env_steps,
                     batch_size=args.batch_size,
                     device="auto",
                     policy_kwargs=onpolicy_kwargs
@@ -343,12 +353,12 @@ class PBDroneSimulator:
             model = PPO(ActorCriticPolicy,
                         train_env,
                         verbose=1,
-                        n_steps=args.num_steps * self.num_envs,
+                        n_steps=args.num_steps,
                         batch_size=args.batch_size * self.num_envs,
                         ent_coef=0.01,
                         # use_sde=True,
                         # sde_sample_freq=4,
-                        clip_range=0.2,
+                        clip_range=0.1,
                         learning_rate=int(args.learning_rate),
                         tensorboard_log="./logs/ppo_tensorboard/" if args.savemodel else None,
                         device="auto",
@@ -405,19 +415,20 @@ class PBDroneSimulator:
             callbacks.append(Callbacks.FoundTargetsCallback(log_dir=filename + '/'))
 
         if args.wandb:
-            callbacks.append(WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2, ))
+            callbacks.append(
+                WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2, ))
 
         callbacks.append(EvalCallback(eval_env,
-                                     # callback_on_new_best=callback_on_best,
-                                     verbose=1,
-                                     best_model_save_path=filename + '/' if args.savemodel else None,
-                                     log_path=filename + '/' if args.savemodel else None,
-                                     eval_freq=int(2000 / self.num_envs),
-                                     deterministic=False,
-                                     render=False
-                                     )
+                                      # callback_on_new_best=callback_on_best,
+                                      verbose=1,
+                                      best_model_save_path=filename + '/' if args.savemodel else None,
+                                      log_path=filename + '/' if args.savemodel else None,
+                                      eval_freq=int(2000 / self.num_envs),
+                                      deterministic=False,
+                                      render=False
+                                      )
                          )
-                # AimCallback(repo='.Aim/', experiment_name='sb3_test')
+        # AimCallback(repo='.Aim/', experiment_name='sb3_test')
 
         model.learn(total_timesteps=self.max_steps,
                     callback=callbacks,
@@ -536,7 +547,7 @@ def parse_args():
                         help="the number of parallel game environments")
     parser.add_argument('--max_steps', type=str, default=5e6,
                         help="total timesteps of the experiments")
-    parser.add_argument('--max_env_steps', type=int, default=5000,
+    parser.add_argument('--max_env_steps', type=int, default=4096,
                         help="total timesteps of one episode")
     parser.add_argument("--learning_rate", type=str, default=1e-3,
                         help="the learning rate of the optimizer")
@@ -652,12 +663,66 @@ def manual_pb_env():
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
 
+def print_ppo_model_configuration(model):
+    print("Training Configuration:")
+    print("  Batch Size:", model.batch_size)
+    print("  Number of Steps:", model.n_steps)
+    print("  Clip Range:", model.clip_range)
+    print("  Entropy Coefficient:", model.ent_coef)
+    print("  Learning Rate:", model.learning_rate)
+    print("  Gamma (discount factor):", model.gamma)
+    print("  GAE Lambda:", model.gae_lambda)
+    print("  Max Grad Norm:", model.max_grad_norm)
+    print("  Number of Epochs:", model.n_epochs)
+    print("  Target KL Divergence:", model.target_kl)
+    print("  Use SDE (Stochastic Differential Equations):", model.use_sde)
+    print("  SDE Sample Frequency:", model.sde_sample_freq)
+
+    print("\nPolicy Configuration:")
+    print("  Policy kwargs:", model.policy_kwargs)
+    print("  Policy Class:", model.policy_class)
+
+    print("\nOther Settings:")
+    print("  Verbose:", model.verbose)
+    print("  Tensorboard Log:", model.tensorboard_log)
+    print("  Device:", model.device)
+    print("  Vectorized Environment:", model._vec_normalize_env)
+
+def print_sac_model_configuration(model):
+    print("SAC Configuration:")
+    print("  Batch Size:", model.batch_size)
+    print("  Buffer Size:", model.buffer_size)
+    print("  Learning Rate:", model.learning_rate)
+    print("  Gamma (discount factor):", model.gamma)
+    print("  Tau (soft update coefficient):", model.tau)
+    print("  Entropy Coefficient:", model.ent_coef)
+    print("  Target Entropy:", model.target_entropy)
+    print("  Learning Rate Scheduler:", model.lr_schedule)
+    print("  Number of Environments:", model.n_envs)
+    print("  Number of Timesteps:", model.num_timesteps)
+
+    print("\nPolicy Configuration:")
+    print("  Policy kwargs:", model.policy_kwargs)
+    print("  Policy Class:", model.policy_class)
+
+    print("\nInternal State:")
+    print("  Episode Number:", model._episode_num)
+    print("  Last Observation:", model._last_obs)
+    print("  Last Episode Starts:", model._last_episode_starts)
+
+
+# Example usage:
+# print_sac_model_configuration(your_sac_model_instance)
+
+
+# Example usage:
+# print_model_configuration(your_model_instance)
+
+
 if __name__ == "__main__":
-    # C:\Users\xx4qw\anaconda3\envs\CondaDrone\python.exe C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py --agent SAC
 
     args = parse_args()
     print(args)
-    #
 
     ## seeding
     seed = args.seed
@@ -665,11 +730,12 @@ if __name__ == "__main__":
     np.random.seed(seed)
     th.manual_seed(seed)
     th.backends.cudnn.deterministic = False
-    #
+
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
 
     # targets = Waypoints.up_circle()
-    targets = Waypoints.rnd()
+    # targets = Waypoints.rnd()
+    targets = Waypoints.half_up_forward()
 
     sim = PBDroneSimulator(args, targets, target_factor=0)
 

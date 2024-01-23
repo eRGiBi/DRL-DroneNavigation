@@ -33,21 +33,11 @@ def up():
 
 def half_up_forward():
     return [
-        # np.array([0.0, 0.0, 0.1]),
-        #         np.array([0.0, 0.0, 0.2]),
         np.array([0., 0., 0.5]),
-        # np.array([0., 0., 0.4]),
         np.array([0., 0., 1]),
-        # np.array([0., 0.1, 0.5]),
         np.array([0., 1, 1.5]),
-        # np.array([0., 0.3, 0.5]),
-        # np.array([0., 0.4, 0.5]),
-        # np.array([0., 0.5, 0.5]),
-        np.array([0.5, 1.5, 1.5]),
-        # np.array([0.2, 0.5, 0.5]),
-        # np.array([0.3, 0.5, 0.5]),
-        # np.array([0.4, 0.5, 0.5]),
-        np.array([1.5, 1.5, 1.5]),
+        # np.array([0.5, 1.5, 1.5]),
+        # np.array([1.5, 1.5, 1.5]),
     ]
 
 
@@ -120,3 +110,16 @@ def generate_random_targets(num_targets: int) -> np.ndarray:
 if __name__ == '__main__':
     targets = up()
     Plotter.plot_3d_targets(targets)
+
+    targets = half_up_forward()
+    Plotter.plot_3d_targets(targets)
+
+    targets = up_circle()
+    Plotter.plot_3d_targets(targets)
+
+    targets = rnd()
+    Plotter.plot_3d_targets(targets)
+
+    targets = generate_random_targets(10)
+    Plotter.plot_3d_targets(targets)
+

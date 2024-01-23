@@ -22,10 +22,6 @@ import sys
 import os
 import importlib
 
-Sol =importlib.import_module('Sol')
-
-print("Working dir:", os.getcwd())
-
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import PPO
 

@@ -340,11 +340,11 @@ class PBDroneEnv(
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 1_000_00  # * self._discount ** self._steps/10
+                reward += 1000  # * self._discount ** self._steps/10
                 self._is_done = True
             else:
                 # Reward for reaching a target
-                reward += 1000 * (self._discount ** (self._steps / 10))
+                reward += 100 * (self._discount ** (self._steps / 10))
 
                 if self.GUI:
                     self.remove_target()
