@@ -1,2 +1,0 @@
-train_eval.env_name = 'Ant-v2'
-train_eval.initial_collect_steps = 10000

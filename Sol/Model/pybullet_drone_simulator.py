@@ -202,7 +202,7 @@ class PBDroneSimulator:
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        saved_filename = "C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.21.2023_11.50.57/best_model.zip"
+        saved_filename = "C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.20.2023_20.27.09/best_model.zip"
 
         if args.agent == "SAC":
             model = SAC.load(saved_filename)
@@ -290,8 +290,6 @@ class PBDroneSimulator:
 
         model.learn(total_timesteps=int(5e2), )
 
-        print("#############################################")
-
         # model = PPO(custom_policy,
         #             train_env,
         #             verbose=1,
@@ -300,7 +298,7 @@ class PBDroneSimulator:
         #             # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
         #             )
 
-    def run_full(self):
+    def run_full_training(self):
         start = time.perf_counter()
 
         filename = os.path.join("./Sol/model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -308,11 +306,15 @@ class PBDroneSimulator:
             os.makedirs(filename + '/')
 
         train_env = self.make_env(multi=False, gui=False)
-        # check_env(train_env, warn=True, skip_render_check=True)
+        check_env(train_env, warn=True, skip_render_check=True)
 
-        train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
-                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
-                                   range(self.num_envs)])
+        train_env = SubprocVecEnv([self.make_env(multi=True,
+                                                 gui=False,
+                                                 rank=i,
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])
+                                                 )
+                                   for i in range(self.num_envs)]
+                                  )
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
 
@@ -369,6 +371,8 @@ class PBDroneSimulator:
         # tensorboard --logdir ./logs/ppo_tensorboard/
 
         elif args.agent == 'SAC':
+            # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
+            # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
 
             model = SAC(
                 "MlpPolicy",
@@ -390,21 +394,19 @@ class PBDroneSimulator:
                 device="auto",
             )
 
-            # model = DDPG("MlpPolicy",
-            #              train_env,
-            #              verbose=1,
-            #              batch_size=1024,
-            #              learning_rate=1e-3,
-            #              train_freq=(10, "step"),
-            #              tensorboard_log="./logs/ddpg_tensorboard/",
-            #              device="auto",
-            #              policy_kwargs=dict(net_arch=[64, 64])
-            #              )
+        elif args.agent == 'DDPG':
+            model = DDPG("MlpPolicy",
+                         train_env,
+                         verbose=1,
+                         batch_size=1024,
+                         learning_rate=1e-3,
+                         train_freq=(10, "step"),
+                         tensorboard_log="./logs/ddpg_tensorboard/",
+                         device="auto",
+                         policy_kwargs=dict(net_arch=[64, 64])
+                         )
 
         model.set_random_seed(1)
-
-        # vec_env = make_vec_env([make_env(gui=False, rank=i) for i in range(num_cpu)], n_envs=4, seed=0)
-        # model = SAC("MlpPolicy", vec_env, train_freq=1, gradient_steps=2, verbose=1)
 
         callbacks = []
 
@@ -418,16 +420,17 @@ class PBDroneSimulator:
             callbacks.append(
                 WandbCallback(gradient_save_freq=100, model_save_path=filename + '/' + "wand", verbose=2, ))
 
-        callbacks.append(EvalCallback(eval_env,
-                                      # callback_on_new_best=callback_on_best,
-                                      verbose=1,
-                                      best_model_save_path=filename + '/' if args.savemodel else None,
-                                      log_path=filename + '/' if args.savemodel else None,
-                                      eval_freq=int(2000 / self.num_envs),
-                                      deterministic=False,
-                                      render=False
-                                      )
+        callbacks.append(
+            EvalCallback(eval_env,
+                         # callback_on_new_best=callback_on_best,
+                         verbose=1,
+                         best_model_save_path=filename + '/' if args.savemodel else None,
+                         log_path=filename + '/' if args.savemodel else None,
+                         eval_freq=int(2000 / self.num_envs),
+                         deterministic=False,
+                         render=False
                          )
+        )
         # AimCallback(repo='.Aim/', experiment_name='sb3_test')
 
         model.learn(total_timesteps=self.max_steps,
@@ -445,68 +448,69 @@ class PBDroneSimulator:
             wandb.finish()
 
         # Test the model #########################################
+        if args.autotest:
 
-        test_env = self.make_env(multi=False)
-        test_env_nogui = self.make_env(multi=False)
+            test_env = self.make_env(multi=False)
+            test_env_nogui = self.make_env(multi=False)
 
-        test_env = stable_baselines3.common.monitor.Monitor(test_env)
-        test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
+            test_env = stable_baselines3.common.monitor.Monitor(test_env)
+            test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
 
-        rewards = []
+            rewards = []
 
-        # if os.path.isfile(filename + '/success_model.zip'):
-        #     path = filename + '/success_model.zip'
-        # elif os.path.isfile(filename + '/best_model.zip'):
-        #     path = filename + '/best_model.zip'
-        # else:
-        #     print("[ERROR]: no model under the specified path", filename)
-        # model = PPO.load(path)
+            # if os.path.isfile(filename + '/success_model.zip'):
+            #     path = filename + '/success_model.zip'
+            # elif os.path.isfile(filename + '/best_model.zip'):
+            #     path = filename + '/best_model.zip'
+            # else:
+            #     print("[ERROR]: no model under the specified path", filename)
+            # model = PPO.load(path)
 
-        train_env.close()
+            train_env.close()
 
-        logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
-                        num_drones=1,
-                        output_folder=os.curdir + "/logs"
-                        )
+            logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
+                            num_drones=1,
+                            output_folder=os.curdir + "/logs"
+                            )
 
-        mean_reward, std_reward = evaluate_policy(model,
-                                                  test_env_nogui,
-                                                  n_eval_episodes=100
-                                                  )
-        print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
+            mean_reward, std_reward = evaluate_policy(model,
+                                                      test_env_nogui,
+                                                      n_eval_episodes=100
+                                                      )
+            print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
-        obs, info = test_env.reset()
-        i = 0
-        while True:
-            action, _states = model.predict(obs,
-                                            deterministic=True
-                                            )
+            obs, info = test_env.reset()
+            i = 0
+            while True:
+                action, _states = model.predict(obs,
+                                                deterministic=True
+                                                )
 
-            obs, reward, terminated, truncated, info = test_env.step(action)
-            rewards.append(reward)
-            obs2 = obs.squeeze()
-            act2 = action.squeeze()
-            print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
-                  truncated)
+                obs, reward, terminated, truncated, info = test_env.step(action)
+                rewards.append(reward)
+                obs2 = obs.squeeze()
+                act2 = action.squeeze()
+                print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
+                      truncated)
 
-            logger.log(drone=0,
-                       timestamp=i / test_env.CTRL_FREQ,
-                       state=np.hstack([obs2[0:3],
-                                        np.zeros(4),
-                                        obs2[3:15],
-                                        act2
-                                        ]),
-                       control=np.zeros(12))
+                logger.log(drone=0,
+                           timestamp=i / test_env.CTRL_FREQ,
+                           state=np.hstack([obs2[0:3],
+                                            np.zeros(4),
+                                            obs2[3:15],
+                                            act2
+                                            ]),
+                           control=np.zeros(12))
 
-            if terminated:
-                plot_learning_curve(rewards)
-                break
-            i += 1
+                if terminated:
+                    plot_learning_curve(rewards)
+                    break
+                i += 1
 
-        test_env.close()
+            test_env.close()
 
-        if self.plot:
-            logger.plot()
+            if self.plot:
+                logger.plot()
 
         end = time.perf_counter()
         print(end - start)
@@ -546,7 +550,7 @@ def parse_args():
     parser.add_argument("--num-envs", type=int, default=1,
                         help="the number of parallel game environments")
     parser.add_argument('--max_steps', type=str, default=5e6,
-                        help="total timesteps of the experiments")
+                        help="total number of the experiments")
     parser.add_argument('--max_env_steps', type=int, default=4096,
                         help="total timesteps of one episode")
     parser.add_argument("--learning_rate", type=str, default=1e-3,
@@ -557,7 +561,7 @@ def parse_args():
     parser.add_argument('--agent-config', type=str, default='default')
     parser.add_argument('--discount', type=int, default=0.999)
     parser.add_argument('--threshold', type=int, default=0.3)
-    parser.add_argument('--batch_size', type=int, default=40960)
+    parser.add_argument('--batch_size', type=int, default=2048)
     parser.add_argument('--num_steps', type=int, default=2048)
 
     # PPO specific
@@ -583,9 +587,7 @@ def parse_args():
     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="weather to capture videos of the agent performances (check out `videos` folder)")
 
-    args = parser.parse_args()
-
-    return args
+    return parser.parse_args()
 
 
 def init_wandb(args):
@@ -688,6 +690,7 @@ def print_ppo_model_configuration(model):
     print("  Device:", model.device)
     print("  Vectorized Environment:", model._vec_normalize_env)
 
+
 def print_sac_model_configuration(model):
     print("SAC Configuration:")
     print("  Batch Size:", model.batch_size)
@@ -734,8 +737,8 @@ if __name__ == "__main__":
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
 
     # targets = Waypoints.up_circle()
-    # targets = Waypoints.rnd()
-    targets = Waypoints.half_up_forward()
+    targets = Waypoints.rnd()
+    # targets = Waypoints.half_up_forward()
 
     sim = PBDroneSimulator(args, targets, target_factor=0)
 

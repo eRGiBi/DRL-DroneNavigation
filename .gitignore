@@ -1,11 +1,12 @@
-redtail-master
-Drone-Follow-Me-main.zip
-IsaacGymEnvs-main.zip
+Libraries
+
 Sol/PyBullet/__pycache__/
 .idea
 Sol/PyBullet/__pycache__/BaseAviary.cpython-38.pyc
+Sol/wandb/
+
 AirSimSol/Blocks/
 AirSimSol/MSBuild2018/
-PPO-based-Autonomous-Navigation-for-Quadcopters-main
+
 PPO-based-Autonomous-Navigation-for-Quadcopters-main/
-PyFlyt-master/
+

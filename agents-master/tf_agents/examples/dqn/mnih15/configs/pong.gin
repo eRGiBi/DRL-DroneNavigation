@@ -1,2 +1,0 @@
-train_eval.env_name='Pong-v0'
-AtariPreprocessing.terminal_on_life_loss = True
