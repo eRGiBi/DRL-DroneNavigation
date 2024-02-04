@@ -6,8 +6,11 @@
 
 ### 1. Introduction
 
-The autonomous navigation of drones is a challenging problem that and yet to be solved. It requires the development of efficient algorithms for optimal path planning, control to navigate on the path, and robustness and intelligent reactions to unexpected events. 
-Deep reinforcement learning (DRL) has shown promise in solving these problems, but it is still an open question how to best apply DRL to the domain of autonomous drone navigation.
+The autonomous navigation of drones is a challenging problem that is yet to be solved.
+It requires the development of efficient algorithms for path planning,
+control, and intelligent decision-making when unexpected events occur. 
+Deep reinforcement learning (DRL) has shown promise in solving these problems,
+but it is still an open question how to best apply it to the domain of autonomous drone navigation.
 
 My original goal with this project was to develop a DRL-based framework for autonomous drone racing, 
 but this same model could be utilized for other, perhaps more relevant real-world scenarios, such as search and rescue, surveillance, and package delivery.
@@ -24,10 +27,7 @@ To install dependencies in a Conda or Poetry environment:
 $ pip install -r requirements.txt
 ```
 
-### 3. 
-
-
-### 4. Example:
+### 3. Example:
 Example args:
 
 ```
