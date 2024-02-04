@@ -116,3 +116,8 @@ class VideoRecorderCallback(BaseCallback):
                 exclude=("stdout", "log", "json", "csv"),
             )
         return True
+
+  # video_recorder.record_video(
+    #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
+    #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",
+    #                    ))

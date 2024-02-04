@@ -1,9 +1,12 @@
 Libraries
+build
+
+.idea/
 
 Sol/PyBullet/__pycache__/
-.idea
 Sol/PyBullet/__pycache__/BaseAviary.cpython-38.pyc
 Sol/wandb/
+Sol/results
 
 AirSimSol/Blocks/
 AirSimSol/MSBuild2018/
