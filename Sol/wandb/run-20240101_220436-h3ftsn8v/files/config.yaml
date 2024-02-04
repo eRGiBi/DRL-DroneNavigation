@@ -12,7 +12,7 @@ total_timesteps:
 _wandb:
   desc: null
   value:
-    code_path: code/Sol/Model/pybullet_drone_simulator.py
+    code_path: code/Sol/Model/simulation_controller.py
     python_version: 3.8.18
     cli_version: 0.16.1
     framework: torch
