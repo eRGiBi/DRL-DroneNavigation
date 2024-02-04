@@ -1,3 +1,7 @@
+import argparse
+import os
+from distutils.util import strtobool
+
 
 def parse_args():
     """Parse arguments from the command line."""
@@ -16,8 +20,8 @@ def parse_args():
                         help="seed of the experiment")
     parser.add_argument('--cuda', action='store_true', default=True,
                         help="if toggled, cuda will be enabled by default")
-    parser.add_argument('--gui', default=DEFAULT_GUI, help='Whether to use PyBullet GUI for the eval env'
-                                                           '(default: False)')
+    parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env'
+                                                     '(default: False)')
 
     # Saving
     parser.add_argument('--savemodel', type=bool, default=True)

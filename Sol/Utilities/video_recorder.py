@@ -18,7 +18,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.logger import Video
 
-from Sol.Model.pybullet_drone_simulator import make_env
+from Sol.Model.simulation_controller import make_env
 
 def show_videos(video_path="", prefix=""):
     """
