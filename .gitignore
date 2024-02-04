@@ -1,7 +1,7 @@
 Libraries
-build
+build/
 
-.idea/
+idea/
 
 Sol/PyBullet/__pycache__/
 Sol/PyBullet/__pycache__/BaseAviary.cpython-38.pyc
