@@ -31,6 +31,6 @@ $ pip install -r requirements.txt
 Example args:
 
 ```
-$ python RL\Sol\Model\pybullet_drone_simulator.py --agent PPO --run_type full --wandb
+$ your python RL\Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
  False --savemodel False --max_steps 10e6
 ```
