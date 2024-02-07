@@ -114,7 +114,6 @@ def manual_pb_env():
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
 
-
 if __name__ == "__main__":
 
     init_env()
@@ -148,4 +147,3 @@ if __name__ == "__main__":
         sim.test_saved()
     elif args.run_type == "learning":
         sim.test_learning()
-
