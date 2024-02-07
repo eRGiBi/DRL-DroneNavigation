@@ -1,12 +1,35 @@
-Libraries
-build
+# Byte-compiled / optimized / DLL files
+__pycache__/
+Sol/Models/__pycache__/
+Sol/Models/__pycache__
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+bin/
 build/
-**/build
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+Libraries
 
 .idea
 
 Sol/PyBullet/__pycache__
 Sol/PyBullet/__pycache__/BaseAviary.cpython-38.pyc
+Sol/__pycache__
 Sol/__pycache__/
 
 Sol/wandb/
@@ -18,3 +41,12 @@ AirSimSol/MSBuild2018/
 
 PPO-based-Autonomous-Navigation-for-Quadcopters-main/
 
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
