@@ -73,9 +73,8 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     """
     Linear learning rate schedule.
 
-    :param initial_value: Initial learning rate.
-    :return: schedule that computes
-      the current learning rate depending on remaining progress
+    :param initial_value: initial learning rate
+    :return: schedule that computes the current learning rate depending on remaining progress
     """
 
     def func(progress_remaining: float) -> float:
@@ -121,7 +120,7 @@ if __name__ == "__main__":
     args = parse_args()
     print(args)
 
-    ## seeding
+    # Seeding
     seed = args.seed
     random.seed(seed)
     np.random.seed(seed)
