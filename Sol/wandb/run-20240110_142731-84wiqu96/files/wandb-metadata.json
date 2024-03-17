@@ -1,0 +1,64 @@
+{
+    "os": "Windows-10-10.0.19045-SP0",
+    "python": "3.8.18",
+    "heartbeatAt": "2024-01-10T13:27:32.360290",
+    "startedAt": "2024-01-10T13:27:31.144289",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--agent",
+        "PPO",
+        "--run_type",
+        "full",
+        "--wandb",
+        "True",
+        "--savemodel",
+        "True",
+        "--max_steps",
+        "10e6"
+    ],
+    "state": "running",
+    "program": "C:\\Files\\Egyetem\\Szakdolgozat\\RL\\Sol\\Model\\pybullet_drone_simulator.py",
+    "codePathLocal": "Sol\\Model\\pybullet_drone_simulator.py",
+    "codePath": "Sol\\Model\\pybullet_drone_simulator.py",
+    "git": {
+        "remote": "https://github.com/eRGiBi/RL.git",
+        "commit": "2dc3c77e2501a8457d66ff1cb92157e037898957"
+    },
+    "email": "xx4qwexx@gmail.com",
+    "root": "C:/Files/Egyetem/Szakdolgozat/RL",
+    "host": "Ozymandias-II",
+    "username": "xx4qw",
+    "executable": "C:\\Users\\xx4qw\\anaconda3\\envs\\CondaDrone\\python.exe",
+    "cpu_count": 6,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 3600.0,
+        "min": 0.0,
+        "max": 3600.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3600.0,
+            "min": 0.0,
+            "max": 3600.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 465.1516418457031,
+            "used": 420.0953598022461
+        }
+    },
+    "gpu": "NVIDIA GeForce GTX 1660 SUPER",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce GTX 1660 SUPER",
+            "memory_total": 6442450944
+        }
+    ],
+    "memory": {
+        "total": 31.915626525878906
+    }
+}

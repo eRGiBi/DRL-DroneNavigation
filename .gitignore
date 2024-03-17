@@ -32,12 +32,10 @@ Sol/PyBullet/__pycache__/BaseAviary.cpython-38.pyc
 Sol/__pycache__
 Sol/__pycache__/
 
-Sol/wandb/
-Sol/wandb
+
 Sol/results
 /Sol/results/
 logs.txt
-
 
 AirSimSol/Blocks/
 AirSimSol/MSBuild2018/

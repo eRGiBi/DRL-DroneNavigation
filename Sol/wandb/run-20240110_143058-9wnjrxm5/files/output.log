@@ -1,0 +1,44 @@
+AVIARY DIM [-1 -1  0  1  1  1]
+Attempting to open: C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources
+[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:
+[INFO] m 0.027000, L 0.039700,
+[INFO] ixx 0.000014, iyy 0.000014, izz 0.000022,
+[INFO] kf 0.000000, km 0.000000,
+[INFO] t2w 2.250000, max_speed_kmh 30.000000,
+[INFO] gnd_eff_coeff 11.368590, prop_radius 0.023135,
+[INFO] drag_xy_coeff 0.000001, drag_z_coeff 0.000001,
+[INFO] dw_coeff_1 2267.180000, dw_coeff_2 0.160000, dw_coeff_3 -0.110000
+Using cuda device
+C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py:155: UserWarning: You have specified a mini-batch size of 40960, but because the `RolloutBuffer` is of size `n_steps * n_envs = 2048`, after every 0 untruncated mini-batches, there will be a truncated mini-batch of size 2048
+We recommend using a `batch_size` that is a factor of `n_steps * n_envs`.
+Info: (n_steps=2048 and n_envs=1)
+  warnings.warn(
+[34m[1mwandb[39m[22m: [33mWARNING[39m When using several event log directories, please call `wandb.tensorboard.patch(root_logdir="...")` before `wandb.init`
+Traceback (most recent call last):
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 312, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 678, in <module>
+    sim.run_full()
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 416, in run_full
+    model.learn(total_timesteps=int(max_steps),
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py", line 315, in learn
+    return super().learn(
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 277, in learn
+    continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 194, in collect_rollouts
+    new_obs, rewards, dones, infos = env.step(clipped_actions)
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\base_vec_env.py", line 206, in step
+    return self.step_wait()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in step_wait
+    results = [remote.recv() for remote in self.remotes]
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\common\vec_env\subproc_vec_env.py", line 129, in <listcomp>
+    results = [remote.recv() for remote in self.remotes]
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 250, in recv
+    buf = self._recv_bytes()
+  File "C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\multiprocessing\connection.py", line 321, in _recv_bytes
+    raise EOFError
+EOFError
+Logging to ./logs/ppo_tensorboard/PPO 01.10.2024_14.31.21_1

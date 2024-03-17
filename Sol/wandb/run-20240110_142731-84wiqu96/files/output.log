@@ -1,0 +1,21 @@
+AVIARY DIM [-1 -1  0  1  1  1]
+Attempting to open: C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources
+[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:
+[INFO] m 0.027000, L 0.039700,
+[INFO] ixx 0.000014, iyy 0.000014, izz 0.000022,
+[INFO] kf 0.000000, km 0.000000,
+[INFO] t2w 2.250000, max_speed_kmh 30.000000,
+[INFO] gnd_eff_coeff 11.368590, prop_radius 0.023135,
+[INFO] drag_xy_coeff 0.000001, drag_z_coeff 0.000001,
+[INFO] dw_coeff_1 2267.180000, dw_coeff_2 0.160000, dw_coeff_3 -0.110000
+Using cuda device
+C:\Users\xx4qw\anaconda3\envs\CondaDrone\lib\site-packages\stable_baselines3\ppo\ppo.py:155: UserWarning: You have specified a mini-batch size of 40960, but because the `RolloutBuffer` is of size `n_steps * n_envs = 2048`, after every 0 untruncated mini-batches, there will be a truncated mini-batch of size 2048
+We recommend using a `batch_size` that is a factor of `n_steps * n_envs`.
+Info: (n_steps=2048 and n_envs=1)
+  warnings.warn(
+Traceback (most recent call last):
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 678, in <module>
+    sim.run_full()
+  File "C:\Files\Egyetem\Szakdolgozat\RL\Sol\Model\pybullet_drone_simulator.py", line 416, in run_full
+    model.learn(total_timesteps=int(args.max_steps),
+ValueError: invalid literal for int() with base 10: '10e6'
