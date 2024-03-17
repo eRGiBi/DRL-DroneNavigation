@@ -301,7 +301,7 @@ class PBDroneEnv(
         else:
             return False
 
-    def _computeReward(self):
+    def _computeReward(self) -> float:
         """Computes the current reward value.
 
         Returns

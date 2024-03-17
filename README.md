@@ -27,10 +27,16 @@ To install dependencies in a Conda or Poetry environment:
 $ pip install -r requirements.txt
 ```
 
+To install PyTorch on Windows or Linux with CUDA 11.8 for GPU support:
+```
+$ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+```
+
+
 ### 3. Example:
 Example args:
 
 ```
-$ your python RL\Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
+$ your_python RL\Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
  False --savemodel False --max_steps 10e6
-```
+``` 

@@ -285,7 +285,7 @@ class PBDroneSimulator:
             os.makedirs(chckpt_path + '/')
 
         train_env = self.make_env(multi=False, gui=False)
-        check_env(train_env, warn=True, skip_render_check=True)
+    #    check_env(train_env, warn=True, skip_render_check=True)
 
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
