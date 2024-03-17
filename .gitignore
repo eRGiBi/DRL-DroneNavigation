@@ -35,6 +35,9 @@ Sol/__pycache__/
 Sol/wandb/
 Sol/wandb
 Sol/results
+/Sol/results/
+logs.txt
+
 
 AirSimSol/Blocks/
 AirSimSol/MSBuild2018/
