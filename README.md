@@ -1,5 +1,5 @@
 
-# Deep reinforcement learning Simulator and Algorithms for optimal path finding in autonomous drone navigation
+# Deep reinforcement learning Simulator and Algorithms for optimal path finding
 
 ### Based on Stable-Baseline3 and PyBullet-drones, optimized for PPO and SAC
 
