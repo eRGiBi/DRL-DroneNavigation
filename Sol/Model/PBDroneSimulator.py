@@ -5,10 +5,11 @@ from datetime import datetime
 
 import sys
 
+from tensorflow.python.types.core import Callable
+
 # TODO
 sys.path.append("../")
 sys.path.append("./")
-
 
 import gym.wrappers
 import numpy as np
@@ -50,7 +51,6 @@ from wandb.integration.sb3 import WandbCallback
 
 
 def dilate_targets(targets, factor: int) -> list:
-
     # Initialize an empty array to store the dilated points
     dilated_points = []
 
@@ -285,7 +285,7 @@ class PBDroneSimulator:
             os.makedirs(chckpt_path + '/')
 
         train_env = self.make_env(multi=False, gui=False)
-    #    check_env(train_env, warn=True, skip_render_check=True)
+        #    check_env(train_env, warn=True, skip_render_check=True)
 
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
@@ -317,8 +317,8 @@ class PBDroneSimulator:
 
         onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
                                share_features_extractor=True,
-                               net_arch=dict(vf=[512, 512, 256, 128],
-                                             pi=[512, 512, 256, 128]))
+                               net_arch=dict(vf=[512, 512, 256, 256, 128],
+                                             pi=[512, 512, 256, 256, 128]))
 
         custom_policy = dict(net_arch=[dict(share=[512, 512], vf=[256, 128], pi=[256, 128])],
                              activation_fn=th.nn.Tanh)
@@ -499,3 +499,39 @@ class PBDroneSimulator:
 
         end = time.perf_counter()
         print(end - start)
+
+
+def linear_schedule(initial_value: float) -> Callable[[float], float]:
+    """
+    Linear learning rate schedule.
+
+    :param initial_value: initial learning rate
+    :return: schedule that computes the current learning rate depending on remaining progress
+    """
+    if isinstance(initial_value, str):
+        initial_value = float(initial_value)
+
+    def func(progress_remaining: float) -> float:
+        """
+        Progress will decrease from 1 (beginning) to 0.
+
+        :param progress_remaining:
+        :return: current learning rate
+        """
+        return progress_remaining * initial_value
+
+    return func
+
+
+def lrsched():
+    def reallr(progress):
+        lr = 0.003
+        if progress < 0.85:
+            lr = 0.0005
+        if progress < 0.66:
+            lr = 0.00025
+        if progress < 0.33:
+            lr = 0.0001
+        return lr
+
+    return reallr
