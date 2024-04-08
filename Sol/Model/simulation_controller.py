@@ -1,18 +1,17 @@
 import math
 import os
 import random
+import sys
+
 import time
 from datetime import datetime
 
-import sys
+from typing import Callable
 
 # TODO
 sys.path.append("../")
 sys.path.append("./")
 
-from typing import Callable
-
-import gym.wrappers
 import numpy as np
 import torch as th
 import wandb
@@ -23,9 +22,9 @@ import Sol.Model.Waypoints as Waypoints
 from Sol.Utilities.ArgParser import parse_args
 
 from gymnasium.envs.registration import register
+import gym.wrappers
 
 from torch.utils.tensorboard import SummaryWriter
-
 
 # from tf_agents.environments import py_environment
 
@@ -67,26 +66,6 @@ def init_wandb(args):
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
     )
-
-
-def linear_schedule(initial_value: float) -> Callable[[float], float]:
-    """
-    Linear learning rate schedule.
-
-    :param initial_value: initial learning rate
-    :return: schedule that computes the current learning rate depending on remaining progress
-    """
-
-    def func(progress_remaining: float) -> float:
-        """
-        Progress will decrease from 1 (beginning) to 0.
-
-        :param progress_remaining:
-        :return: current learning rate
-        """
-        return progress_remaining * initial_value
-
-    return func
 
 
 def manual_pb_env():

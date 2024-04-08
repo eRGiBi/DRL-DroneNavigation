@@ -1,6 +1,7 @@
 import argparse
 import os
 from distutils.util import strtobool
+from Sol.Model.parameters import *
 
 
 def parse_args():
@@ -16,7 +17,7 @@ def parse_args():
     parser.add_argument('--env-config', type=str, default='default')
     parser.add_argument('--env-kwargs', type=str, default='{}')
 
-    parser.add_argument('--seed', '-s', type=int, default=1,
+    parser.add_argument('--seed', '-s', type=int, default=gen_params['seed'],
                         help="seed of the experiment")
     parser.add_argument('--cuda', action='store_true', default=True,
                         help="if toggled, cuda will be enabled by default")
@@ -43,7 +44,7 @@ def parse_args():
     parser.add_argument("--learning_rate", type=str, default=1e-3,
                         help="the learning rate of the optimizer")
 
-    # RL Algorithm specific arguments
+    # General RL Algorithm specific arguments
     parser.add_argument('--agent', type=str, default='PPO')
     parser.add_argument('--agent-config', type=str, default='default')
     parser.add_argument('--discount', type=int, default=0.999)

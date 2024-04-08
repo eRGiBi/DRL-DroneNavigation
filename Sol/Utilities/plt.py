@@ -1,53 +1,52 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def activation_functions():
-    # Logisztikus függvény
+    # Logistic function
     def logistic_function(x):
         return 1 / (1 + np.exp(-x))
 
-    # Tangens hiperbolikus függvény (tanh)
+    # tanh
     def tanh_function(x):
         return np.tanh(x)
 
-    # ReLU függvény
+    # ReLU
     def relu_function(x):
         return np.maximum(0, x)
 
-    # Tartomány létrehozása
     x_values = np.linspace(-5, 5, 100)
 
-    # Függvények kiértékelése
     logistic_values = logistic_function(x_values)
     tanh_values = tanh_function(x_values)
     relu_values = relu_function(x_values)
 
-    # Függvények plotolása
     plt.figure(figsize=(12, 4))
 
     plt.subplot(131)
-    plt.plot(x_values, logistic_values, label='Logisztikus')
-    plt.title('Logisztikus függvény')
+    plt.plot(x_values, logistic_values, label='Logistic')
+    plt.title('Logistic function')
     plt.legend()
 
     plt.subplot(132)
     plt.plot(x_values, tanh_values, label='Tanh')
-    plt.title('Tangens hiperbolikus függvény')
+    plt.title('Tangent hyperbolic function')
     plt.legend()
 
     plt.subplot(133)
     plt.plot(x_values, relu_values, label='ReLU')
-    plt.title('ReLU függvény')
+    plt.title('ReLU function')
     plt.legend()
 
     plt.tight_layout()
     plt.show()
 
+
 if __name__ == "__main__":
-    
-   # Define the function
+    # Define the function
     def reciprocal(x):
         return 1 / np.abs(x)
+
 
     # Generate x values
     x_values = np.linspace(-1, 1, 100)  # Adjust the range as needed
@@ -65,11 +64,12 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid(color='gray', linestyle='--', linewidth=0.5)
     plt.show()
-    
-    
+
+
     # Define the reward function
     def calculate_reward(distance_to_target):
         return np.exp(-distance_to_target * 5) * 50
+
 
     # Generate a range of distance values
     distance_values = np.linspace(0, 2, 100)
