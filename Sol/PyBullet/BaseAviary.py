@@ -15,9 +15,10 @@ import gymnasium as gym
 
 import sys
 
-sys.path.append("C:\Files\Egyetem\Szakdolgozat\RL\Sol\PyBullet")
-
-from enums import DroneModel, Physics, ImageType
+if platform == "linux":
+    from Sol.PyBullet.enums import DroneModel, Physics, ImageType
+else:
+    from enums import DroneModel, Physics, ImageType
 
 
 class BaseAviary(gym.Env):
@@ -512,7 +513,7 @@ class BaseAviary(gym.Env):
         p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=self.CLIENT)
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
-        urdf_path = os.path.join('C:\Files\\Egyetem\Szakdolgozat\RL\Sol/resources', self.URDF)
+        urdf_path = os.path.join('Sol/resources', self.URDF)
         self.DRONE_IDS = np.array([p.loadURDF(
             # pkg_resources.resource_filename('gym_pybullet_drones', 'assets/'+self.URDF),
             urdf_path,
@@ -1042,7 +1043,7 @@ class BaseAviary(gym.Env):
 
         """
         # URDF_TREE = etxml.parse(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/'+self.URDF)).getroot()
-        urdf_path = "C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources"
+        urdf_path = "Sol/resources"
         print("Attempting to open:", urdf_path)
         source = open(urdf_path + "/cf2x.urdf", "rb")
 

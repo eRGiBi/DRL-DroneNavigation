@@ -78,7 +78,7 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
 
         """
         super()._addObstacles()
-        p.loadURDF("C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources/architrave.urdf",
+        p.loadURDF("Sol/resources/architrave.urdf",
                    [0, -1, .55],
                    p.getQuaternionFromEuler([0, 0, 0]),
                    physicsClientId=self.CLIENT

@@ -21,7 +21,7 @@ I focus on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) al
 I evaluate the performance of the algorithms with a variety of differing hyperparameters.
 
 ### 2. Requirements
-To install dependencies in a Conda or Poetry environment:
+To install dependencies in a Conda, miniconda or Poetry environment:
 
 ```
 $ pip install -r requirements.txt
@@ -34,9 +34,20 @@ $ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c n
 
 
 ### 3. Example:
-Example args:
+Example args for Windows:
 
 ```
-$ your_python RL\Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
+$ your_python Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
  False --savemodel False --max_steps 10e6
 ``` 
+Args for Ubuntu with WSL:
+
+```
+ python3 Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb False --savemodel False
+ ```
+
+
+For Ubuntu with WSL:
+
+source activate  /root/miniconda3/envs/RL-WSL
+ 

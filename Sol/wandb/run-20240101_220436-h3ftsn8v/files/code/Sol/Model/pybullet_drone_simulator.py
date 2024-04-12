@@ -183,9 +183,8 @@ class PBDroneSimulator:
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        model = SAC.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.29.2023_11.55.59/best_model.zip")
-        # model = PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\sa/best_model.zip",
-        #                  env=drone_environment)
+        model = SAC.load("Sol\model_chkpts\save-12.29.2023_11.55.59/best_model.zip")
+        # model = PPO.load("Sol\model_chkpts\sa/best_model.zip", env=drone_environment)
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
 
@@ -532,8 +531,8 @@ if __name__ == "__main__":
     #
 
     # video_recorder.record_video(
-    #     model=PPO.load("C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
-    #                    video_folder="C:\Files\Egyetem\Szakdolgozat\RL\Sol/results/videos",
+    #     model=PPO.load("Sol\model_chkpts\save-12.04.2023_22.26.05/best_model.zip",
+    #                    video_folder="Sol/results/videos",
     #                    ))
 
 

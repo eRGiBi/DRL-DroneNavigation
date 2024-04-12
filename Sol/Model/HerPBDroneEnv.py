@@ -525,7 +525,7 @@ class PBDroneEnv(
         for target in self._target_points:
             self.target_visual.append(
                 p.loadURDF(
-                    fileName="C:\Files\Egyetem\Szakdolgozat\RL\Sol/resources/target.urdf",
+                    fileName="Sol/resources/target.urdf",
                     # "/resources/target.urdf",
                     basePosition=target,
                     useFixedBase=True,

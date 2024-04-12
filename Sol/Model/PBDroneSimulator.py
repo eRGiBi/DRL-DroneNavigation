@@ -5,7 +5,8 @@ from datetime import datetime
 
 import sys
 
-from tensorflow.python.types.core import Callable
+# from tensorflow.python.types.core import Callable
+from typing import Callable
 
 # TODO
 sys.path.append("../")
@@ -178,7 +179,7 @@ class PBDroneSimulator:
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        saved_filename = "C:\Files\Egyetem\Szakdolgozat\RL\Sol\model_chkpts\save-12.20.2023_20.27.09/best_model.zip"
+        saved_filename = "Sol\model_chkpts\save-12.20.2023_20.27.09/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename)
