@@ -41,7 +41,7 @@ import Sol.Model.Waypoints as Waypoints
 from Sol.Utilities.Plotter import plot_learning_curve, plot_metrics, plot_3d_targets
 import Sol.Utilities.Callbacks as Callbacks
 from Sol.Utilities.ArgParser import parse_args
-from Sol.Utilities.Printer import print_ppo_model_configuration, print_sac_model_configuration
+from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
 
 from Sol.Model.SBActorCritic import CustomActorCriticPolicy
 
@@ -293,7 +293,7 @@ class PBDroneSimulator:
                                                  rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2])
                                                  )
-                                   for i in range(self.num_envs)]
+                                   for i in range(self.args.num_envs)]
                                   )
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
@@ -318,8 +318,9 @@ class PBDroneSimulator:
 
         onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
                                share_features_extractor=True,
-                               net_arch=dict(vf=[512, 512, 256, 256, 128],
-                                             pi=[512, 512, 256, 256, 128]))
+                               net_arch=dict(vf=[512, 256],
+                                             pi=[512, 256])
+                               )
 
         custom_policy = dict(net_arch=[dict(share=[512, 512], vf=[256, 128], pi=[256, 128])],
                              activation_fn=th.nn.Tanh)
@@ -336,17 +337,19 @@ class PBDroneSimulator:
                         train_env,
                         verbose=1,
                         n_steps=self.args.num_steps,
-                        batch_size=self.args.batch_size * self.num_envs,
-                        ent_coef=0.01,
+                        batch_size=self.args.batch_size,
+                        ent_coef=0.1,
                         # use_sde=True,
                         # sde_sample_freq=4,
+                        normalize_advantage=True,
                         clip_range=0.1,
                         learning_rate=int(self.args.learning_rate),
                         tensorboard_log=tensorboard_path + "/ppo_tensorboard/" if self.args.savemodel else None,
                         device="auto",
                         policy_kwargs=onpolicy_kwargs
-                        # dict(net_arch=[256, 256, 256], activation_fn=th.nn.ReLU, ),
                         )
+            print_ppo_conf(model)
+
 
         # tensorboard --logdir ./logs/ppo_tensorboard/
 
@@ -367,19 +370,20 @@ class PBDroneSimulator:
                 train_freq=1,
                 gradient_steps=2,
                 buffer_size=int(1e6),
-                learning_rate=self.args.learning_rate,
+                learning_rate=int(self.args.learning_rate),
                 # gamma=0.95,
                 batch_size=self.args.batch_size,
                 policy_kwargs=offpolicy_kwargs,  # dict(net_arch=[256, 256, 256]),
                 device="auto",
             )
+            print_sac_conf(model)
 
         elif self.args.agent == 'DDPG':
             model = DDPG("MlpPolicy",
                          train_env,
                          verbose=1,
                          batch_size=1024,
-                         learning_rate=1e-3,
+                         learning_rate=int(self.args.learning_rate),
                          train_freq=(10, "step"),
                          tensorboard_log=tensorboard_path + "/ddpg_tensorboard/",
                          device="auto",
@@ -403,17 +407,18 @@ class PBDroneSimulator:
         callbacks.append(
             EvalCallback(eval_env,
                          # callback_on_new_best=callback_on_best,
-                         verbose=1,
                          best_model_save_path=chckpt_path + '/' if self.args.savemodel else None,
                          log_path=chckpt_path + '/' if self.args.savemodel else None,
-                         eval_freq=int(2000 / self.num_envs),
+                         eval_freq=max(2000 // self.num_envs, 1),
+                         n_eval_episodes=10,
                          deterministic=False,
-                         render=False
+                         render=False,
+                        verbose=1,
                          )
         )
         # AimCallback(repo='.Aim/', experiment_name='sb3_test')
 
-        model.learn(total_timesteps=self.max_steps,
+        trained_model = model.learn(total_timesteps=self.max_steps,
                     callback=callbacks,
                     log_interval=1000,
                     tb_log_name=self.args.agent + " " + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
@@ -502,6 +507,7 @@ class PBDroneSimulator:
         print(end - start)
 
 
+#TODO
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     """
     Linear learning rate schedule.

@@ -328,13 +328,13 @@ class PBDroneEnv(
 
                 # Reward based on distance to target
 
-                reward += (1 / self._distance_to_target)  # * self._discount ** self._steps/10
+                reward += (1 / self._distance_to_target) * 2 # * self._discount ** self._steps/10
                 reward += np.exp(-self._distance_to_target * 5) * 50
                 # Additional reward for progressing towards the target
-                reward += (self._prev_distance_to_target - self._distance_to_target) * 30
+                reward += (self._prev_distance_to_target - self._distance_to_target) * 10
 
-                # Add a negative reward for spinning too fast
-                reward += -np.linalg.norm(self.ang_v) / 30
+                # Negative reward for spinning too fast
+                reward += -np.linalg.norm(self.ang_v) / 50
 
                 # Penalize large actions to avoid erratic behavior
                 # reward -= 0.01 * np.linalg.norm(self._last_action)
