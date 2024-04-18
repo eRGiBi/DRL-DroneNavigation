@@ -21,8 +21,8 @@ def parse_args():
                         help="seed of the experiment")
     parser.add_argument('--cuda', action='store_true', default=True,
                         help="if toggled, cuda will be enabled by default")
-    parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env'
-                                                     '(default: False)')
+    parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env',
+                        type=lambda x: bool(strtobool(x)))
 
     # Saving
     parser.add_argument('--savemodel', type=bool, default=True)
@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument('--vec_normalize', default=False, type=lambda x: bool(strtobool(x)))
     parser.add_argument('--ve_check_env', default=False, type=lambda x: bool(strtobool(x)))
 
-    parser.add_argument("--num-envs", type=int, default=1,
+    parser.add_argument("--num-envs", type=int, default=12,
                         help="the number of parallel game environments")
     parser.add_argument('--max_steps', type=str, default=5e6,
                         help="total number of the experiments")
@@ -49,7 +49,7 @@ def parse_args():
     parser.add_argument('--agent-config', type=str, default='default')
     parser.add_argument('--discount', type=int, default=0.999)
     parser.add_argument('--threshold', type=int, default=0.3)
-    parser.add_argument('--batch_size', type=int, default=2048)
+    parser.add_argument('--batch_size', type=int, default=12288)
     parser.add_argument('--num_steps', type=int, default=2048)
 
     # PPO specific

@@ -1,5 +1,5 @@
 
-def print_ppo_model_configuration(model):
+def print_ppo_conf(model):
     print("Training Configuration:")
     print("  Batch Size:", model.batch_size)
     print("  Number of Steps:", model.n_steps)
@@ -25,7 +25,7 @@ def print_ppo_model_configuration(model):
     print("  Vectorized Environment:", model._vec_normalize_env)
 
 
-def print_sac_model_configuration(model):
+def print_sac_conf(model):
     print("SAC Configuration:")
     print("  Batch Size:", model.batch_size)
     print("  Buffer Size:", model.buffer_size)

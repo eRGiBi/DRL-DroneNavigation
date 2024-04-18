@@ -1,7 +1,7 @@
 
-# Deep reinforcement learning Simulator and Algorithms for optimal path finding
+# Deep reinforcement learning Simulator and Algorithm environment for optimal path finding
 
-### Based on Stable-Baseline3 and PyBullet-drones, optimized for PPO and SAC
+### Based on Stable-Baseline3 and PyBullet-drones, for PPO and SAC
 
 
 ### 1. Introduction
@@ -39,6 +39,8 @@ Example args for Windows:
 ```
 $ your_python Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
  False --savemodel False --max_steps 10e6
+ 
+
 ``` 
 Args for Ubuntu with WSL:
 
@@ -46,8 +48,13 @@ Args for Ubuntu with WSL:
  python3 Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb False --savemodel False
  ```
 
-
 For Ubuntu with WSL:
 
-source activate  /root/miniconda3/envs/RL-WSL
+On root installation for activating the conda environment:
+```
+ source activate  /root/miniconda3/envs/RL-WSL
+```
+#TODO:
+Specific dir for the conda environment
+
  
