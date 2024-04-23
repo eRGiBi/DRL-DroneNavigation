@@ -1,6 +1,4 @@
-import math
 import os
-import random
 import time
 from datetime import datetime
 import argparse
@@ -9,7 +7,6 @@ from distutils.util import strtobool
 
 from typing import Callable
 
-import gym.wrappers
 import numpy as np
 import torch as th
 import wandb
@@ -17,13 +14,11 @@ import wandb
 from gymnasium.envs.registration import register
 
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.env_util import make_vec_env
 import stable_baselines3.common.monitor
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv, VecEnv, VecCheckNan, VecNormalize, VecTransposeImage
+from stable_baselines3.common.vec_env import SubprocVecEnv
 
-from stable_baselines3.common.policies import ActorCriticPolicy
-from stable_baselines3 import PPO, SAC, DDPG, HerReplayBuffer
+from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
     StopTrainingOnNoModelImprovement
 
@@ -32,15 +27,14 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.utils import set_random_seed
 from torch.utils.tensorboard import SummaryWriter
 
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
 # from PyBullet import BaseAviary
 from Sol.PyBullet.enums import Physics
 # from Sol.DroneEnvironment import DroneEnvironment
-from Sol.Model.PBDroneEnv import PBDroneEnv
+from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
 import Sol.Model.Waypoints as Waypoints
 
-from Sol.Utilities.Plotter import plot_learning_curve, plot_metrics, plot_3d_targets
+from Sol.Utilities.Plotter import plot_learning_curve, plot_3d_targets
 import Sol.Utilities.Callbacks as Callbacks
 from Sol.Model.SBActorCritic import CustomActorCriticPolicy
 
