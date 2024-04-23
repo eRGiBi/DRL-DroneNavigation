@@ -37,6 +37,7 @@ class PBDroneEnv(
                  vision_attributes=False,
                  user_debug_gui=False,
                  obstacles=False,
+                 random_spawn=False
                  ):
 
         self.ACT_TYPE = act
@@ -51,6 +52,7 @@ class PBDroneEnv(
         self._max_steps = max_steps
         self._aviary_dim = aviary_dim
         self._x_low, self._y_low, self._z_low, self._x_high, self._y_high, self._z_high = aviary_dim
+        self.random_spawn = random_spawn
         print("AVIARY DIM", self._aviary_dim)
 
         super().__init__(drone_model=drone_model,
@@ -328,8 +330,8 @@ class PBDroneEnv(
 
                 # Reward based on distance to target
 
-                reward += (1 / self._distance_to_target) * 2 # * self._discount ** self._steps/10
-                reward += np.exp(-self._distance_to_target * 5) * 50
+                reward += abs(5 / self._distance_to_target + self.eps) # * self._discount ** self._steps/10
+                reward += np.exp(-abs(self._distance_to_target * 3)) * 10
                 # Additional reward for progressing towards the target
                 reward += (self._prev_distance_to_target - self._distance_to_target) * 10
 
@@ -385,11 +387,11 @@ class PBDroneEnv(
 
         self._is_done = False
         self._current_target_index = 0
-        self._current_position = self.INIT_XYZS[0]
+        self._current_position = np.array([0, 0, np.random.uniform(0.5, 1.5)]) if self.random_spawn else self.INIT_XYZS[0]
         self._steps = 0
         # self._steps_since_last_target = 0
-        self._distance_to_target = np.linalg.norm(self.INIT_XYZS - self._target_points[0])
-        self._prev_distance_to_target = np.linalg.norm(self.INIT_XYZS - self._target_points[0])
+        self._distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
+        self._prev_distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
         self._last_action = np.zeros(4, dtype=np.float32)
         # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
 

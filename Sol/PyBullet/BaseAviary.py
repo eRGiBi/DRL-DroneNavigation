@@ -15,11 +15,7 @@ import gymnasium as gym
 
 import sys
 
-if platform == "linux":
-    from Sol.PyBullet.enums import DroneModel, Physics, ImageType
-else:
-    from enums import DroneModel, Physics, ImageType
-
+from Sol.PyBullet.enums import DroneModel, Physics, ImageType
 
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
@@ -160,7 +156,8 @@ class BaseAviary(gym.Env):
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################
-            self.CLIENT = p.connect(p.GUI)  # p.connect(p.GUI, options="--opengl2")
+            self.CLIENT = p.connect(p.GUI)
+            # p.connect(p.GUI, options="--opengl2") # --opengl2 for virtual machines
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW,
                       p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
                 p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)

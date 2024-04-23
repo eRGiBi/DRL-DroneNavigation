@@ -5,7 +5,7 @@ import PIL.Image
 
 from tf_agents.environments import suite_pybullet
 
-from Sol.Model.PBDroneEnv import PBDroneEnv
+from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.enums import Physics
 
 

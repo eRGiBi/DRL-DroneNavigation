@@ -1,12 +1,7 @@
-import math
-import os
 import random
 import sys
 
 import time
-from datetime import datetime
-
-from typing import Callable
 
 # TODO
 sys.path.append("../")
@@ -22,7 +17,6 @@ import Sol.Model.Waypoints as Waypoints
 from Sol.Utilities.ArgParser import parse_args
 
 from gymnasium.envs.registration import register
-import gym.wrappers
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -68,6 +62,42 @@ def init_wandb(args):
     )
 
 
+if __name__ == "__main__":
+
+    init_env()
+
+    args = parse_args()
+    print(args)
+
+    # Seeding
+    seed = args.seed
+    random.seed(seed)
+    np.random.seed(seed)
+    th.manual_seed(seed)
+    th.backends.cudnn.deterministic = False
+
+    # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
+
+    # targets = Waypoints.up_circle()
+    targets = Waypoints.up_sharp_back_turn()
+    # targets = Waypoints.half_up_forward()
+
+    sim = PBDroneSimulator(args, targets, target_factor=0)
+
+    if args.wandb:
+        init_wandb(args)
+
+    if args.run_type == "full":
+        sim.run_full_training()
+    elif args.run_type == "test":
+        sim.run_test()
+    elif args.run_type == "saved":
+        sim.test_saved()
+    elif args.run_type == "learning":
+        sim.test_learning()
+
+
+
 def manual_pb_env():
     # Connect to the PyBullet physics server
     # physicsClient = p.connect(p.GUI)
@@ -91,37 +121,3 @@ def manual_pb_env():
     # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
 
-
-if __name__ == "__main__":
-
-    init_env()
-
-    args = parse_args()
-    print(args)
-
-    # Seeding
-    seed = args.seed
-    random.seed(seed)
-    np.random.seed(seed)
-    th.manual_seed(seed)
-    th.backends.cudnn.deterministic = False
-
-    # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
-
-    # targets = Waypoints.up_circle()
-    targets = Waypoints.forward_up()
-    # targets = Waypoints.half_up_forward()
-
-    sim = PBDroneSimulator(args, targets, target_factor=0)
-
-    if args.wandb:
-        init_wandb(args)
-
-    if args.run_type == "full":
-        sim.run_full_training()
-    elif args.run_type == "test":
-        sim.run_test()
-    elif args.run_type == "saved":
-        sim.test_saved()
-    elif args.run_type == "learning":
-        sim.test_learning()

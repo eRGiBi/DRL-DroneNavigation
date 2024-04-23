@@ -58,8 +58,9 @@ def up_circle():
     ]
 
 
-def forward_up():
+def up_sharp_back_turn():
     return [
+        np.array([0.0, 0.0, 0.5]),
         np.array([-1, 0.2, 1]),
         np.array([0.3, 0.5, 0.7]),
         np.array([1, 0.5, 1]),

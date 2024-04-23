@@ -10,7 +10,7 @@ from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
 
-from Sol.Model.DroneEnvironment import DroneEnvironment
+from Sol.Model.Environments.DroneEnvironment import DroneEnvironment
 
 from stable_baselines3 import TD3
 
