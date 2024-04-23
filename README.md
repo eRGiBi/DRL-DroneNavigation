@@ -57,4 +57,21 @@ On root installation for activating the conda environment:
 #TODO:
 Specific dir for the conda environment
 
- 
+### 4. Results
+
+
+### 5. Conclusion
+
+
+### 6. Notes:
+
+The OpenGl 3 engine doesn't work in virtual machines, so in order to have a visual representation of the simulation,
+it is necessary to run the simulation with OpenGL 2, set in the modified BaseAviary class, as such: 
+```
+    p.connect(p.GUI, options="--opengl2")
+```
+Further: only OpenGL3 works in turn in Windows.
+
+Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
+https://askubuntu.com/questions/1352158/libgl-error-failed-to-load-drivers-iris-and-swrast-in-ubuntu-20-04
+
