@@ -1,5 +1,4 @@
 import os
-import random
 import time
 from datetime import datetime
 
@@ -12,19 +11,17 @@ from typing import Callable
 sys.path.append("../")
 sys.path.append("./")
 
-import gym.wrappers
 import numpy as np
 import torch as th
 import wandb
 
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.env_util import make_vec_env
 import stable_baselines3.common.monitor
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv, VecEnv, VecCheckNan, VecNormalize, VecTransposeImage
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecCheckNan, VecNormalize
 
 from stable_baselines3.common.policies import ActorCriticPolicy
-from stable_baselines3 import PPO, SAC, DDPG, HerReplayBuffer
+from stable_baselines3 import PPO, SAC, DDPG
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
     StopTrainingOnNoModelImprovement
 
@@ -34,16 +31,13 @@ from stable_baselines3.common.utils import set_random_seed
 
 from Sol.PyBullet.enums import Physics
 # from Sol.DroneEnvironment import DroneEnvironment
-from Sol.Model.PBDroneEnv import PBDroneEnv
+from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
 import Sol.Model.Waypoints as Waypoints
 
-from Sol.Utilities.Plotter import plot_learning_curve, plot_metrics, plot_3d_targets
+from Sol.Utilities.Plotter import plot_learning_curve, plot_3d_targets
 import Sol.Utilities.Callbacks as Callbacks
-from Sol.Utilities.ArgParser import parse_args
 from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
-
-from Sol.Model.SBActorCritic import CustomActorCriticPolicy
 
 # from tf_agents.environments import py_environment
 
@@ -110,6 +104,7 @@ class PBDroneSimulator:
                 initial_xyzs=initial_xyzs,
                 save_folder=save_path,
                 aviary_dim=aviary_dim,
+                random_spawn=True,
             )
             env.reset(seed=seed + rank)
             env = Monitor(env)  # record stats such as returns
@@ -187,12 +182,12 @@ class PBDroneSimulator:
             print(model.actor)
             print(model.critic)
             print(model.replay_buffer_class)
-            print_sac_model_configuration(model)
+            print_sac_conf(model)
 
         if self.args.agent == "PPO":
             model = PPO.load(saved_filename)
             # print(model.get_parameters())
-            print_ppo_model_configuration(model)
+            print_ppo_conf(model)
 
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
@@ -243,8 +238,9 @@ class PBDroneSimulator:
     def test_learning(self):
 
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
-                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in
-                                   range(1)])
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
+                                   for i in range(1)]
+                                  )
 
         # custom_policy = CustomActorCriticPolicy(train_env.observation_space, train_env.action_space,
         #                                         net_arch=[512, 512, dict(vf=[256, 128],
@@ -291,7 +287,8 @@ class PBDroneSimulator:
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
                                                  rank=i,
-                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])
+                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
+                                                 initial_xyzs=np.array([[0, 0, np.random.uniform(0.5, 1.5)]]),
                                                  )
                                    for i in range(self.args.num_envs)]
                                   )
