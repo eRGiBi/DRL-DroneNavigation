@@ -7,6 +7,9 @@ import sys
 # from tensorflow.python.types.core import Callable
 from typing import Callable
 
+import gym
+import torch.distributions
+
 # TODO
 sys.path.append("../")
 sys.path.append("./")
@@ -77,13 +80,14 @@ class PBDroneSimulator:
         self.plot = plot
         self.discount = discount
         self.threshold = args.threshold
-        self.max_steps = int(float(args.max_steps))
         self.env_steps = args.max_env_steps
 
         # self.max_reward = 100 + len(targets) * 10
 
         self.num_envs = args.num_envs
         self.targets = dilate_targets(targets, target_factor)
+
+        self.initial_xyzs = np.array([[0, 0, 0.2]])
 
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
@@ -174,7 +178,7 @@ class PBDroneSimulator:
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
-        saved_filename = "Sol\model_chkpts\save-12.20.2023_20.27.09/best_model.zip"
+        saved_filename = "Sol/model_chkpts/save-04.24.2024_16.22.21/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename)
@@ -288,7 +292,7 @@ class PBDroneSimulator:
                                                  gui=False,
                                                  rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
-                                                 initial_xyzs=np.array([[0, 0, np.random.uniform(0.5, 1.5)]]),
+                                                 initial_xyzs=self.initial_xyzs,
                                                  )
                                    for i in range(self.args.num_envs)]
                                   )
@@ -315,8 +319,8 @@ class PBDroneSimulator:
 
         onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
                                share_features_extractor=True,
-                               net_arch=dict(vf=[512, 256],
-                                             pi=[512, 256])
+                               net_arch=dict(vf=[256, 256],
+                                             pi=[256, 256]),
                                )
 
         custom_policy = dict(net_arch=[dict(share=[512, 512], vf=[256, 128], pi=[256, 128])],
@@ -331,17 +335,19 @@ class PBDroneSimulator:
 
         if self.args.agent == 'PPO':
             model = PPO(ActorCriticPolicy,
-                        train_env,
+                        env=train_env,
                         verbose=1,
-                        n_steps=self.args.num_steps,
+                        n_steps=4096,
                         batch_size=self.args.batch_size,
-                        ent_coef=0.1,
+                        ent_coef=0.01,
+                        vf_coef=0.5,
+                        gae_lambda=0.9,
                         # use_sde=True,
                         # sde_sample_freq=4,
                         normalize_advantage=True,
                         clip_range=0.1,
                         learning_rate=int(self.args.learning_rate),
-                        tensorboard_log=tensorboard_path + "/ppo_tensorboard/" if self.args.savemodel else None,
+                        tensorboard_log=(tensorboard_path + "/ppo_tensorboard/") if self.args.savemodel else None,
                         device="auto",
                         policy_kwargs=onpolicy_kwargs
                         )
@@ -363,7 +369,7 @@ class PBDroneSimulator:
                 #     goal_selection_strategy="future",
                 # ),
                 verbose=0,
-                tensorboard_log=tensorboard_path + "/SAC_tensorboard/" if self.args.savemodel else None,
+                tensorboard_log=(tensorboard_path + "/SAC_tensorboard/") if self.args.savemodel else None,
                 train_freq=1,
                 gradient_steps=2,
                 buffer_size=int(1e6),
@@ -391,6 +397,8 @@ class PBDroneSimulator:
 
         callbacks = []
 
+        torch.distributions.Normal(0, 1).log_prob(torch.tensor(0.0))
+
         callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
@@ -405,20 +413,20 @@ class PBDroneSimulator:
             EvalCallback(eval_env,
                          # callback_on_new_best=callback_on_best,
                          best_model_save_path=chckpt_path + '/' if self.args.savemodel else None,
-                         log_path=chckpt_path + '/' if self.args.savemodel else None,
+                         log_path=(chckpt_path + '/') if self.args.savemodel else None,
                          eval_freq=max(2000 // self.num_envs, 1),
                          n_eval_episodes=10,
                          deterministic=False,
                          render=False,
-                        verbose=1,
+                         verbose=1,
                          )
         )
         # AimCallback(repo='.Aim/', experiment_name='sb3_test')
 
-        trained_model = model.learn(total_timesteps=self.max_steps,
+        trained_model = model.learn(total_timesteps=self.args.total_timesteps,
                     callback=callbacks,
                     log_interval=1000,
-                    tb_log_name=self.args.agent + " " + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
+                    tb_log_name=self.args.agent + "_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
                     )
 
         if self.args.savemodel:

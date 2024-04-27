@@ -36,7 +36,7 @@ import Sol.Model.Waypoints as Waypoints
 
 from Sol.Utilities.Plotter import plot_learning_curve, plot_3d_targets
 import Sol.Utilities.Callbacks as Callbacks
-from Sol.Model.SBActorCritic import CustomActorCriticPolicy
+from Sol.Model.Policies.SBActorCritic import CustomActorCriticPolicy
 
 # from tf_agents.environments import py_environment
 

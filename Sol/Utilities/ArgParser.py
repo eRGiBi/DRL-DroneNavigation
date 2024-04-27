@@ -28,33 +28,30 @@ def parse_args():
     parser.add_argument('--savemodel', type=bool, default=True)
     parser.add_argument('--logdir', type=str, default='logs')
     parser.add_argument('--savedir', type=str, default='')
-    parser.add_argument('--checkpoint-freq', type=int, default=100)
 
     # Wrapper specific arguments
     parser.add_argument('--vec_check_nan', default=False, type=lambda x: bool(strtobool(x)))
     parser.add_argument('--vec_normalize', default=False, type=lambda x: bool(strtobool(x)))
     parser.add_argument('--ve_check_env', default=False, type=lambda x: bool(strtobool(x)))
 
-    parser.add_argument("--num-envs", type=int, default=12,
-                        help="the number of parallel game environments")
-    parser.add_argument('--max_steps', type=str, default=5e6,
-                        help="total number of the experiments")
-    parser.add_argument('--max_env_steps', type=int, default=4096,
-                        help="total timesteps of one episode")
-    parser.add_argument("--learning_rate", type=str, default=1e-3,
-                        help="the learning rate of the optimizer")
-
     # General RL Algorithm specific arguments
     parser.add_argument('--agent', type=str, default='PPO')
     parser.add_argument('--agent-config', type=str, default='default')
-    parser.add_argument('--discount', type=int, default=0.999)
-    parser.add_argument('--threshold', type=int, default=0.3)
-    parser.add_argument('--batch_size', type=int, default=12288)
-    parser.add_argument('--num_steps', type=int, default=2048)
+
+    parser.add_argument("--num_envs", type=int, default=12, help="the number of parallel game environments")
+    parser.add_argument('--total_timesteps', type=str, default=gen_params['total_timesteps'], help="total number of the experiments")
+    parser.add_argument('--max_env_steps', type=int, default=gen_params['max_env_steps'], help="total timesteps of one episode")
+    parser.add_argument("--learning_rate", type=str, default=gen_params['learning_rate'],
+                        help="the learning rate of the optimizer")
+
+    parser.add_argument('--discount', type=int, default=gen_params['discount'])
+    parser.add_argument('--threshold', type=int, default=gen_params['threshold'])
+    parser.add_argument('--batch_size', type=int, default=gen_params['batch_size'])
+    parser.add_argument('--num_steps', type=int, default=gen_params['num_steps'])
 
     # PPO specific
-    parser.add_argument('--clip_range', type=int, default=0.2)
-    parser.add_argument('--ent_coef', type=int, default=0)
+    parser.add_argument('--clip_range', type=int, default=def_ppo_params['clip_range'])
+    parser.add_argument('--ent_coef', type=int, default=def_ppo_params['ent_coef'])
 
     parser.add_argument('--eval-criterion', type=str, default='default')
     parser.add_argument('--eval-criterion-config', type=str, default='default')

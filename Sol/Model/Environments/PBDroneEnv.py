@@ -4,9 +4,12 @@ import copy
 
 import inspect
 
+import gym
+import torch
 from gymnasium import spaces
 import numpy as np
 import pybullet as p
+from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
 from Sol.PyBullet.GymPybulletDronesMain import *
@@ -103,7 +106,6 @@ class PBDroneEnv(
         obs, reward, terminated, truncated, info = (
             super().step(action)
         )
-
         self._steps += 1
         self._last_action = action
         self._last_position = copy.deepcopy(self._current_position)
@@ -330,13 +332,15 @@ class PBDroneEnv(
 
                 # Reward based on distance to target
 
-                reward += abs(5 / self._distance_to_target + self.eps) # * self._discount ** self._steps/10
-                reward += np.exp(-abs(self._distance_to_target * 3)) * 10
+                # reward += abs(1 / self._distance_to_target + self.eps) # * self._discount ** self._steps/10
+                reward += (np.exp(-4 * abs(self._distance_to_target))) * 3
                 # Additional reward for progressing towards the target
                 reward += (self._prev_distance_to_target - self._distance_to_target) * 10
 
                 # Negative reward for spinning too fast
-                reward += -np.linalg.norm(self.ang_v) / 50
+                # reward += -np.linalg.norm(self.ang_v) / 50
+
+                # reward -= sum(abs (x - y) for x in self._last_action for y in self._action)
 
                 # Penalize large actions to avoid erratic behavior
                 # reward -= 0.01 * np.linalg.norm(self._last_action)
@@ -359,6 +363,7 @@ class PBDroneEnv(
 
         self._prev_distance_to_target = self._distance_to_target
         self._last_position = self._current_position
+
         return reward
 
     def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
@@ -385,17 +390,17 @@ class PBDroneEnv(
               options: dict = None):
         """Resets the environment."""
 
+        ret = super().reset(seed, options)
+
         self._is_done = False
         self._current_target_index = 0
-        self._current_position = np.array([0, 0, np.random.uniform(0.5, 1.5)]) if self.random_spawn else self.INIT_XYZS[0]
+        self._current_position = self.INIT_XYZS[0]
         self._steps = 0
         # self._steps_since_last_target = 0
         self._distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
         self._prev_distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
         self._last_action = np.zeros(4, dtype=np.float32)
         # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
-
-        ret = super().reset(seed, options)
 
         if self.GUI:
             self.show_targets()
@@ -461,13 +466,8 @@ class PBDroneEnv(
 
     def distance_to_line(self, point, line_start, line_end):
         # Calculate the vector from line_start to line_end
-        line_vector = line_end - line_start
 
-        # Calculate the vector from line_start to the point
-        point_vector = point - line_start
-
-        # Calculate the perpendicular distance
-        distance = np.linalg.norm(np.cross(line_vector, point_vector)) / np.linalg.norm(line_vector)
+        distance = np.linalg.norm(np.cross(line_end - line_start, point - line_start)) / np.linalg.norm(line_vector)
 
         return distance
 
@@ -499,3 +499,52 @@ class PBDroneEnv(
         if len(self.target_visual) > 0:
             p.removeBody(self.target_visual[0])
             self.target_visual = self.target_visual[1:]
+
+    # class NormalizeReward:
+    #     r"""This wrapper will normalize immediate rewards s.t. their exponential moving average has a fixed variance.
+    #
+    #     The exponential moving average will have variance :math:`(1 - \gamma)^2`.
+    #
+    #     Note:
+    #         The scaling depends on past trajectories and rewards will not be scaled correctly if the wrapper was newly
+    #         instantiated or the policy was changed recently.
+    #     """
+    #
+    #     def __init__(
+    #             self,
+    #             env: gym.Env,
+    #             gamma: float = 0.99,
+    #             epsilon: float = 1e-8,
+    #     ):
+    #         """This wrapper will normalize immediate rewards s.t. their exponential moving average has a fixed variance.
+    #
+    #         Args:
+    #             env (env): The environment to apply the wrapper
+    #             epsilon (float): A stability parameter
+    #             gamma (float): The discount factor that is used in the exponential moving average.
+    #         """
+    #         super().__init__(env)
+    #         self.num_envs = getattr(env, "num_envs", 1)
+    #         self.is_vector_env = getattr(env, "is_vector_env", False)
+    #         self.return_rms = RunningMeanStd(shape=())
+    #         self.returns = np.zeros(self.num_envs)
+    #         self.gamma = gamma
+    #         self.epsilon = epsilon
+    #
+    #     def step(self, action):
+    #         """Steps through the environment, normalizing the rewards returned."""
+    #         obs, rews, terminateds, truncateds, infos = self.env.step(action)
+    #         if not self.is_vector_env:
+    #             rews = np.array([rews])
+    #         self.returns = self.returns * self.gamma + rews
+    #         rews = self.normalize(rews)
+    #         dones = np.logical_or(terminateds, truncateds)
+    #         self.returns[dones] = 0.0
+    #         if not self.is_vector_env:
+    #             rews = rews[0]
+    #         return obs, rews, terminateds, truncateds, infos
+    #
+    #     def normalize(self, rews):
+    #         """Normalizes the rewards with the running mean rewards and their variance."""
+    #         self.return_rms.update(self.returns)
+    #         return rews / np.sqrt(self.return_rms.var + self.epsilon)

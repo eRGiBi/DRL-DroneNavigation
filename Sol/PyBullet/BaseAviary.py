@@ -256,6 +256,13 @@ class BaseAviary(gym.Env):
 
         # TODO : initialize random number generator with seed
 
+        # self.INIT_XYZS = np.vstack([np.array([x * 4 * self.L for x in range(self.NUM_DRONES)]), \
+        #                                 np.array([y * 4 * self.L for y in range(self.NUM_DRONES)]), \
+        #                                 np.ones(self.NUM_DRONES) * (
+        #                                     np.random.uniform(self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1, 2)
+        #                                     )]).transpose().reshape(
+        #         self.NUM_DRONES, 3)
+
         super().reset(seed=seed)
 
         p.resetSimulation(physicsClientId=self.CLIENT)
