@@ -91,7 +91,8 @@ class PBDroneSimulator:
 
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
-                 rank: int = 0, seed: int = 0,
+                 rank: int = 0,
+                 seed: int = 0,
                  save_path: str = None):
         """
         Utility function for multi-processed env.
@@ -108,7 +109,7 @@ class PBDroneSimulator:
                 initial_xyzs=initial_xyzs,
                 save_folder=save_path,
                 aviary_dim=aviary_dim,
-                random_spawn=True,
+                random_spawn=False,
             )
             env.reset(seed=seed + rank)
             env = Monitor(env)  # record stats such as returns
@@ -332,13 +333,13 @@ class PBDroneSimulator:
 
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
-
+        print(self.args.learning_rate)
         if self.args.agent == 'PPO':
             model = PPO(ActorCriticPolicy,
                         env=train_env,
                         verbose=1,
                         n_steps=4096,
-                        batch_size=self.args.batch_size,
+                        batch_size=1024,
                         ent_coef=0.01,
                         vf_coef=0.5,
                         gae_lambda=0.9,
@@ -346,7 +347,7 @@ class PBDroneSimulator:
                         # sde_sample_freq=4,
                         normalize_advantage=True,
                         clip_range=0.1,
-                        learning_rate=int(self.args.learning_rate),
+                        learning_rate=float(self.args.learning_rate),
                         tensorboard_log=(tensorboard_path + "/ppo_tensorboard/") if self.args.savemodel else None,
                         device="auto",
                         policy_kwargs=onpolicy_kwargs
@@ -416,7 +417,7 @@ class PBDroneSimulator:
                          log_path=(chckpt_path + '/') if self.args.savemodel else None,
                          eval_freq=max(2000 // self.num_envs, 1),
                          n_eval_episodes=10,
-                         deterministic=False,
+                         deterministic=True,
                          render=False,
                          verbose=1,
                          )
