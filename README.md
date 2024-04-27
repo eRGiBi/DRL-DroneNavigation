@@ -38,7 +38,7 @@ Example args for Windows:
 
 ```
 $ your_python Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
- False --savemodel False --max_steps 10e6
+ False --savemodel False --total_timesteps 10e6
  
 
 ``` 
