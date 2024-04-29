@@ -137,14 +137,19 @@ class PBDroneSimulator:
         action *= -1 / 10
         # action = np.array([0, 0, 0, 0], dtype=np.float32)
 
-        plot_3d_targets(self.targets)
+        # plot_3d_targets(self.targets)
         self.targets = Waypoints.up()
 
-        drone_environment = self.make_env(gui=True,  # initial_xyzs=np.array([[0, 0, 0.5]]),
+        drone_environment = self.make_env(gui=True,   initial_xyzs=np.array([[1, 0, 0.5]]),
                                           aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
         print(drone_environment.G)
 
         print(drone_environment.INIT_XYZS)
+        #
+        # print(self.args.learning_rate)
+        # print(type(self.args.learning_rate))
+        # print(type(float(self.args.learning_rate)))
+        # print(float(self.args.learning_rate))
 
         # It will check your custom environment and output additional warnings if needed
         # check_env(drone_environment, warn=True)
@@ -173,13 +178,14 @@ class PBDroneSimulator:
 
             time.sleep(1. / 240.)  # Control the simulation speed
 
-        plot_learning_curve(rewards)
-        plot_learning_curve(rewards_sum)
+        # plot_learning_curve(rewards)
+        # plot_learning_curve(rewards_sum)
 
     def test_saved(self):
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
 
         saved_filename = "Sol/model_chkpts/save-04.24.2024_16.22.21/best_model.zip"
+
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename)
@@ -286,23 +292,21 @@ class PBDroneSimulator:
         if not os.path.exists(chckpt_path):
             os.makedirs(chckpt_path + '/')
 
-        train_env = self.make_env(multi=False, gui=False)
+        # train_env = self.make_env(multi=False, gui=False)
         #    check_env(train_env, warn=True, skip_render_check=True)
 
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
                                                  rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
-                                                 initial_xyzs=self.initial_xyzs,
-                                                 )
-                                   for i in range(self.args.num_envs)]
-                                  )
+                                                 # initial_xyzs=self.initial_xyzs,
+                                                 ) for i in range(self.args.num_envs)])
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
 
         eval_env = SubprocVecEnv([self.make_env(multi=True,
                                                 save_path=chckpt_path if self.args.savemodel else None,
-                                                gui=self.args.gui,
+                                                gui=False,
                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
 
@@ -337,17 +341,19 @@ class PBDroneSimulator:
         if self.args.agent == 'PPO':
             model = PPO(ActorCriticPolicy,
                         env=train_env,
-                        verbose=1,
+                        verbose=2,
                         n_steps=4096,
-                        batch_size=1024,
-                        ent_coef=0.01,
+                        batch_size=256,
+                        n_epochs=20,
+                        gamma=0.99,
+                        # ent_coef=0.1,
                         vf_coef=0.5,
                         gae_lambda=0.9,
                         # use_sde=True,
                         # sde_sample_freq=4,
                         normalize_advantage=True,
                         clip_range=0.1,
-                        learning_rate=float(self.args.learning_rate),
+                        learning_rate=0.003,
                         tensorboard_log=(tensorboard_path + "/ppo_tensorboard/") if self.args.savemodel else None,
                         device="auto",
                         policy_kwargs=onpolicy_kwargs
@@ -394,11 +400,9 @@ class PBDroneSimulator:
                          policy_kwargs=dict(net_arch=[64, 64])
                          )
 
-        model.set_random_seed(1)
+        # model.set_random_seed(1)
 
         callbacks = []
-
-        torch.distributions.Normal(0, 1).log_prob(torch.tensor(0.0))
 
         callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
@@ -415,10 +419,10 @@ class PBDroneSimulator:
                          # callback_on_new_best=callback_on_best,
                          best_model_save_path=chckpt_path + '/' if self.args.savemodel else None,
                          log_path=(chckpt_path + '/') if self.args.savemodel else None,
-                         eval_freq=max(2000 // self.num_envs, 1),
+                         eval_freq=max(8192 // self.num_envs, 1),
                          n_eval_episodes=10,
-                         deterministic=True,
-                         render=False,
+                         deterministic=False,
+                         render=True,
                          verbose=1,
                          )
         )

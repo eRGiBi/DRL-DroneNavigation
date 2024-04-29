@@ -25,7 +25,7 @@ def parse_args():
                         type=lambda x: bool(strtobool(x)))
 
     # Saving
-    parser.add_argument('--savemodel', type=bool, default=True)
+    parser.add_argument('--savemodel', default=True, type=lambda x: bool(strtobool(x)))
     parser.add_argument('--logdir', type=str, default='logs')
     parser.add_argument('--savedir', type=str, default='')
 

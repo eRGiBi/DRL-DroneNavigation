@@ -241,7 +241,7 @@ class BaseAviary(gym.Env):
         seed : int, optional
             Random seed.
         options : dict[..], optional
-            Additinonal options, unused
+            Additional options, unused
 
         Returns
         -------
@@ -1174,7 +1174,7 @@ class BaseAviary(gym.Env):
         from drone's current position
 
         Enables drones to reach distant waypoints without
-        losing control/crashing, and hover on arrival at destintion
+        losing control/crashing, and hover on arrival at destination
 
         Parameters
         ----------

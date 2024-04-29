@@ -10,7 +10,7 @@ class PositionGenerator():
         self.bounds = bounds
         self.max_distance = max_distance
         
-    def nearest_point_on_line(x1, y1, z1, x2, y2, z2, point):
+    def nearest_point_on_line(self, x1, y1, z1, x2, y2, z2, point):
         # Calculate direction vector of the line
         line_vector = np.array([x2 - x1, y2 - y1, z2 - z1])
 
@@ -79,7 +79,12 @@ class PositionGenerator():
         return points
 
 
-    def generate_random_point_around_line(self, x1, y1, z1, x2, y2, z2):
+    def generate_random_point_around_line(self, from_point, to_point):
+        """
+        Generates a random point around a line defined by two points, clipped to the specified bounds.
+        """
+
+        x1, y1, z1, x2, y2, z2 = from_point[0], from_point[1], from_point[2], to_point[0], to_point[1], to_point[2]
         # Generate a random parameter t between 0 and 1
         t = random.uniform(0, 1)
 
@@ -98,7 +103,7 @@ class PositionGenerator():
         dy = y_point - y1
         dz = z_point - z1
         length = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
-        print(length)
+
         scale_factor = self.max_distance / length if length > self.max_distance else 1
 
         # Apply the offsets to the coordinates
@@ -106,19 +111,27 @@ class PositionGenerator():
         y_point += offset_y * scale_factor
         z_point += offset_z * scale_factor
 
+        x_point, y_point, z_point = self.clip_to_bounds(x_point, y_point, z_point)
+
         return x_point, y_point, z_point
+
+    def clip_to_bounds(self, x, y, z):
+
+        x = max(self.bounds[0], min(self.bounds[3], x))
+        y = max(self.bounds[1], min(self.bounds[4], y))
+        z = max(self.bounds[2], min(self.bounds[5], z))
+
+        return x, y, z
 
 
     def test(self):
-        global result, diff
         x1, y1, z1 = 0, 0, 0
         x2, y2, z2 = 3, 3, 3
         max_distance = 1
-        PositionGenerator = PositionGenerator([x1, y1, z1, x2, y2, z2], max_distance)
+        pg = PositionGenerator([x1, y1, z1, x2, y2, z2], max_distance)
         # Generate a single random point along the line
-        result = [PositionGenerator.generate_random_point_around_line(x1, y1, z1, x2, y2, z2) for i in range(10)]
-        diff = [PositionGenerator.coordinate_differences_to_nearest_point(x1, y1, z1, x2, y2, z2, point) for point in
-                result]
+        result = [pg.generate_random_point_around_line(x1, y1, z1, x2, y2, z2) for i in range(10)]
+        diff = [pg.coordinate_differences_to_nearest_point(x1, y1, z1, x2, y2, z2, point) for point in result]
         print(result)
         print(diff)
 

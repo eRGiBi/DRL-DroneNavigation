@@ -1,24 +1,3 @@
-import os
-import math
-import copy
-
-import inspect
-
-import gym
-import torch
-from gymnasium import spaces
-import numpy as np
-import pybullet as p
-from stable_baselines3.common.running_mean_std import RunningMeanStd
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
-from gymnasium.spaces.space import Space
-from Sol.Utilities.position_generator import PositionGenerator
-
-
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,
@@ -87,7 +66,6 @@ class PBDroneEnv(
         self._distance_to_target = np.linalg.norm(self._current_position - target_points[0])
         self._prev_distance_to_target = np.linalg.norm(self._current_position - target_points[0])
         self._current_target_index = 0
-        self.just_found = False
 
         self._is_done = False
 
@@ -111,29 +89,22 @@ class PBDroneEnv(
         obs, reward, terminated, truncated, info = (
             super().step(action)
         )
-        # print("ACTION", action)
-        # print("OBS", obs)
-        # print("pos", self.pos[0])
-        # print("REWARD", reward)
-        # print("TERMINATED", terminated)
+        self._steps += 1
+        self._last_action = action
+        self._last_position = copy.deepcopy(self._current_position)
+        self._current_position = np.array(self.pos[0], dtype=np.float32) + self.eps
 
-        if not terminated:
-            self._steps += 1
-            self._last_action = action
-            self._last_position = copy.deepcopy(self._current_position)
-            self._current_position = self.pos[0] #+ self.eps
+        # Calculate the Euclidean distance between the drone and the next target
+        self._distance_to_target = abs(np.linalg.norm(
+            self._target_points[self._current_target_index] - self._current_position))
 
-            # Calculate the Euclidean distance between the drone and the next target
-            self._distance_to_target = abs(np.linalg.norm(
-                self._target_points[self._current_target_index] - self._current_position))
-
-            # distance_to_target = self.distance_between_points(self._computeObs()[:3],
-            #                                                   self._target_points[self._current_target_index])
+        # distance_to_target = self.distance_between_points(self._computeObs()[:3],
+        #                                                   self._target_points[self._current_target_index])
 
         if self.GUI and self._distance_to_target <= self._threshold:
             self.remove_target()
 
-        return obs, reward, terminated, truncated, info
+        return np.array(obs, dtype=np.float32), np.array(reward, dtype=np.float32), terminated, truncated, info
 
     def _actionSpace(self):
         """Returns the action space of the environment."""
@@ -145,16 +116,9 @@ class PBDroneEnv(
     def _observationSpace(self):
         """Returns the observation space of the environment."""
 
-        # return spaces.Box(low=np.array([self._x_low, self._y_low, 0,
-        #                                 -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
-        #                   high=np.array([self._x_high, self._y_high, self._z_high,
-        #                                  1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
-        #                   dtype=np.float32
-        #                     )
-
-        return spaces.Box(low=np.array([1, 1, 0,
+        return spaces.Box(low=np.array([self._x_low, self._y_low, 0,
                                         -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
-                          high=np.array([1, 1, 1,
+                          high=np.array([self._x_high, self._y_high, self._z_high,
                                          1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
                           dtype=np.float32
                           )
@@ -167,36 +131,33 @@ class PBDroneEnv(
 
         """
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        # obs = self._getDroneStateVector(0)
-
-        obs = obs #+ self.eps
+        obs = obs + self.eps
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
 
-        # print("x", obs[0], "y", obs[1], "z", obs[2])
-        # print("roll", obs[7], "pitch", obs[8], "yaw", obs[9])
-        # print("vel_x", obs[10], "vel_y", obs[11], "vel_z", obs[12])
-        # print("ang_vel_x", obs[13], "ang_vel_y", obs[14], "ang_vel_z", obs[15])
-
-        # #TODO: NORMALIZation check
-        # ret = np.array([ret[0]/self._x_high, ret[1]/self._y_high, ret[2]/self._z_high,
-        #                 ret[3], ret[4], ret[5], ret[6], ret[7], ret[8], ret[9], ret[10], ret[11]])
-
+        #TODO: NORMALIZE
         try:
-            return ret #.astype('float32')
+            return ret.astype('float32')
         except FloatingPointError as e:
             print("Error in _computeObs():", ret)
             print(f"Underflow error: {e}")
             # return np.zeros_like(ret).astype('float32')
-            return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)#.astype('float32')
+            return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max).astype('float32')
 
     def _clipAndNormalizeState(self, state):
         """
         Normalizes a drone's state to the [-1,1] range.
 
-        np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
-                           self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :]])
-        """
+        Parameters
+        ----------
+        state : ndarray
+            (20,)-shaped array of floats containing the non-normalized state of a single drone.
 
+        Returns
+        -------
+        ndarray
+            (20,)-shaped array of floats containing the normalized state of a single drone.
+
+        """
         MAX_LIN_VEL_XY = 3
         MAX_LIN_VEL_Z = 1
         self.EPISODE_LEN_SEC = 1
@@ -206,12 +167,9 @@ class PBDroneEnv(
         MAX_PITCH_ROLL = np.pi  # Full range
 
         # clipped_pos_xy = np.clip(state[0:2], -MAX_XY, MAX_XY)
-        # clipped_pos_x = np.clip(state[0], self._aviary_dim[0], self._aviary_dim[3])
-        # clipped_pos_y = np.clip(state[1], self._aviary_dim[1], self._aviary_dim[4])
-        # clipped_pos_xy = np.clip(state[0:2], self._aviary_dim[0], self._aviary_dim[3])
-
+        clipped_pos_xy = np.clip(state[0:2], self._aviary_dim[0], self._aviary_dim[3])
         # clipped_pos_z = np.clip(state[2], 0, MAX_Z)
-        # clipped_pos_z = np.clip(state[2], 0, self._aviary_dim[5])
+        clipped_pos_z = np.clip(state[2], 0, self._aviary_dim[5])
         clipped_rp = np.clip(state[7:9], -MAX_PITCH_ROLL, MAX_PITCH_ROLL)
         clipped_vel_xy = np.clip(state[10:12], -MAX_LIN_VEL_XY, MAX_LIN_VEL_XY)
         clipped_vel_z = np.clip(state[12], -MAX_LIN_VEL_Z, MAX_LIN_VEL_Z)
@@ -225,11 +183,8 @@ class PBDroneEnv(
         #                                        clipped_vel_z
         #                                        )
 
-        # normalized_pos_xy = clipped_pos_xy / MAX_XY
-        normalized_pos_xy = state[0:2] / np.array([self._aviary_dim[3], self._aviary_dim[4]])
-        # normalized_pos_z = clipped_pos_z / MAX_Z
-        normalized_pos_z = state[2] / self._aviary_dim[5]
-
+        normalized_pos_xy = clipped_pos_xy / MAX_XY
+        normalized_pos_z = clipped_pos_z / MAX_Z
         normalized_rp = clipped_rp / MAX_PITCH_ROLL
         normalized_y = state[9] / np.pi  # No reason to clip
         normalized_vel_xy = clipped_vel_xy / MAX_LIN_VEL_XY
@@ -247,7 +202,6 @@ class PBDroneEnv(
                                       normalized_ang_vel,
                                       state[16:20]
                                       ]).reshape(20, )
-        # print("NORM AND CLIPPED", norm_and_clipped)
 
         return norm_and_clipped
 
@@ -331,10 +285,7 @@ class PBDroneEnv(
         # print(self._steps)
         #  or \self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or
 
-        if (self._has_collision_occurred()
-                or self._is_done
-                # or (self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC)
-        ):
+        if self._has_collision_occurred() or self._current_target_index == len(self._target_points):
             return True
         else:
             return False
@@ -350,39 +301,38 @@ class PBDroneEnv(
         """
         # Negative reward for termination
         if self._computeTerminated() and not self._is_done:
-            return -100.0
+            return -30
+            # -10 * (len(self._target_points) - self._current_target_index)) #  * np.linalg.norm(velocity)
 
-        reward = np.float32(0.0)
+        reward = 0.0
 
-        # try:
-        #
-        #     if self._current_target_index > 0:
-        #         # Additional reward for progressing towards the target
-        #         reward += self.calculate_progress_reward(self._current_position, self._last_position,
-        #                                                  self._target_points[self._current_target_index - 1],
-        #                                                  self._target_points[self._current_target_index]) * 2000
-        #     else:
-        #
-        #         # Reward based on distance to target
-        #
-        #         # reward += abs(1 / self._distance_to_target + self.eps) # * self._discount ** self._steps/10
-        #         reward += (np.exp(-4 * abs(self._distance_to_target))) * 3
-        #         # Additional reward for progressing towards the target
-        #         reward += (self._prev_distance_to_target - self._distance_to_target) * 10
-        #
-        #         # Negative reward for spinning too fast
-        #         # reward += -np.linalg.norm(self.ang_v) / 50
-        #
-        #         # reward -= sum(abs (x - y) for x in self._last_action for y in self._action)
-        #
-        #         # Penalize large actions to avoid erratic behavior
-        #         # reward -= 0.01 * np.linalg.norm(self._last_action)
-        #
-        # except ZeroDivisionError:
-        #     # Give a high reward if the drone is at the target (avoiding division by zero)
-        #     reward += 100
+        try:
 
+            if self._current_target_index > 0:
+                # Additional reward for progressing towards the target
+                reward += self.calculate_progress_reward(self._current_position, self._last_position,
+                                                         self._target_points[self._current_target_index - 1],
+                                                         self._target_points[self._current_target_index]) * 2000
+            else:
 
+                # Reward based on distance to target
+
+                # reward += abs(1 / self._distance_to_target + self.eps) # * self._discount ** self._steps/10
+                reward += (np.exp(-4 * abs(self._distance_to_target))) * 3
+                # Additional reward for progressing towards the target
+                reward += (self._prev_distance_to_target - self._distance_to_target) * 10
+
+                # Negative reward for spinning too fast
+                # reward += -np.linalg.norm(self.ang_v) / 50
+
+                # reward -= sum(abs (x - y) for x in self._last_action for y in self._action)
+
+                # Penalize large actions to avoid erratic behavior
+                # reward -= 0.01 * np.linalg.norm(self._last_action)
+
+        except ZeroDivisionError:
+            # Give a high reward if the drone is at the target (avoiding division by zero)
+            reward += 100
 
         # Check if the drone has reached a target
         if self._distance_to_target <= self._threshold:
@@ -392,23 +342,14 @@ class PBDroneEnv(
                 # Reward for reaching all targets
                 reward += 1000  # * self._discount ** self._steps/10
                 self._is_done = True
-
             else:
                 # Reward for reaching a target
-                reward += 100 #* (self._discount ** (self._steps / 10))
-                self.just_found = True
-
-        else:
-            # print("DISTANCE TO TARGET", self._distance_to_target)
-
-            reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
-            reward += ((self._prev_distance_to_target - self._distance_to_target) * 10) if not self.just_found else 0
-            self.just_found = False
+                reward += 100 * (self._discount ** (self._steps / 10))
 
         self._prev_distance_to_target = self._distance_to_target
         self._last_position = self._current_position
 
-        return reward / 4
+        return reward
 
     def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
         """
@@ -438,17 +379,16 @@ class PBDroneEnv(
 
         self._is_done = False
         self._current_target_index = 0
+
+        if self.random_spawn:
+            from_p, to_p = self._target_points[np.random.choice(len(self._target_points), size=2, replace=False)]
+            self.INIT_XYZS[0] = self.init_position_generator.generate_random_point_around_line(from_p, to_p)
+        else:
+            # self.INIT_XYZS[0] = self.INIT_XYZS[0]
+            self.INIT_XYZS[0] = self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1
+
+        self._current_position = self.INIT_XYZS[0]
         self._steps = 0
-
-        # if self.random_spawn:
-        #     from_p, to_p = self._target_points[np.random.choice(len(self._target_points), size=2, replace=False)]
-        #     self.INIT_XYZS[0] = self.init_position_generator.generate_random_point_around_line(from_p, to_p)
-        # else:
-        #     # self.INIT_XYZS[0] = self.INIT_XYZS[0]
-        #     self.INIT_XYZS[0] = (0,0, self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1)
-
-        self._current_position = ret[0][0:3]
-
         # self._steps_since_last_target = 0
         self._distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
         self._prev_distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
@@ -483,13 +423,11 @@ class PBDroneEnv(
         # and circle around a lower target point.
         # Now done with the contact detection by the PyBullet environment
 
-        state = self.pos[0]
+        state = self._current_position
 
-        if (state[0] > self._x_high or
-                state[0] < self._x_low or
-                state[1] > self._y_high or
-                state[1] < self._y_low or
-                (len(p.getContactPoints()) > 0) or
+        if (state[0] > self._x_high or state[0] < self._x_low or
+                state[1] > self._y_high or state[1] < self._y_low or
+                len(p.getContactPoints()) > 0 or
                 state[2] > self._z_high):
 
             # print(p.getOverlappingObjects())
