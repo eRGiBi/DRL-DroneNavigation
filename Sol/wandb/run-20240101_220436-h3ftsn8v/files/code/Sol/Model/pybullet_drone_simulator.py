@@ -31,7 +31,7 @@ from Sol.PyBullet.enums import Physics
 # from Sol.DroneEnvironment import DroneEnvironment
 from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
-import Sol.Model.Waypoints as Waypoints
+import Sol.Utilities.Waypoints as Waypoints
 
 from Sol.Utilities.Plotter import plot_learning_curve, plot_3d_targets
 import Sol.Utilities.Callbacks as Callbacks
