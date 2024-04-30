@@ -1,10 +1,15 @@
+import csv
+import gzip
 import os
 import math
 import copy
 
 import inspect
+import threading
+from datetime import datetime
 
 import gym
+import pandas as pd
 import torch
 from gymnasium import spaces
 import numpy as np
@@ -76,6 +81,7 @@ class PBDroneEnv(
         self._last_position = None
 
         self._steps = 0
+        self.total_steps = 0
         # self.steps_since_last_target = 0
 
         self._last_action = np.zeros(4, dtype=np.float32)
@@ -93,6 +99,10 @@ class PBDroneEnv(
 
         self.CLIENT = self.getPyBulletClient()
         self.target_visual = []
+
+        self.save_folder = save_folder
+        self.file_path = os.path.join('Sol/rollouts/', 'rollout_' + str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/'))) + '.txt')
+        self.lock = threading.Lock()
 
         if save_folder is not None:
             self.save_model(save_folder)
@@ -116,6 +126,18 @@ class PBDroneEnv(
         # print("pos", self.pos[0])
         # print("REWARD", reward)
         # print("TERMINATED", terminated)
+
+        #
+        # if True and len(obs) > 0:
+        #     with open(self.file_path, mode='a+') as f:
+        #         with self.lock: # Doesnt work even with thread locking with multiple envs
+        #             for x in obs.tolist():
+        #                 f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
+        #             f.write(str(reward))
+        #             f.write("\n")
+        #     f.close()
+
+        # self.total_steps += 1
 
         if not terminated:
             self._steps += 1
@@ -395,7 +417,7 @@ class PBDroneEnv(
 
             else:
                 # Reward for reaching a target
-                reward += 100 #* (self._discount ** (self._steps / 10))
+                reward += 150 #* (self._discount ** (self._steps / 10))
                 self.just_found = True
 
         else:
@@ -440,7 +462,7 @@ class PBDroneEnv(
         self._current_target_index = 0
         self._steps = 0
 
-        # if self.random_spawn:
+        # if self.random_spawn and self.total_steps < 100_000:
         #     from_p, to_p = self._target_points[np.random.choice(len(self._target_points), size=2, replace=False)]
         #     self.INIT_XYZS[0] = self.init_position_generator.generate_random_point_around_line(from_p, to_p)
         # else:

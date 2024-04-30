@@ -21,7 +21,6 @@ gen_params = {
     'threshold': 0.3,
     'batch_size': 128,
     'num_steps': 2048
-
 }
 
 rl_algorithms = {
@@ -32,6 +31,11 @@ rl_algorithms = {
 def_ppo_params = {
     'clip_range': 0.1,
     'ent_coef': 0.2,
+}
+
+best_ppo_params = {
+    'clip_range': 0.2,
+    'ent_coef': 0.01,
 }
 
 def_sac_params = {

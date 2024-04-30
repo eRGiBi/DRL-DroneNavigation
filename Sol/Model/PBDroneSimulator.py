@@ -7,9 +7,6 @@ import sys
 # from tensorflow.python.types.core import Callable
 from typing import Callable
 
-import gym
-import torch.distributions
-
 # TODO
 sys.path.append("../")
 sys.path.append("./")
@@ -36,9 +33,9 @@ from Sol.PyBullet.enums import Physics
 # from Sol.DroneEnvironment import DroneEnvironment
 from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
-import Sol.Model.Waypoints as Waypoints
+import Sol.Utilities.Waypoints as Waypoints
 
-from Sol.Utilities.Plotter import plot_learning_curve, plot_3d_targets
+from Sol.Utilities.Plotter import plot_learning_curve
 import Sol.Utilities.Callbacks as Callbacks
 from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
 
@@ -306,7 +303,7 @@ class PBDroneSimulator:
 
         eval_env = SubprocVecEnv([self.make_env(multi=True,
                                                 save_path=chckpt_path if self.args.savemodel else None,
-                                                gui=False,
+                                                gui=self.args.gui,
                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
 
@@ -337,7 +334,7 @@ class PBDroneSimulator:
 
         #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
         #                             dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
-        print(self.args.learning_rate)
+
         if self.args.agent == 'PPO':
             model = PPO(ActorCriticPolicy,
                         env=train_env,
@@ -419,10 +416,10 @@ class PBDroneSimulator:
                          # callback_on_new_best=callback_on_best,
                          best_model_save_path=chckpt_path + '/' if self.args.savemodel else None,
                          log_path=(chckpt_path + '/') if self.args.savemodel else None,
-                         eval_freq=max(8192 // self.num_envs, 1),
+                         eval_freq=max(8196 // self.num_envs, 1),
                          n_eval_episodes=10,
                          deterministic=False,
-                         render=True,
+                         render=False,
                          verbose=1,
                          )
         )

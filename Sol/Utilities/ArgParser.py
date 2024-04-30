@@ -17,17 +17,14 @@ def parse_args():
     parser.add_argument('--env-config', type=str, default='default')
     parser.add_argument('--env-kwargs', type=str, default='{}')
 
-    parser.add_argument('--seed', '-s', type=int, default=gen_params['seed'],
-                        help="seed of the experiment")
-    parser.add_argument('--cuda', action='store_true', default=True,
-                        help="if toggled, cuda will be enabled by default")
+    parser.add_argument('--seed', '-s', type=int, default=gen_params['seed'], help="seed of the experiment")
+    parser.add_argument('--cuda', action='store_true', default=True, help="if toggled, cuda will be enabled by default")
     parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env',
                         type=lambda x: bool(strtobool(x)))
 
     # Saving
-    parser.add_argument('--savemodel', default=True, type=lambda x: bool(strtobool(x)))
-    parser.add_argument('--logdir', type=str, default='logs')
-    parser.add_argument('--savedir', type=str, default='')
+    parser.add_argument('--savemodel', default=True
+                        , type=lambda x: bool(strtobool(x)))
 
     # Wrapper specific arguments
     parser.add_argument('--vec_check_nan', default=False, type=lambda x: bool(strtobool(x)))
@@ -41,8 +38,7 @@ def parse_args():
     parser.add_argument("--num_envs", type=int, default=12, help="the number of parallel game environments")
     parser.add_argument('--total_timesteps', type=str, default=gen_params['total_timesteps'], help="total number of the experiments")
     parser.add_argument('--max_env_steps', type=int, default=gen_params['max_env_steps'], help="total timesteps of one episode")
-    parser.add_argument("--learning_rate", type=str, default=gen_params['learning_rate'],
-                        help="the learning rate of the optimizer")
+    parser.add_argument("--learning_rate", type=str, default=gen_params['learning_rate'], help="the learning rate of the optimizer")
 
     parser.add_argument('--discount', type=int, default=gen_params['discount'])
     parser.add_argument('--threshold', type=int, default=gen_params['threshold'])
@@ -62,7 +58,7 @@ def parse_args():
     parser.add_argument('--criterion', type=str, default='default')
     parser.add_argument('--criterion-config', type=str, default='default')
 
-    # Wandb specific arguments
+    # Wandb
     parser.add_argument("--wandb", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
                         help="if toggled, this experiment will be tracked with Weights and Biases")
     parser.add_argument("--wandb-entity", type=str, default=None,

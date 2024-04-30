@@ -3,6 +3,8 @@ import sys
 
 import time
 
+import yaml
+
 # TODO
 sys.path.append("../")
 sys.path.append("./")
@@ -13,7 +15,7 @@ import wandb
 # import aim
 
 from Sol.Model.PBDroneSimulator import PBDroneSimulator
-import Sol.Model.Waypoints as Waypoints
+import Sol.Utilities.Waypoints as Waypoints
 from Sol.Utilities.ArgParser import parse_args
 
 from gymnasium.envs.registration import register
@@ -67,6 +69,11 @@ if __name__ == "__main__":
     init_env()
 
     args = parse_args()
+
+    # if args.yaml:
+    #     with open('parameters.yml', 'r') as file:
+    #         params = yaml.safe_load(file)
+
     print(args)
 
     # Seeding
