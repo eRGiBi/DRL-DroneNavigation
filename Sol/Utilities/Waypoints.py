@@ -64,7 +64,7 @@ def up_sharp_back_turn():
         np.array([-0.5, 0.2, 0.7]),
         np.array([0.3, 0.5, 0.7]),
         np.array([1, 0.5, 1]),
-        np.array([1.5, 1., 1.5])
+        np.array([1.5, 1., 1.2])
     ]
 
 
@@ -106,10 +106,13 @@ if __name__ == '__main__':
     targets = half_up_forward()
     Plotter.plot_3d_targets(targets)
 
-    targets = up_circle()
+    targets = parametric_eq()
     Plotter.plot_3d_targets(targets)
 
-    targets = rnd()
+    targets = up_sharp_back_turn()
+    Plotter.plot_3d_targets(targets)
+
+    targets = up_circle()
     Plotter.plot_3d_targets(targets)
 
     targets = generate_random_targets(10)
