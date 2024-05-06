@@ -31,6 +31,14 @@ To install PyTorch on Windows or Linux with CUDA 11.8 for GPU support:
 ```
 $ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 ```
+To install TensorFlow with GPU support:
+```
+conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
+# Anything above 2.10 is not supported on the GPU on Windows Native
+python -m pip install "tensorflow<2.11"
+# Verify the installation:
+python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+```
 
 
 ### 3. Example:
@@ -75,3 +83,8 @@ Further: only OpenGL3 works in turn in Windows.
 Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
 https://askubuntu.com/questions/1352158/libgl-error-failed-to-load-drivers-iris-and-swrast-in-ubuntu-20-04
 
+### 7. To Do:
+
+
+Reward function formulation
+Further hyperparameter tuning

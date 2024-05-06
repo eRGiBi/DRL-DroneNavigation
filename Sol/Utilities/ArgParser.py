@@ -13,7 +13,7 @@ def parse_args():
                         help="the name of this experiment")
     parser.add_argument('--gym_id', type=str, default='PBDroneEnv',
                         help="the id of the gym environment")
-    parser.add_argument('--run_type', type=str, default='full', choices=["full", "test", "saved", "learning"])
+    parser.add_argument('--run_type', type=str, default='full', choices=["full", "cont", "test", "saved", "learning"])
     parser.add_argument('--env-config', type=str, default='default')
     parser.add_argument('--env-kwargs', type=str, default='{}')
 

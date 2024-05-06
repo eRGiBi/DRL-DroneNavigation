@@ -8,6 +8,8 @@ import yaml
 # TODO
 sys.path.append("../")
 sys.path.append("./")
+sys.path.append("Sol/Model")
+sys.path.append("Sol.Model")
 
 import numpy as np
 import torch as th
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     if args.wandb:
         init_wandb(args)
 
-    if args.run_type == "full":
+    if args.run_type == "full" or args.run_type == "cont":
         sim.run_full_training()
     elif args.run_type == "test":
         sim.run_test()

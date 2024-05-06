@@ -55,7 +55,9 @@ class PBDroneEnv(
         self._OBS_TYPE = obs
 
         self._target_points = np.array(target_points)
-        # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
+        self._or_target_points = np.array(target_points)
+        self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
+
         self._threshold = threshold
         self._discount = discount
         self._max_steps = max_steps
@@ -78,7 +80,7 @@ class PBDroneEnv(
                          )
 
         self._current_position = self.INIT_XYZS[0]
-        self._last_position = None
+        self._last_position = self._current_position
 
         self._steps = 0
         self.total_steps = 0
@@ -101,7 +103,7 @@ class PBDroneEnv(
         self.target_visual = []
 
         self.save_folder = save_folder
-        self.file_path = os.path.join('Sol/rollouts/', 'rollout_' + str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/'))) + '.txt')
+        self.rollout_path = os.path.join('Sol/rollouts/', 'rollout_' + str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/'))) + '.txt')
         self.lock = threading.Lock()
 
         if save_folder is not None:
@@ -113,7 +115,7 @@ class PBDroneEnv(
         # self._addObstacles()
 
         if self.random_spawn:
-            self.init_position_generator = PositionGenerator(self._aviary_dim, 0.5)
+            self.init_position_generator = PositionGenerator(self._aviary_dim, 0.25)
 
     def step(self, action):
         """Applies the given action to the environment."""
@@ -129,7 +131,7 @@ class PBDroneEnv(
 
         #
         # if True and len(obs) > 0:
-        #     with open(self.file_path, mode='a+') as f:
+        #     with open(self.rollout_path, mode='a+') as f:
         #         with self.lock: # Doesnt work even with thread locking with multiple envs
         #             for x in obs.tolist():
         #                 f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
@@ -152,7 +154,7 @@ class PBDroneEnv(
             # distance_to_target = self.distance_between_points(self._computeObs()[:3],
             #                                                   self._target_points[self._current_target_index])
 
-        if self.GUI and self._distance_to_target <= self._threshold:
+        if self.GUI and self._distance_to_target <= self._threshold and not (self.random_spawn and self.total_steps < 100_000):
             self.remove_target()
 
         return obs, reward, terminated, truncated, info
@@ -167,6 +169,7 @@ class PBDroneEnv(
     def _observationSpace(self):
         """Returns the observation space of the environment."""
 
+        # Without normalization
         # return spaces.Box(low=np.array([self._x_low, self._y_low, 0,
         #                                 -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
         #                   high=np.array([self._x_high, self._y_high, self._z_high,
@@ -213,6 +216,7 @@ class PBDroneEnv(
 
     def _clipAndNormalizeState(self, state):
         """
+        Original PyBullet code modified for the new observation spaces.
         Normalizes a drone's state to the [-1,1] range.
 
         np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
@@ -344,14 +348,11 @@ class PBDroneEnv(
         -------
         bool
             Whether the current episode is done.
-
         """
-        # Original PyBullet termination conditions
 
+        # Original PyBullet termination conditions
         # print(self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC)
         # print(self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100)
-        # print(self._steps)
-        #  or \self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC or
 
         if (self._has_collision_occurred()
                 or self._is_done
@@ -368,13 +369,41 @@ class PBDroneEnv(
         -------
         float
             The reward value.
-
         """
+
+        rew = self.progress_reward()
+        self._prev_distance_to_target = self._distance_to_target
+        self._last_position = copy.deepcopy(self._current_position)
+        return rew
+
         # Negative reward for termination
         if self._computeTerminated() and not self._is_done:
-            return -100.0
+            return -4.0
 
         reward = np.float32(0.0)
+        if self.random_spawn and self.total_steps < 100_000:
+            min_dis = 0
+            if self._current_target_index == len(self._target_points):
+                return 1000
+            for i, target in enumerate(self._target_points):
+                dis = np.linalg.norm(self._current_position - target)
+                if  dis < self._threshold and not self._reached_targets[i]:
+                    self.remove_target(i)
+                    # self.remove_target(target, i)
+                    self._reached_targets[i] = True
+                    return 100
+                elif min_dis == 0 or dis < min_dis:
+                    min_dis = dis
+                    self._current_target_index = i
+                    self._distance_to_target = min_dis
+
+            self._last_position = copy.deepcopy(self._current_position)
+
+            reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
+            reward += ((self._prev_distance_to_target - self._distance_to_target) * 10) if not self.just_found else 0
+            self.just_found = False
+            return reward / 4
+
 
         # try:
         #
@@ -417,20 +446,20 @@ class PBDroneEnv(
 
             else:
                 # Reward for reaching a target
-                reward += 150 #* (self._discount ** (self._steps / 10))
+                reward += 25 #* (self._discount ** (self._steps / 10))
                 self.just_found = True
 
         else:
             # print("DISTANCE TO TARGET", self._distance_to_target)
 
             reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
-            reward += ((self._prev_distance_to_target - self._distance_to_target) * 10) if not self.just_found else 0
+            reward += ((self._prev_distance_to_target - self._distance_to_target) * 20) if not self.just_found else 0
             self.just_found = False
 
         self._prev_distance_to_target = self._distance_to_target
-        self._last_position = self._current_position
+        self._last_position = copy.deepcopy(self._current_position)
 
-        return reward / 4
+        return reward / 25
 
     def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
         """
@@ -451,6 +480,36 @@ class PBDroneEnv(
 
         return rp_t
 
+    def progress_reward(self):
+        """https://arxiv.org/pdf/2310.10943"""
+
+        reward = 0
+
+        dist_to_cent = np.linalg.norm(self._current_position - self._target_points[self._current_target_index])
+
+        if dist_to_cent <= self._threshold:
+            self._current_target_index += 1
+            reward += 3
+
+        if self._current_target_index == len(self._target_points):
+            print("asdasdasdasdasd")
+            self._is_done = True
+            return 10
+
+        dist_to_prev = np.linalg.norm(self._current_position - self._last_position)
+
+        # Penalty term
+        b = 0.01
+        penalty_term = b * np.linalg.norm(self.pos[10:])
+
+        # Collision penalty
+        collision_penalty = -10.0 if self._has_collision_occurred() else 0.0
+
+        reward += dist_to_prev - dist_to_cent - penalty_term + collision_penalty
+
+
+        return reward
+
     def reset(self,
               seed: int = None,
               options: dict = None):
@@ -461,21 +520,29 @@ class PBDroneEnv(
         self._is_done = False
         self._current_target_index = 0
         self._steps = 0
+        self._target_points = self._or_target_points
 
-        # if self.random_spawn and self.total_steps < 100_000:
-        #     from_p, to_p = self._target_points[np.random.choice(len(self._target_points), size=2, replace=False)]
-        #     self.INIT_XYZS[0] = self.init_position_generator.generate_random_point_around_line(from_p, to_p)
-        # else:
-        #     # self.INIT_XYZS[0] = self.INIT_XYZS[0]
-        #     self.INIT_XYZS[0] = (0,0, self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1)
+        if self.random_spawn and self.total_steps < 100_000:
+            from_p, to_p = self._target_points[np.random.choice(len(self._target_points), size=2, replace=False)]
+            self.INIT_XYZS[0] = self.init_position_generator.generate_random_point_around_line(from_p, to_p)
 
-        self._current_position = ret[0][0:3]
+            self._current_position = self.INIT_XYZS[0]
+            self._current_target_index = 0
+        else:
+            # self.INIT_XYZS[0] = self.INIT_XYZS[0]
+            # self.INIT_XYZS[0] = (0,0, self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1)
+            self._current_position = ret[0][0:3]
+
+        # self._current_position = ret[0][0:3]
 
         # self._steps_since_last_target = 0
         self._distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
         self._prev_distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
-        self._last_action = np.zeros(4, dtype=np.float32)
-        # self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
+        # self._last_action = np.zeros(4, dtype=np.float32)
+        self._last_position = copy.deepcopy(self._current_position)
+        self.just_found = False
+
+        self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
 
         if self.GUI:
             self.show_targets()
@@ -499,10 +566,9 @@ class PBDroneEnv(
             True if the drone has collided, False otherwise.
 
         """
-        # (state[2] < self.COLLISION_H * 3 and self._steps > 100) or
-        # COLLISION_H = 0.15  # Height at which the drone is considered to have collided with the ground.
-        # Three times the collision height because the drone tend act like a "wheel"
-        # and circle around a lower target point.
+        # If initialized on the ground: (state[2] < self.COLLISION_H * 3 and self._steps > 100) or
+        # COLLISION_H = 0.15 # Height at which the drone is considered to have collided with the ground.
+        # Three times the collision height because the drone tends to act like a "wheel"
         # Now done with the contact detection by the PyBullet environment
 
         state = self.pos[0]
@@ -533,10 +599,8 @@ class PBDroneEnv(
         # Get the source code of the object's class
         source_code = inspect.getsource(self.__class__)
 
-        # Construct the file path for saving the source code
         file_path = os.path.join(save_folder, "model.py")
 
-        # Save the source code as text
         with open(file_path, "w") as file:
             file.write(source_code)
         print(f"Object source code saved to: {file_path}")
@@ -549,10 +613,12 @@ class PBDroneEnv(
         return distance
 
     def show_targets(self):
-
+        """Shows the targets in PyBullet visualization."""
         self.target_visual = []
+        # for _ in range(len(self.target_visual)):
+        #     p.removeBody()
 
-        for target in self._target_points:
+        for target, reached in zip(self._target_points, self._reached_targets):
             self.target_visual.append(
                 p.loadURDF(
                     fileName="\Sol/resources/target.urdf",
@@ -571,11 +637,16 @@ class PBDroneEnv(
                 physicsClientId=self.CLIENT
             )
 
-    def remove_target(self):
-        # delete the reached target and recolour the others
+
+    def remove_target(self, index=None):
+        """Removes the target from PyBullet visualization."""
         if len(self.target_visual) > 0:
-            p.removeBody(self.target_visual[0])
-            self.target_visual = self.target_visual[1:]
+            p.removeBody(self.target_visual[0]) if index is None else p.removeBody(self.target_visual[index])
+            # if target is None:
+            if not self.random_spawn:
+                self.target_visual.pop(0)
+            elif self.total_steps > 100_000 and index is not None:
+                self.target_visual.pop(index)
 
     # class NormalizeReward:
     #     r"""This wrapper will normalize immediate rewards s.t. their exponential moving average has a fixed variance.

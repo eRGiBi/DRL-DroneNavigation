@@ -11,14 +11,23 @@ from torch.utils.tensorboard import SummaryWriter
 class FoundTargetsCallback(BaseCallback):
     """
     Callback for plotting the number of found targets during training.
-
     """
-    def __init__(self, log_dir, verbose=1):
+    def __init__(self, log_dir, log_freq, verbose=1):
         super(FoundTargetsCallback, self).__init__(verbose)
         self.log_dir = log_dir
-        self.episode_rewards = []
+        self._log_freq = log_freq
+
+        output_formats = self.logger.output_formats
+        self.tb_formatter = next(
+            formatter for formatter in output_formats if isinstance(formatter, TensorBoardOutputFormat))
 
     def _on_step(self) -> bool:
+
+        if self.n_calls % self._log_freq == 0:
+            found_targets = self.locals["infos"][0]["found_targets"]
+            self.tb_formatter.writer.add_scalar("found_targets", found_targets)
+
+
         return True
 
     def _on_episode_end(self) -> None:
@@ -51,6 +60,8 @@ class HParamCallback(BaseCallback):
         for key, value in self.hparams.items():
             self.writer.add_text("hyperparameters", f"{key}: {value}")
 
+        self.writer.flush()
+
     def _on_step(self) -> bool:
         return True
 
@@ -61,29 +72,6 @@ class HParamCallback(BaseCallback):
         """
         if self.writer is not None:
             self.writer.close()
-
-
-class SummaryWriterCallback(BaseCallback):
-
-    def _on_training_start(self):
-        self._log_freq = 1000  # log every 1000 calls
-
-        output_formats = self.logger.output_formats
-        # Save reference to tensorboard formatter object
-        # note: the failure case (not formatter found) is not handled here, should be done with try/except.
-        self.tb_formatter = next(formatter for formatter in output_formats if isinstance(formatter, TensorBoardOutputFormat))
-
-    def _on_step(self) -> bool:
-        if self.n_calls % self._log_freq == 0:
-            # You can have access to info from the env using self.locals.
-            # for instance, when using one env (index 0 of locals["infos"]):
-            # lap_count = self.locals["infos"][0]["lap_count"]
-            # self.tb_formatter.writer.add_scalar("train/lap_count", lap_count, self.num_timesteps)
-
-            self.tb_formatter.writer.add_text("direct_access", "this is a value", self.num_timesteps)
-            self.tb_formatter.writer.flush()
-
-        return True
 
 class SummaryWriterCallback2(BaseCallback):
     """

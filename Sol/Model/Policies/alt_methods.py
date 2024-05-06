@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 from sklearn.svm import SVC
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+from sklearn.model_selection import GridSearchCV, cross_val_score, cross_val_predict
 
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -20,12 +20,18 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier
 
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
+
 
 def read_data():
 
     rollouts = pd.DataFrame()
 
-    for file in os.listdir("Sol/rollouts"):
+    for file in os.listdir(".\Sol/rollouts"):
         print(file)
         # if file.endswith(".csv"):
         #     rollouts = pd.concat([rollouts, pd.read_csv(f"Sol/rollouts/{file}")], ignore_index=True)
@@ -79,6 +85,15 @@ def read_data():
 
 
 # SVM
+
+def svm(x_train, y_train, x_test, y_test):
+
+    svm_classifier = SVC(kernel='poly')
+
+    svm_classifier.fit(x_train, y_train)
+
+    return accuracy_score(y_test, svm_classifier.predict(x_test))
+
 def svm_param_search(X_train, y_train, X_test, y_test):
 
     clf = SVC()
@@ -110,13 +125,6 @@ def svm_param_search(X_train, y_train, X_test, y_test):
 
     return acc
 
-def svm(x_train, y_train, x_test, y_test):
-
-    svm_classifier = SVC(kernel='poly')
-
-    svm_classifier.fit(x_train, y_train)
-
-    return accuracy_score(y_test, svm_classifier.predict(x_test))
 
 def naive_bayes(x_train, y_train, x_test, y_test):
 
@@ -146,15 +154,6 @@ def naive_bayes_search(x_train, y_train, x_test, y_test):
 
     return accuracy_score(y_test, y_pred)
 
-def decision_tree(x_train, y_train, x_test, y_test):
-
-    decision_tree_classifier = DecisionTreeClassifier()
-
-    decision_tree_classifier.fit(x_train, y_train)
-
-    y_pred = decision_tree_classifier.predict(x_test)
-
-    return accuracy_score(y_test, y_pred)
 
 def radiusnr (x_train, y_train, x_test, y_test):
 
@@ -166,12 +165,149 @@ def radiusnr (x_train, y_train, x_test, y_test):
 
     return accuracy_score(y_test, y_pred)
 
+def linear_regression(x_train, y_train, x_test, y_test):
+
+    X_train_norm = x_train
+    X_test_norm = x_test
+
+    # print(f'Before normalizing:\nMax value: {max(x_train)}\nMin value: {min(x_train)}')
+    # scaler = MinMaxScaler()
+    # scaler.fit(x_train)
+    # X_train_norm = scaler.transform(x_train)
+    # X_test_norm = scaler.transform(x_test)
+    # print(f'After normalizing:\nMax value: {max(X_train_norm)}\nMin value: {min(X_train_norm)}')
+
+    regressor = LinearRegression()
+    regressor.fit(X_train_norm, y_train)
+
+    y_pred = regressor.predict(X_test_norm)
+
+    print("Linear Regression Results: -------------------")
+    print(f'Predicted values: {y_pred[:5]}')
+    print(f'Actual values: {y_test[:5]}')
+
+    R_squared = r2_score(y_test, y_pred)
+    MSE = mean_squared_error(y_test, y_pred)
+    RMSE = mean_squared_error(y_test, y_pred, squared=False)
+    MAE = mean_absolute_error(y_test, y_pred)
+    MAPE = mean_absolute_percentage_error(y_test, y_pred)
+
+    print(f'R-squared: {round(R_squared * 100, 2)}%')
+    print(f'Mean Absolute Error (MAE): {round(MAE, 2)}')
+    print(f'Mean Squared Error (MSE): {round(MSE, 2)}')
+    print(f'Root Mean Squared Error (RMSE): {round(RMSE, 2)}')
+    print(f'Mean Absolute Percentage Error (MAPE): {round(MAPE, 2)}%')
+    print()
+
+def ridge_reg(x_train, x_test, y_train, y_test):
+
+    scaler = StandardScaler()
+    x_train_scaled = scaler.fit_transform(x_train)
+    x_test_scaled = scaler.transform(x_test)
+
+    alphas = [0.1, 1.0, 10.0]
+
+    print("Ridge Regression Results: -------------------")
+
+    for alpha in alphas:
+        ridge = Ridge(alpha=alpha)
+
+        scores = cross_val_score(ridge, x_train_scaled, y_train, cv=5, scoring='neg_mean_squared_error')
+
+        mean_score = np.mean(scores)
+
+        print(f"Alpha: {alpha}, Mean Squared Error: {mean_score}")
+
+        ridge.fit(x_train_scaled, y_train)
+
+        y_pred = ridge.predict(x_test_scaled)
+
+        R_squared = r2_score(y_test, y_pred)
+        MSE = mean_squared_error(y_test, y_pred)
+        RMSE = mean_squared_error(y_test, y_pred, squared=False)
+        MAE = mean_absolute_error(y_test, y_pred)
+        MAPE = np.mean(np.abs((y_test - y_pred) / y_test)) * 100  # Mean Absolute Percentage Error
+
+        print(f"For Alpha: {alpha}")
+        print(f'R-squared: {round(R_squared * 100, 2)}%')
+        print(f'Mean Absolute Error (MAE): {round(MAE, 2)}')
+        print(f'Mean Squared Error (MSE): {round(MSE, 2)}')
+        print(f'Root Mean Squared Error (RMSE): {round(RMSE, 2)}')
+        print(f'Mean Absolute Percentage Error (MAPE): {round(MAPE, 2)}%')
+        print()
+
+def lasso_reg(x_train, x_test, y_train, y_test):
+    scaler = StandardScaler()
+    x_train_scaled = scaler.fit_transform(x_train)
+    x_test_scaled = scaler.transform(x_test)
+
+    # Define different alpha values to try
+    alphas = [0.1, 1.0, 10.0, ]
+
+    print("Lasso Regression Results: -------------------")
+
+    for alpha in alphas:
+        # Initialize Lasso regression model
+        lasso = Lasso(alpha=alpha)
+
+        # Fit the model
+        lasso.fit(x_train_scaled, y_train)
+
+        # Make predictions on the test set
+        y_pred = lasso.predict(x_test_scaled)
+
+        # Calculate evaluation metrics
+        R_squared = r2_score(y_test, y_pred)
+        MSE = mean_squared_error(y_test, y_pred)
+        RMSE = mean_squared_error(y_test, y_pred, squared=False)
+        MAE = mean_absolute_error(y_test, y_pred)
+        MAPE = np.mean(np.abs((y_test - y_pred) / y_test)) * 100  # Mean Absolute Percentage Error
+
+        # Print evaluation metrics with their full names
+        print(f"For Alpha: {alpha}")
+        print(f'R-squared: {round(R_squared * 100, 2)}%')
+        print(f'Mean Absolute Error (MAE): {round(MAE, 2)}')
+        print(f'Mean Squared Error (MSE): {round(MSE, 2)}')
+        print(f'Root Mean Squared Error (RMSE): {round(RMSE, 2)}')
+        print(f'Mean Absolute Percentage Error (MAPE): {round(MAPE, 2)}%')
+        print()
+
+def poly_reg(x_train, x_test, y_train, y_test):
+
+    degrees = [1,  3, 4, ]
+
+    print("Lasso Regression Results: -------------------")
+
+    for degree in degrees:
+        poly_features = PolynomialFeatures(degree=degree)
+
+        poly_regression = make_pipeline(poly_features, LinearRegression())
+
+        y_pred_cv = cross_val_predict(poly_regression, x_train, y_train, cv=5)
+
+        R_squared = r2_score(y_train, y_pred_cv)
+        MSE = mean_squared_error(y_train, y_pred_cv)
+        RMSE = mean_squared_error(y_train, y_pred_cv, squared=False)
+        MAE = mean_absolute_error(y_train, y_pred_cv)
+        MAPE = np.mean(np.abs((y_train - y_pred_cv) / y_train)) * 100  # Mean Absolute Percentage Error
+
+        print(f'For Degree of Polynomial: {degree}')
+        print(f'R-squared: {round(R_squared * 100, 2)}%')
+        print(f'Mean Absolute Error (MAE): {round(MAE, 2)}')
+        print(f'Mean Squared Error (MSE): {round(MSE, 2)}')
+        print(f'Root Mean Squared Error (RMSE): {round(RMSE, 2)}')
+        print(f'Mean Absolute Percentage Error (MAPE): {round(MAPE, 2)}%')
+        print()
+
 if __name__ == "__main__":
 
     x_train, x_test, y_train, y_test = read_data()
+    linear_regression(x_train, y_train, x_test, y_test)
+    ridge_reg(x_train, x_test, y_train, y_test)
+    lasso_reg(x_train, x_test, y_train, y_test)
+    poly_reg(x_train, x_test, y_train, y_test)
 
-
-
+    #
     # svm_acc = svm(x_train, y_train, x_test, y_test)
     #
     # print(f"Accuracy: {svm_acc}")
@@ -186,12 +322,7 @@ if __name__ == "__main__":
     # print(f"Naive Bayes accuracy: {naive_bayes_acc}")
     #
 
-    decision_tree_acc = decision_tree(x_train, y_train, x_test, y_test)
-
-    print(f"Decision Tree accuracy: {decision_tree_acc}")
-
-
-
+    radiusnr_acc = radiusnr(x_train, y_train, x_test, y_test)
     print(f"Radius Neighbors accuracy: {radiusnr_acc}")
 
 
