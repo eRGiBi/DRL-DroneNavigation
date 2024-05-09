@@ -79,12 +79,10 @@ it is necessary to run the simulation with OpenGL 2, set in the modified BaseAvi
     p.connect(p.GUI, options="--opengl2")
 ```
 Further: only OpenGL3 works in turn in Windows.
-
 Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
 https://askubuntu.com/questions/1352158/libgl-error-failed-to-load-drivers-iris-and-swrast-in-ubuntu-20-04
 
+StableBaselines3 and other packages that have '_' in them might not be installed or recognized correctly.
+
+
 ### 7. To Do:
-
-
-Reward function formulation
-Further hyperparameter tuning
