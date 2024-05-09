@@ -455,20 +455,27 @@ class PBDroneEnv(
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
                 reward += 1000  # * self._discount ** self._steps/10
+                # reward += self.smoothness_reward(0.9, 0.9)
                 self._is_done = True
 
             else:
                 # Reward for reaching a target
-                reward += 25 #* (self._discount ** (self._steps / 10))
+                reward += 75 #* (self._discount ** (self._steps / 10))
                 reward += self.orientation_reward(self._target_points[self._current_target_index]) * 5
                 self.just_found = True
 
         else:
-            # print("DISTANCE TO TARGET", self._distance_to_target)
-
             reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
-            reward += ((self._prev_distance_to_target - self._distance_to_target) * 20) if not self.just_found else 0
-            reward += self.orientation_reward(self._target_points[self._current_target_index])
+            reward += ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0
+            reward += self.orientation_reward(self._target_points[self._current_target_index]) * 3
+            reward += self.smoothness_reward()
+
+            # print("smooothnes", self.smoothness_reward())
+            # print("ori", self.orientation_reward(self._target_points[self._current_target_index])* 3)
+            # print("prev dis", ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0)
+            # print(self._prev_distance_to_target , self._distance_to_target)
+            # print("exp", (np.exp(-2 * abs(self._distance_to_target))) * 3)
+
             self.just_found = False
 
         self._prev_distance_to_target = copy.deepcopy(self._distance_to_target)
@@ -632,7 +639,7 @@ class PBDroneEnv(
                 state[1] < self._y_low or
                 (len(p.getContactPoints()) > 0) or
                 state[2] > self._z_high or
-                self.is_out_of_bounds(state)):
+                (self.is_out_of_bounds(state)) and False):
 
             # print(p.getOverlappingObjects())
 
@@ -656,7 +663,10 @@ class PBDroneEnv(
         center_to_drone_vec[2] = 0
 
         # Normalize and scale to circle radius
-        norm_vec = center_to_drone_vec / np.linalg.norm(center_to_drone_vec) * self.circle_radius
+        try:
+            norm_vec = center_to_drone_vec / np.linalg.norm(center_to_drone_vec) * self.circle_radius
+        except FloatingPointError:
+            norm_vec = np.zeros_like(center_to_drone_vec)
         closest_point = center_vec + norm_vec
 
         distance_from_closest_point = np.linalg.norm(np.array(drone_position) - closest_point)

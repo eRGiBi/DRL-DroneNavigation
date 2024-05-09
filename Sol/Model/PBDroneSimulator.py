@@ -107,7 +107,7 @@ class PBDroneSimulator:
                 # physics=Physics.PYB,
                 gui=gui,
                 initial_xyzs=initial_xyzs,
-                initial_rpys=np.array([list(self.face_target())]),
+                # initial_rpys=np.array([list(self.face_target())]),
                 save_folder=save_path,
                 aviary_dim=aviary_dim,
                 random_spawn=False,
@@ -162,12 +162,12 @@ class PBDroneSimulator:
                             gamma=0.99,
                             # ent_coef=0.1,
                             vf_coef=0.5,
-                            gae_lambda=0.7,
+                            gae_lambda=0.9,
                             # use_sde=True,
                             # sde_sample_freq=4,
                             normalize_advantage=True,
                             clip_range=0.1,
-                            learning_rate=0.003,
+                            learning_rate=2.5e-4,
                             tensorboard_log=(tensorboard_path + "/ppo_tensorboard/") if self.args.savemodel else None,
                             device="auto",
                             policy_kwargs=onpolicy_kwargs
@@ -249,7 +249,7 @@ class PBDroneSimulator:
         # plot_3d_targets(self.targets)
         self.targets = Waypoints.up()
 
-        drone_environment = self.make_env(gui=True, initial_xyzs=np.array([[0, 0, 0.2]]),
+        drone_environment = self.make_env(gui=True, initial_xyzs=np.array([[0, 0, 0.1]]),
                                           aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
         print(drone_environment.G)
 
@@ -438,6 +438,8 @@ class PBDroneSimulator:
                                      clip_obs=1)
             eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
                                     clip_obs=1)
+
+        # TODO: MaxAndSkipEnv 
 
         model = self.setup_agent(tensorboard_path, train_env)
 
