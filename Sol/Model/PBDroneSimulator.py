@@ -13,7 +13,6 @@ from stable_baselines3.common.base_class import BaseAlgorithm
 sys.path.append("../")
 sys.path.append("./")
 
-
 import numpy as np
 import torch as th
 import wandb
@@ -86,8 +85,9 @@ class PBDroneSimulator:
 
         self.num_envs = args.num_envs
         self.targets = dilate_targets(targets, target_factor)
+        self.targets.pop(0)
 
-        self.initial_xyzs = np.array([[0, 0, 0.2]])
+        self.initial_xyzs = np.array([[1, 0, 1]])
 
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
@@ -107,6 +107,7 @@ class PBDroneSimulator:
                 # physics=Physics.PYB,
                 gui=gui,
                 initial_xyzs=initial_xyzs,
+                initial_rpys=np.array([list(self.face_target())]),
                 save_folder=save_path,
                 aviary_dim=aviary_dim,
                 random_spawn=False,
@@ -146,7 +147,7 @@ class PBDroneSimulator:
 
             # Off-policy algorithms #################################
             offpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
-                                    net_arch=[256, 256,])
+                                    net_arch=[256, 256, ])
 
             #     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
             #                             dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
@@ -172,7 +173,7 @@ class PBDroneSimulator:
                             policy_kwargs=onpolicy_kwargs
                             )
                 print_ppo_conf(model)
-                print(model.get_parameters())
+                # print(model.get_parameters())
 
 
             # tensorboard --logdir ./Sol/logs/
@@ -212,7 +213,7 @@ class PBDroneSimulator:
                              tensorboard_log=tensorboard_path + "/ddpg_tensorboard/",
                              device="auto",
                              policy_kwargs=dict(net_arch=[64, 64])
-                            )
+                             )
 
         elif self.args.run_type == "cont":
             print("Train the model from save file. -----------------------------------")
@@ -248,7 +249,7 @@ class PBDroneSimulator:
         # plot_3d_targets(self.targets)
         self.targets = Waypoints.up()
 
-        drone_environment = self.make_env(gui=True,   initial_xyzs=np.array([[0, 0, 0.2]]),
+        drone_environment = self.make_env(gui=True, initial_xyzs=np.array([[0, 0, 0.2]]),
                                           aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
         print(drone_environment.G)
 
@@ -294,7 +295,6 @@ class PBDroneSimulator:
 
         saved_filename = "Sol/model_chkpts/save-05.05.2024_20.07.35/best_model.zip"
 
-
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
             # print(model.get_parameters())
@@ -338,7 +338,7 @@ class PBDroneSimulator:
 
                     obs, reward, terminated, truncated, info = drone_environment.step(action)
 
-                    print("Step:", i, "of deterministic:", b ,"------------------", j)
+                    print("Step:", i, "of deterministic:", b, "------------------", j)
                     i += 1
                     print("Obs:", obs, "\nAction", action, "\nReward:", reward, "\nTerminated:", terminated,
                           "\nTruncated:", truncated)
@@ -404,25 +404,29 @@ class PBDroneSimulator:
 
         chckpt_path = os.path.join("./Sol/model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
 
-        if not os.path.exists(chckpt_path):
+        if not os.path.exists(chckpt_path) and self.args.savemodel:
             os.makedirs(chckpt_path + '/')
 
-        # train_env = self.make_env(multi=False, gui=False)
+        train_env = self.make_env(multi=False, gui=False)
+        print(train_env.action_space)
         #    check_env(train_env, warn=True, skip_render_check=True)
 
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
                                                  rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
-                                                 # initial_xyzs=self.initial_xyzs,
-                                                 ) for i in range(self.args.num_envs)])
+                                                 initial_xyzs=self.initial_xyzs,
+                                                 ) for i in range(self.args.num_envs)
+                                   ])
 
         # eval_env = make_env(multi=False, gui=False, rank=0)
 
         eval_env = SubprocVecEnv([self.make_env(multi=True,
                                                 save_path=chckpt_path if self.args.savemodel else None,
                                                 gui=self.args.gui,
-                                                aviary_dim=np.array([-2, -2, 0, 2, 2, 2])), ])
+                                                initial_xyzs=self.initial_xyzs,
+                                                aviary_dim=np.array([-2, -2, 0, 2, 2, 2])),
+                                  ])
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
 
         if self.args.vec_check_nan:
@@ -435,7 +439,6 @@ class PBDroneSimulator:
             eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
                                     clip_obs=1)
 
-
         model = self.setup_agent(tensorboard_path, train_env)
 
         # model.set_random_seed(1)
@@ -446,9 +449,9 @@ class PBDroneSimulator:
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
         # if self.args.savemodel:
-            # callbacks.append(Callbacks.FoundTargetsCallback(log_dir=chckpt_path + '/'))
-            # callbacks.append(CheckpointCallback(save_freq=1000, save_path=chckpt_path + '/',
-            #                  save_replay_buffer=True if (self.args.agent == "SAC" and True) else False, verbose=1))
+        # callbacks.append(Callbacks.FoundTargetsCallback(log_dir=chckpt_path + '/'))
+        # callbacks.append(CheckpointCallback(save_freq=1000, save_path=chckpt_path + '/',
+        #                  save_replay_buffer=True if (self.args.agent == "SAC" and True) else False, verbose=1))
 
         if self.args.wandb:
             callbacks.append(
@@ -468,11 +471,12 @@ class PBDroneSimulator:
         )
         # AimCallback(repo='.Aim/', experiment_name='sb3_test')
 
-        trained_model = model.learn(total_timesteps=self.args.total_timesteps,
-                    callback=callbacks,
-                    log_interval=1000,
-                    tb_log_name=self.args.agent + "_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
-                    )
+        trained_model = model.learn(
+            total_timesteps=self.args.total_timesteps,
+            callback=callbacks,
+            log_interval=1000,
+            tb_log_name=self.args.agent + "_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
+        )
 
         if self.args.savemodel:
             model.save(os.curdir + chckpt_path + '/success_model.zip')
@@ -556,6 +560,17 @@ class PBDroneSimulator:
         end = time.perf_counter()
         print(end - start)
 
+    def face_target(self):
+        target_vector = np.array(self.targets[0]) - np.array(self.initial_xyzs[0])
+        target_vector_xy = np.array([target_vector[0], target_vector[1]])  # Projection on the XY plane
+        yaw = np.arctan2(target_vector[1], target_vector[0])  # Angle in the XY plane
+
+        # Calculate the distance and pitch
+        distance = np.linalg.norm(target_vector)
+        print(target_vector, distance)
+        pitch = np.arcsin(target_vector[2] / distance)  # Angle with respect to the horizontal plane
+
+        return 0, pitch, yaw
 
 #TODO
 def linear_schedule(initial_value: float) -> Callable[[float], float]:

@@ -88,8 +88,10 @@ if __name__ == "__main__":
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
 
     # targets = Waypoints.up_circle()
-    targets = Waypoints.up_sharp_back_turn()
+    # targets = Waypoints.up_sharp_back_turn()
     # targets = Waypoints.half_up_forward()
+
+    targets = Waypoints.circle(radius=1, num_points=6, height=1, )
 
     sim = PBDroneSimulator(args, targets, target_factor=0)
 

@@ -544,7 +544,7 @@ class BaseAviary(gym.Env):
     ################################################################################
 
     def _updateAndStoreKinematicInformation(self):
-        """Updates and stores the drones kinemaatic information.
+        """Updates and stores the drones kinematic information.
 
         This method is meant to limit the number of calls to PyBullet in each step
         and improve performance (at the expense of memory).

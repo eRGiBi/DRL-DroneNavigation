@@ -67,6 +67,41 @@ def up_sharp_back_turn():
         np.array([1.5, 1., 1.2])
     ]
 
+def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
+    """
+        Generate points on a circle in 3D space.
+
+        Parameters:
+        - radius (float): Radius of the circle.
+        - num_points (int): Number of points to generate.
+        - center (tuple): 3D center of the circle (x, y, z).
+        - plane (str): The plane in which the circle lies, options are "XY", "XZ", "YZ".
+
+        Returns:
+        - np.array: Array of shape (num_points, 3) containing 3D coordinates.
+        """
+
+    angles = np.linspace(0, 2 * np.pi, num_points + 1, endpoint=True)
+    circle_points = np.zeros((num_points + 1, 3))
+
+
+    if plane == "XY":
+        circle_points[:, 0] = center[0] + radius * np.cos(angles)  # X coordinate
+        circle_points[:, 1] = center[1] + radius * np.sin(angles)  # Y coordinate
+        circle_points[:, 2] = center[2] + height
+    elif plane == "XZ":
+        circle_points[:, 0] = center[0] + radius * np.cos(angles)  # X coordinate
+        circle_points[:, 2] = center[2] + radius * np.sin(angles) + height  # Z coordinate
+        circle_points[:, 1] = center[1]  # Y coordinate is constant
+    elif plane == "YZ":
+        circle_points[:, 1] = center[1] + radius * np.cos(angles)  # Y coordinate
+        circle_points[:, 2] = center[2] + radius * np.sin(angles) + height  # Z coordinate
+        circle_points[:, 0] = center[0]  # X coordinate is constant
+    else:
+        raise ValueError("Invalid plane specified. Choose 'XY', 'XZ', or 'YZ'.")
+
+    return circle_points
+
 
 def generate_random_targets(num_targets: int) -> np.ndarray:
     """Generates random targets for the drone to navigate to.
@@ -117,4 +152,17 @@ if __name__ == '__main__':
 
     targets = generate_random_targets(10)
     Plotter.plot_3d_targets(targets)
+
+    c = circle(radius=1, num_points=6, height=1, )
+
+    print(c)
+    Plotter.plot_3d_targets(c)
+
+    point = (0, 0, 2)  # Adjust coordinates to test
+    radius = 1
+    height = 3
+    center = (0, 0, 0)
+    plane = "XY"
+
+    # print(is_point_inside_cylinder(point, radius, height, center, plane))
 
