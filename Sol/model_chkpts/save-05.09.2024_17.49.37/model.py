@@ -1,29 +1,3 @@
-import csv
-import gzip
-import os
-import math
-import copy
-
-import inspect
-import threading
-from datetime import datetime
-
-import gym
-import pandas as pd
-import torch
-from gymnasium import spaces
-import numpy as np
-import pybullet as p
-from stable_baselines3.common.running_mean_std import RunningMeanStd
-
-from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
-from Sol.PyBullet.GymPybulletDronesMain import *
-from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
-from Sol.PyBullet.FlyThruGateAviary import FlyThruGateAviary
-from gymnasium.spaces.space import Space
-from Sol.Utilities.position_generator import PositionGenerator
-
-
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,

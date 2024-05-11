@@ -65,6 +65,12 @@ On root installation for activating the conda environment:
 #TODO:
 Specific dir for the conda environment
 
+### 5. 
+
+First, the simulation_controller parses the args, initializes the targets (Waypoints), 
+then starts the choosen funcion of the PBDroneSimulator.
+
+
 ### 4. Results
 
 

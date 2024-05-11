@@ -1,5 +1,4 @@
 
-
 best_ppo:
   targets:  Waypoints.up_sharp_back_turn()
   n_envs: 12
@@ -18,3 +17,26 @@ best_ppo:
     net_arch:
       vf: [ 256, 256 ]
       pi: [ 256, 256 ]
+
+
+circle_agent:
+  type: PPO
+  model:
+    policy: ActorCriticPolicy
+    n_envs: 12
+    n_steps: 4096
+    batch_size: 512
+    n_epochs: 20
+    gamma: 0.99
+    vf_coef: 0.5
+    gae_lambda: 0.9
+    normalize_advantage: true
+    clip_range: 0.1
+    learning_rate: 2.5e-4
+    device: auto
+  policy_kwargs:
+    activation_fn: th.nn.Tanh
+    share_features_extractor: true
+    net_arch:
+      vf: [256, 256]
+      pi: [256, 256]

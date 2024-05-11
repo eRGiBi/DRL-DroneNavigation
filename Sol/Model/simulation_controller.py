@@ -24,6 +24,7 @@ from gymnasium.envs.registration import register
 
 from torch.utils.tensorboard import SummaryWriter
 
+
 # from tf_agents.environments import py_environment
 
 
@@ -108,7 +109,6 @@ if __name__ == "__main__":
         sim.test_learning()
 
 
-
 def manual_pb_env():
     # Connect to the PyBullet physics server
     # physicsClient = p.connect(p.GUI)
@@ -131,4 +131,3 @@ def manual_pb_env():
     # print('time_step_spec.step_type:', tf_env.time_step_spec().step_type)
     # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
     # print('time_step_spec.reward:', tf_env.time_step_spec().reward)
-
