@@ -6,52 +6,83 @@ from packaging import version
 
 import pandas as pd
 from matplotlib import pyplot as plt
-import seaborn as sns
+# import seaborn as sns
 from scipy import stats
 import tensorboard as tb
-
 import tensorflow as tf
+
 from tensorflow.python.summary.summary_iterator import summary_iterator
 
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-from tbparse import SummaryReader
-
+# from tbparse import SummaryReader
 
 import time
+class TBM:
 
-def measure_time(f):
+    def measure_time(f):
 
-  def timed(*args, **kw):
-    ts = time.time()
-    result = f(*args, **kw)
-    te = time.time()
+        def timed(*args, **kw):
+            ts = time.time()
+            result = f(*args, **kw)
+            te = time.time()
 
-    # print '%r (%r, %r) %2.2f sec' % \
-    #       (f.__name__, args, kw, te-ts)
-    return result
+            # print '%r (%r, %r) %2.2f sec' % \
+            #       (f.__name__, args, kw, te-ts)
+            return result
 
-  return timed
+        return timed
+
+    def concatenate_tf_events(self, root_dir, output_file):
+
+        writer = tf.summary.create_file_writer(output_file)
+
+        event_count = 0  # Initialize a counter for events
+
+        # Walk through the directory tree
+        for subdir, dirs, files in os.walk(root_dir):
+            for file in files:
+                if file.startswith("events.out.tfevents"):
+                    path = os.path.join(subdir, file.replace('\\', '/'))  # Ensure consistent path formatting
+                    print(f"Processing file: {path}")
+                    raw_dataset = tf.data.TFRecordDataset(path)
+                    for raw_record in raw_dataset:
+                        event = tf.compat.v1.Event.FromString(raw_record.numpy())
+                        with writer.as_default():
+                            tf.summary.experimental.write_raw_pb(event.SerializeToString(), step=0)
+                        event_count += 1
+
+        writer.close()
+        print(f"Total events written: {event_count}")
+
+
+if __name__ == '__main__':
+    major_ver, minor_ver, _ = version.parse(tb.__version__).release
+    print("TensorBoard version: ", tb.__version__)
+
+    experiment_id = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
+    out = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/events.out.tfevents.concatenated"
+
+    tbm = TBM()
+    tbm.concatenate_tf_events(experiment_id, out)
 
 
 
-major_ver, minor_ver, _ = version.parse(tb.__version__).release
-assert major_ver >= 2 and minor_ver >= 3, \
-    "This notebook requires TensorBoard 2.3 or later."
-print("TensorBoard version: ", tb.__version__)
+    # experiment_id = "Sol/model_chkpts/save-05.05.2024_20.07.35/best_model.zip"
+    experiment_id = "Sol/model_chkpts/save-05.05.2024_20.07.35/"
+
+    tup = ["Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip", "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"]
 
 
-# experiment_id = "Sol/model_chkpts/save-05.05.2024_20.07.35/best_model.zip"
-experiment_id = "Sol/model_chkpts/save-05.05.2024_20.07.35/"
 
 
-log_dir = "<PATH_TO_EVENT_FILE_OR_DIRECTORY>"
-reader = SummaryReader(experiment_id)
-# reader = SummaryReader(experiment_id, extra_columns={'dir_name'})
-df = reader.tensors
-print(df)
-print(SummaryReader(experiment_id, pivot=True).scalars)
 
+    reader = SummaryReader(experiment_id)
+
+    # reader = SummaryReader(experiment_id, extra_columns={'dir_name'})
+    df = reader.tensors
+    print(df)
+    print(SummaryReader(experiment_id, pivot=True).scalars)
 
 tmpdirs = {}
 tmpdirs['tensorboardX'] = tempfile.TemporaryDirectory()
