@@ -1,6 +1,9 @@
 import random
 import sys
 
+import cProfile
+import pstats
+
 import time
 
 import yaml
@@ -100,13 +103,26 @@ if __name__ == "__main__":
         init_wandb(args)
 
     if args.run_type == "full" or args.run_type == "cont":
-        sim.run_full_training()
+        profiler = cProfile.Profile()
+        # profiler.enable()
+        try:
+            sim.run_full_training()
+            profiler.disable()
+        except KeyboardInterrupt:
+            profiler.disable()
+            stats = pstats.Stats(profiler).sort_stats('cumtime')
+            stats.print_stats()
+
+        stats = pstats.Stats(profiler).sort_stats('cumtime')
+        stats.print_stats()
+
     elif args.run_type == "test":
         sim.run_test()
     elif args.run_type == "saved":
         sim.test_saved()
     elif args.run_type == "learning":
         sim.test_learning()
+
 
 
 def manual_pb_env():

@@ -37,6 +37,8 @@ from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
 import Sol.Utilities.Waypoints as Waypoints
 
+from Sol.PyBullet.enums import ActionType
+
 from Sol.Utilities.Plotter import plot_learning_curve
 import Sol.Utilities.Callbacks as Callbacks
 from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
@@ -104,6 +106,7 @@ class PBDroneSimulator:
                 threshold=self.threshold,
                 discount=self.discount,
                 max_steps=self.env_steps,
+                act=ActionType.THRUST,
                 # physics=Physics.PYB,
                 gui=gui,
                 initial_xyzs=initial_xyzs,
@@ -218,6 +221,7 @@ class PBDroneSimulator:
         elif self.args.run_type == "cont":
             print("Train the model from save file. -----------------------------------")
             saved_filename = "Sol/model_chkpts/save-05.04.2024_17.38.21/best_model.zip"
+            saved_filename = "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"
 
             if self.args.agent == "SAC":
                 model = SAC.load(saved_filename, env=train_env)
@@ -291,9 +295,10 @@ class PBDroneSimulator:
         # plot_learning_curve(rewards_sum)
 
     def test_saved(self):
-        drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
+        drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
+                                          initial_xyzs=self.initial_xyzs)
 
-        saved_filename = "Sol/model_chkpts/save-05.05.2024_20.07.35/best_model.zip"
+        saved_filename = "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -328,7 +333,7 @@ class PBDroneSimulator:
         #             print(str(data['timesteps'][j])+","+str(data['results'][j][0]))
 
         for b in [True, False]:
-            for j in range(2):
+            for j in range(5):
                 i = 0
                 terminated = False
                 drone_environment.reset()
@@ -349,8 +354,8 @@ class PBDroneSimulator:
                     rewards_sum.append(sum(rewards))
 
                     if terminated:
-                        plot_learning_curve(rewards)
-                        plot_learning_curve(rewards_sum, title="Cumulative Rewards")
+                        # plot_learning_curve(rewards)
+                        # plot_learning_curve(rewards_sum, title="Cumulative Rewards")
                         print("Cumulative Rewards", sum(rewards))
 
                         drone_environment.reset()
@@ -484,7 +489,7 @@ class PBDroneSimulator:
             model.save(os.curdir + chckpt_path + '/success_model.zip')
 
             stats_path = os.path.join(chckpt_path, "vec_normalize.pkl")
-            eval_env.save(stats_path)
+            # eval_env.save(stats_path)
 
             wandb.finish()
 

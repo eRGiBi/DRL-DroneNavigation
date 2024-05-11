@@ -3,6 +3,7 @@ import gzip
 import os
 import math
 import copy
+from copy import deepcopy
 
 import inspect
 import threading
@@ -16,6 +17,7 @@ import numpy as np
 import pybullet as p
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
+from Sol.Model.env_utils import cmd2pwm, pwm2rpm
 from Sol.PyBullet.enums import DroneModel, Physics, ActionType, ObservationType
 from Sol.PyBullet.GymPybulletDronesMain import *
 from Sol.PyBullet.BaseSingleAgentAviary import BaseSingleAgentAviary
@@ -79,22 +81,30 @@ class PBDroneEnv(
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui,
                          # vision_attributes=vision_attributes,
-                         act=ActionType.RPM
+                         # act=ActionType.RPM
                          )
+
+        a_low = self.KF * (self.PWM2RPM_SCALE * self.MIN_PWM + self.PWM2RPM_CONST) ** 2
+        a_high = self.KF * (self.PWM2RPM_SCALE * self.MAX_PWM + self.PWM2RPM_CONST) ** 2
+        self.physical_action_bounds = (np.full(4, a_low, np.float32),
+                                       np.full(4, a_high, np.float32))
+
+        self.action_space = self._actionSpace()
+        self.observation_space = self._observationSpace()
 
         self._current_position = self.INIT_XYZS[0]
         self._last_position = self._current_position
 
         self.current_vel, self.current_ang_v = np.zeros(3), np.zeros(3)
         self.prev_vel = np.zeros(3)  # Previous linear velocities
-        self.prev_ang_v = np.zeros(3) # Previous angular velocities
+        self.prev_ang_v = np.zeros(3)  # Previous angular velocities
 
         # self.steps_since_last_target = 0
 
         self._last_action = np.zeros(4, dtype=np.float32)
 
         # Smallest possible value for the data type to avoid underflow exceptions
-        # self.eps = np.finfo(self._last_action.dtype).eps
+        self.eps = np.finfo(self._last_action.dtype).eps
         self.eps = np.finfo(self._last_action.dtype).tiny
 
         self._distance_to_target = np.linalg.norm(self._current_position - target_points[0])
@@ -125,7 +135,7 @@ class PBDroneEnv(
         # self._addObstacles()
 
         if self.random_spawn:
-            self.init_position_generator = PositionGenerator(self._aviary_dim, 0.25)
+            self.PositionGenerator = PositionGenerator(self._aviary_dim, 0.25)
 
     def step(self, action):
         """Applies the given action to the environment."""
@@ -149,32 +159,40 @@ class PBDroneEnv(
         #             f.write("\n")
         #     f.close()
 
-        # self.total_steps += 1
-
         if not terminated:
-            self._steps += 1
-            self._last_action = action
-            self._last_position = copy.deepcopy(self._current_position)
-            self._current_position = self.pos[0] #+ self.eps
-
-            self.prev_vel, self.prev_ang_v = copy.deepcopy(self.current_vel), copy.deepcopy(self.current_ang_v)
-
-            # Calculate the Euclidean distance between the drone and the next target
-            self._distance_to_target = abs(np.linalg.norm(
-                self._target_points[self._current_target_index] - self._current_position))
-
-            # distance_to_target = self.distance_between_points(self._computeObs()[:3],
-            #                                                   self._target_points[self._current_target_index])
-
-        if self.GUI and self._distance_to_target <= self._threshold and not (self.random_spawn and self.total_steps < 100_000):
-            self.remove_target()
+            self.update_state_post_step(action)
 
         return obs, reward, terminated, truncated, info
+
+    def update_state_post_step(self, action):
+        self._steps += 1
+        # self.total_steps += 1
+        self._last_action = action
+        self._last_position = copy.deepcopy(self._current_position)
+        self._current_position = self.pos[0]  # + self.eps
+
+        self.prev_vel, self.prev_ang_v = self.current_vel, self.current_ang_v
+
+        # Calculate the Euclidean distance between the drone and the next target
+        self._distance_to_target = abs(np.linalg.norm(
+            self._target_points[self._current_target_index] - self._current_position))
+
+        # distance_to_target = self.distance_between_points(self._computeObs()[:3],
+        #                                                   self._target_points[self._current_target_index])
+
+        if self.GUI and self._distance_to_target <= self._threshold and not (
+                self.random_spawn and self.total_steps < 100_000):
+            self.remove_target()
+
 
     def _actionSpace(self):
         """Returns the action space of the environment."""
 
         # return super()._actionSpace()
+
+        return spaces.Box(low=self.physical_action_bounds[0],
+                          high=self.physical_action_bounds[1],
+                          dtype=np.float32)
 
         return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
                           high=np.ones(4, dtype=np.float32),
@@ -182,6 +200,47 @@ class PBDroneEnv(
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
+
+        # self.x_threshold = 2
+        # self.y_threshold = 2
+        # self.z_threshold = 2
+        # self.phi_threshold_radians = 85 * math.pi / 180
+        # self.theta_threshold_radians = 85 * math.pi / 180
+        # self.psi_threshold_radians = 180 * math.pi / 180  # Do not bound yaw.
+        #
+        #
+        # # obs/state = {x, x_dot, y, y_dot, z, z_dot, phi, theta, psi, p_body, q_body, r_body}.
+        # low = np.array([
+        #     -self.x_threshold, -np.finfo(np.float32).max,
+        #     -self.y_threshold, -np.finfo(np.float32).max,
+        #     self.GROUND_PLANE_Z, -np.finfo(np.float32).max,
+        #     -self.phi_threshold_radians, -self.theta_threshold_radians, -self.psi_threshold_radians,
+        #     -np.finfo(np.float32).max, -np.finfo(np.float32).max, -np.finfo(np.float32).max
+        # ])
+        # high = np.array([
+        #     self.x_threshold, np.finfo(np.float32).max,
+        #     self.y_threshold, np.finfo(np.float32).max,
+        #     self.z_threshold, np.finfo(np.float32).max,
+        #     self.phi_threshold_radians, self.theta_threshold_radians, self.psi_threshold_radians,
+        #     np.finfo(np.float32).max, np.finfo(np.float32).max, np.finfo(np.float32).max
+        # ])
+        # self.STATE_LABELS = ['x', 'x_dot', 'y', 'y_dot', 'z', 'z_dot',
+        #                      'phi', 'theta', 'psi', 'p', 'q', 'r']
+        # self.STATE_UNITS = ['m', 'm/s', 'm', 'm/s', 'm', 'm/s',
+        #                     'rad', 'rad', 'rad', 'rad/s', 'rad/s', 'rad/s']
+        # # Define the state space for the dynamics.
+        #
+        # self.state_space = spaces.Box(low=low, high=high, dtype=np.float32)
+        #
+        # # if self.include_target:
+        # #     # Include future goal state(s) e.g. horizon=1, obs = {state, state_target}
+        # #     mul = 1 + self.obs_goal_horizon
+        # #     low = np.concatenate([low] * mul)
+        # #     high = np.concatenate([high] * mul)
+        #
+        # self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
+        #
+        # # return self.observation_space
 
         # Without normalization
         # return spaces.Box(low=np.array([self._x_low, self._y_low, 0,
@@ -208,7 +267,7 @@ class PBDroneEnv(
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         # obs = self._getDroneStateVector(0)
 
-        obs = obs #+ self.eps
+        obs = obs + self.eps
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
 
         # print("x", obs[0], "y", obs[1], "z", obs[2])
@@ -221,12 +280,12 @@ class PBDroneEnv(
         #                 ret[3], ret[4], ret[5], ret[6], ret[7], ret[8], ret[9], ret[10], ret[11]])
 
         try:
-            return ret #.astype('float32')
+            return ret.astype('float32')
         except FloatingPointError as e:
             print("Error in _computeObs():", ret)
             print(f"Underflow error: {e}")
             # return np.zeros_like(ret).astype('float32')
-            return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)#.astype('float32')
+            return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)  # .astype('float32')
 
     def _clipAndNormalizeState(self, state):
         """
@@ -400,7 +459,7 @@ class PBDroneEnv(
                 return 1000
             for i, target in enumerate(self._target_points):
                 dis = np.linalg.norm(self._current_position - target)
-                if  dis < self._threshold and not self._reached_targets[i]:
+                if dis < self._threshold and not self._reached_targets[i]:
                     self.remove_target(i)
                     # self.remove_target(target, i)
                     self._reached_targets[i] = True
@@ -416,7 +475,6 @@ class PBDroneEnv(
             reward += ((self._prev_distance_to_target - self._distance_to_target) * 10) if not self.just_found else 0
             self.just_found = False
             return reward / 4
-
 
         # try:
         #
@@ -446,8 +504,6 @@ class PBDroneEnv(
         #     # Give a high reward if the drone is at the target (avoiding division by zero)
         #     reward += 100
 
-
-
         # Check if the drone has reached a target
         if self._distance_to_target <= self._threshold:
             self._current_target_index += 1
@@ -460,7 +516,7 @@ class PBDroneEnv(
 
             else:
                 # Reward for reaching a target
-                reward += 75 #* (self._discount ** (self._steps / 10))
+                reward += 75  # * (self._discount ** (self._steps / 10))
                 reward += self.orientation_reward(self._target_points[self._current_target_index]) * 5
                 self.just_found = True
 
@@ -468,7 +524,7 @@ class PBDroneEnv(
             reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
             reward += ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0
             reward += self.orientation_reward(self._target_points[self._current_target_index]) * 3
-            reward += self.smoothness_reward()*5
+            reward += self.smoothness_reward()
 
             # print("smooothnes", self.smoothness_reward())
             # print("ori", self.orientation_reward(self._target_points[self._current_target_index])* 3)
@@ -478,8 +534,8 @@ class PBDroneEnv(
 
             self.just_found = False
 
-        self._prev_distance_to_target = copy.deepcopy(self._distance_to_target)
-        self._last_position = copy.deepcopy(self._current_position)
+        self._prev_distance_to_target = deepcopy(self._distance_to_target)
+        self._last_position = deepcopy(self._current_position)
 
         return reward / 25
 
@@ -525,22 +581,23 @@ class PBDroneEnv(
         return linear_penalty + angular_penalty
 
     def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
-            """
+        """
             Calculates the progress reward for the current and previous positions of the drone and the current and previous
             gate positions.
             Based on the reward function from https://arxiv.org/abs/2103.08624
             """
-            def s(p):
-                g_diff = g2 - g1
-                return np.dot(p - g1, g_diff) / np.linalg.norm(g_diff) ** 2
 
-            if pc_t_minus_1 is None:
-                # Handle the edge case for the first gate
-                rp_t = s(pc_t)
-            else:
-                rp_t = s(pc_t) - s(pc_t_minus_1)
+        def s(p):
+            g_diff = g2 - g1
+            return np.dot(p - g1, g_diff) / np.linalg.norm(g_diff) ** 2
 
-            return rp_t
+        if pc_t_minus_1 is None:
+            # Handle the edge case for the first gate
+            rp_t = s(pc_t)
+        else:
+            rp_t = s(pc_t) - s(pc_t_minus_1)
+
+        return rp_t
 
     def progress_reward(self):
         """https://arxiv.org/pdf/2310.10943"""
@@ -576,6 +633,7 @@ class PBDroneEnv(
         """Resets the environment."""
 
         ret = super().reset(seed, options)
+        # print(ret)
 
         self._is_done = False
         self._current_target_index = 0
@@ -584,7 +642,7 @@ class PBDroneEnv(
 
         # if self.random_spawn and self.total_steps < 100_000:
         #     from_p, to_p = self._target_points[np.random.choice(len(self._target_points), size=2, replace=False)]
-        #     self.INIT_XYZS[0] = self.init_position_generator.generate_random_point_around_line(from_p, to_p)
+        #     self.INIT_XYZS[0] = self.PositionGenerator.generate_random_point_around_line(from_p, to_p)
         #
         #     self._current_position = self.INIT_XYZS[0]
         #     self._current_target_index = 0
@@ -638,8 +696,9 @@ class PBDroneEnv(
                 state[1] > self._y_high or
                 state[1] < self._y_low or
                 (len(p.getContactPoints()) > 0) or
-                state[2] > self._z_high or
-                (self.is_out_of_bounds(state))):
+                state[2] > self._z_high
+                or(self.is_out_of_bounds(state))
+        ):
 
             # print(p.getOverlappingObjects())
 
@@ -706,7 +765,7 @@ class PBDroneEnv(
         for target, reached in zip(self._target_points, self._reached_targets):
             self.target_visual.append(
                 p.loadURDF(
-                    fileName="\Sol/resources/target.urdf",
+                    fileName=os.path.normpath("./Sol/resources/target.urdf"),
                     # "/resources/target.urdf",
                     basePosition=target,
                     useFixedBase=True,
@@ -731,6 +790,57 @@ class PBDroneEnv(
                 self.target_visual.pop(0)
             elif self.total_steps > 100_000 and index is not None:
                 self.target_visual.pop(index)
+
+    def _preprocessAction(self, action):
+        """Converts the action passed to .step() into motors' RPMs (ndarray of shape (4,)).
+
+        Args:
+            action (ndarray): The raw action input, of size 1 or 2 depending on QUAD_TYPE.
+
+        Returns:
+            action (ndarray): The motors RPMs to apply to the quadrotor.
+        """
+
+        # action = self.denormalize_action(action)
+        # self.current_physical_action = action
+
+        # action = action = (1 + self.norm_act_scale * action) * self.hover_thrust
+
+        thrust = np.clip(action, self.physical_action_bounds[0], self.physical_action_bounds[1])
+        # self.current_clipped_action = thrust
+
+        # convert to quad motor rpm commands
+        pwm = cmd2pwm(thrust, self.PWM2RPM_SCALE, self.PWM2RPM_CONST, self.KF, self.MIN_PWM, self.MAX_PWM)
+        rpm = pwm2rpm(pwm, self.PWM2RPM_SCALE, self.PWM2RPM_CONST)
+        return rpm
+
+    def normalize_action(self, action):
+        '''Converts a physical action into an normalized action if necessary.
+
+        Args:
+            action (ndarray): The action to be converted.
+
+        Returns:
+            normalized_action (ndarray): The action in the correct action space.
+        '''
+        if self.NORMALIZED_RL_ACTION_SPACE:
+            action = (action / self.hover_thrust - 1) / self.norm_act_scale
+
+        return action
+
+    def denormalize_action(self, action):
+        '''Converts a normalized action into a physical action if necessary.
+
+        Args:
+            action (ndarray): The action to be converted.
+
+        Returns:
+            physical_action (ndarray): The physical action.
+        '''
+        if self.NORMALIZED_RL_ACTION_SPACE:
+            action = (1 + self.norm_act_scale * action) * self.hover_thrust
+
+        return action
 
     # class NormalizeReward:
     #     r"""This wrapper will normalize immediate rewards s.t. their exponential moving average has a fixed variance.
