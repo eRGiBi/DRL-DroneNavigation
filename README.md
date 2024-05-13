@@ -34,50 +34,43 @@ $ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c n
 To install TensorFlow with GPU support:
 ```
 conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
+
 # Anything above 2.10 is not supported on the GPU on Windows Native
 python -m pip install "tensorflow<2.11"
+
 # Verify the installation:
 python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
 
-
-### 3. Example:
+### 3. Example
 Example args for Windows:
 
 ```
-$ your_python Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
+$ python Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
  False --savemodel False --total_timesteps 10e6
- 
-
 ``` 
-Args for Ubuntu with WSL:
+For Ubuntu:
+```
+python3 ./Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb f
+``` 
 
+Args for Ubuntu with WSL:
 ```
  python3 Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb False --savemodel False
  ```
-
-For Ubuntu with WSL:
-
 On root installation for activating the conda environment:
 ```
  source activate  /root/miniconda3/envs/RL-WSL
 ```
-#TODO:
-Specific dir for the conda environment
 
-### 5. 
+### 4. Basic opertion
 
 First, the simulation_controller parses the args, initializes the targets (Waypoints), 
-then starts the choosen funcion of the PBDroneSimulator.
+then starts the chosen function of the PBDroneSimulator class that direct the whole learning process.
 
+### 5. Results
 
-### 4. Results
-
-
-### 5. Conclusion
-
-
-### 6. Notes:
+### 6. Notes
 
 The OpenGl 3 engine doesn't work in virtual machines, so in order to have a visual representation of the simulation,
 it is necessary to run the simulation with OpenGL 2, set in the modified BaseAviary class, as such: 
@@ -88,7 +81,18 @@ Further: only OpenGL3 works in turn in Windows.
 Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
 https://askubuntu.com/questions/1352158/libgl-error-failed-to-load-drivers-iris-and-swrast-in-ubuntu-20-04
 
+On Ubuntu, with an NVIDIA card, if you receive a "Failed to create and OpenGL context" message, launch nvidia-settings 
+and under "PRIME Profiles" select "NVIDIA (Performance Mode)", reboot and try again.
+
+
+
 StableBaselines3 and other packages that have '_' in them might not be installed or recognized correctly.
 
 
-### 7. To Do:
+### 7. To Do
+
+Further speed and data efficiency improvements.
+
+Specific dir for the conda environment.
+
+SAC.
