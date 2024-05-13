@@ -1,5 +1,7 @@
 import os
 import tempfile
+import matplotlib.pyplot as plt
+from tbparse import SummaryReader
 
 import numpy as np
 from packaging import version
@@ -18,6 +20,8 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 # from tbparse import SummaryReader
 
 import time
+
+
 class TBM:
 
     def measure_time(f):
@@ -55,50 +59,90 @@ class TBM:
         writer.close()
         print(f"Total events written: {event_count}")
 
+    def extract_events(self, event_path):
+        summaries = []
+        for event in tf.compat.v1.train.summary_iterator(event_path):
+            for value in event.summary.value:
+                if value.HasField('simple_value'):
+                    summaries.append({
+                        "step": event.step,
+                        "wall_time": event.wall_time,
+                        "tag": value.tag,
+                        "simple_value": value.simple_value
+                    })
+        return pd.DataFrame(summaries)
+
+    def read_and_concatenate_events(self, root_dir):
+        all_dfs = []
+        for subdir, dirs, files in os.walk(root_dir):
+            for file in files:
+                if file.startswith("events.out.tfevents"):
+                    path = os.path.join(subdir, file)
+                    df = self.extract_events(path)
+                    all_dfs.append(df)
+
+        return all_dfs
+
+
+    def write_df_to_tfevents(self, dataframe, output_path):
+        # Assuming 'step' column exists and is used for indexing summaries in TensorBoard
+        assert 'step' in dataframe.columns, "'step' column must be present in the DataFrame"
+
+        # Create a TensorFlow writer
+        writer = tf.summary.create_file_writer(output_path)
+
+        # Other columns are assumed to be metrics
+        metric_columns = [col for col in dataframe.columns if col != 'step']
+
+        with writer.as_default():
+            for index, row in dataframe.iterrows():
+                for metric in metric_columns:
+                    # Writing each metric as a scalar summary
+                    tf.summary.scalar(name=metric, value=row[metric], step=int(row['step']))
+                writer.flush()
+
 
 if __name__ == '__main__':
     major_ver, minor_ver, _ = version.parse(tb.__version__).release
     print("TensorBoard version: ", tb.__version__)
 
     experiment_id = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
-    out = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/events.out.tfevents.concatenated"
+    out = "Sol/logs/concats/PPO 05.11.2024_11.37.31/"
 
     tbm = TBM()
-    tbm.concatenate_tf_events(experiment_id, out)
-
-
+    # tbm.concatenate_tf_events(experiment_id, out)
 
     # experiment_id = "Sol/model_chkpts/save-05.05.2024_20.07.35/best_model.zip"
     experiment_id = "Sol/model_chkpts/save-05.05.2024_20.07.35/"
 
-    tup = ["Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip", "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"]
+    tup = ["Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip",
+           "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"]
 
-
-
-
-
-    reader = SummaryReader(experiment_id)
-
+    # reader = SummaryReader(experiment_id)
     # reader = SummaryReader(experiment_id, extra_columns={'dir_name'})
-    df = reader.tensors
+    # df = reader.tensors
+    # print(df)
+    # print(SummaryReader(experiment_id, pivot=True).scalars)
+
+    # run_dir = os.path.join(log_dir, 'run0')
+
+    # dfs = tbm.read_and_concatenate_events(experiment_id)
+    #
+    # for df in dfs:
+    #     print(df)
+    #     tbm.write_df_to_tfevents(df, out)
+    reader = SummaryReader(os.path.join(
+        "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/PPO_05.11.2024_11.37.54_1/events.out.tfevents.1715420274.Ozymandias-II.18828.0"))
+
+    df = reader.scalars
     print(df)
-    print(SummaryReader(experiment_id, pivot=True).scalars)
+    print(reader.get_tags())
 
-tmpdirs = {}
-tmpdirs['tensorboardX'] = tempfile.TemporaryDirectory()
-log_dir = tmpdirs['tensorboardX'].name
+    
 
-run_dir = os.path.join(log_dir, 'run0')
-
-
-
-with np.load(os.path.join( experiment_id + "evaluations.npz")) as data:
-
-    for key in data.keys():
-        print(key)
-
-
-
+# with np.load(os.path.join(experiment_id + "evaluations.npz")) as data:
+#     for key in data.keys():
+#         print(key)
 
 # df = tf.data.TFRecordDataset(os.path.join( experiment_id + "evaluations.npz"), compression_type='npz')
 # print(df)

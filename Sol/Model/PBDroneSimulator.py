@@ -222,6 +222,8 @@ class PBDroneSimulator:
             print("Train the model from save file. -----------------------------------")
             saved_filename = "Sol/model_chkpts/save-05.04.2024_17.38.21/best_model.zip"
             saved_filename = "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"
+            saved_filename = "Sol/model_chkpts/save-05.11.2024_21.24.21/best_model.zip"
+            saved_filename = "Sol/model_chkpts/save-05.12.2024_13.59.59/best_model.zip"
 
             if self.args.agent == "SAC":
                 model = SAC.load(saved_filename, env=train_env)
@@ -298,7 +300,7 @@ class PBDroneSimulator:
         drone_environment = self.make_env(gui=True, aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
                                           initial_xyzs=self.initial_xyzs)
 
-        saved_filename = "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"
+        saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -332,7 +334,7 @@ class PBDroneSimulator:
         #         for j in range(data['timesteps'].shape[0]):
         #             print(str(data['timesteps'][j])+","+str(data['results'][j][0]))
 
-        for b in [True, False]:
+        for b in [False, False]:
             for j in range(5):
                 i = 0
                 terminated = False
@@ -346,7 +348,7 @@ class PBDroneSimulator:
                     print("Step:", i, "of deterministic:", b, "------------------", j)
                     i += 1
                     print("Obs:", obs, "\nAction", action, "\nReward:", reward, "\nTerminated:", terminated,
-                          "\nTruncated:", truncated)
+                          "\nTruncated:", truncated, "\nInfo:", info)
                     print("rpy", drone_environment.rpy)
                     print("pos", drone_environment.pos[0])
 
@@ -364,7 +366,7 @@ class PBDroneSimulator:
 
                         break
 
-                    # time.sleep(1. / 240.)
+                    time.sleep(1. / 240.)
 
     def test_learning(self):
 
