@@ -1,6 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+import stable_baselines3
+import torch
+
+import torchviz
+import graphviz
+from torchviz import make_dot
 
 def plot_metrics(episode_rewards, avg_rewards,
                  exploration_rate, episode_durations,
@@ -88,6 +94,14 @@ def plot_3d_targets(targets):
     ax.legend()
     plt.show()
 
+def vis_policy(model, env):
+
+    dummy_input = torch.randn(1, env.observation_space.shape[0])
+    action, _ = model.policy.forward(dummy_input)
+    dot = make_dot(action, params=dict(list(model.policy.named_parameters())))
+    dot.render('policy_graph', format='png')
 
 class Plotter:
     pass
+
+
