@@ -184,7 +184,6 @@ class PBDroneEnv(
                 self.random_spawn and self.total_steps < 100_000):
             self.remove_target()
 
-
     def _actionSpace(self):
         """Returns the action space of the environment."""
 
@@ -361,7 +360,7 @@ class PBDroneEnv(
                                       clipped_vel_z,
                                       ):
         """
-        Original PyBullet code
+        Original PyBullet code, unused
 
         Debugging printouts associated to `_clipAndNormalizeState`.
 
@@ -422,7 +421,7 @@ class PBDroneEnv(
             Whether the current episode is done.
         """
 
-        # Original PyBullet termination conditions
+        # Original PyBullet termination conditions:
         # print(self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC)
         # print(self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100)
 
@@ -697,7 +696,7 @@ class PBDroneEnv(
                 state[1] < self._y_low or
                 (len(p.getContactPoints()) > 0) or
                 state[2] > self._z_high
-                or(self.is_out_of_bounds(state))
+                or (self.is_out_of_bounds(state))
         ):
 
             # print(p.getOverlappingObjects())

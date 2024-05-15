@@ -8,6 +8,7 @@ import sys
 from typing import Callable
 
 from stable_baselines3.common.base_class import BaseAlgorithm
+from stable_baselines3.common.logger import configure
 
 # TODO
 sys.path.append("../")
@@ -91,6 +92,8 @@ class PBDroneSimulator:
 
         self.initial_xyzs = np.array([[1, 0, 1]])
 
+        self.continued_agent = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
+
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
                  rank: int = 0,
@@ -169,9 +172,9 @@ class PBDroneSimulator:
                             # use_sde=True,
                             # sde_sample_freq=4,
                             normalize_advantage=True,
-                            clip_range=0.1,
+                            clip_range=0.2,
                             learning_rate=2.5e-4,
-                            tensorboard_log=(tensorboard_path + "/ppo_tensorboard/") if self.args.savemodel else None,
+                            tensorboard_log=tensorboard_path if self.args.savemodel else None,
                             device="auto",
                             policy_kwargs=onpolicy_kwargs
                             )
@@ -194,7 +197,7 @@ class PBDroneSimulator:
                     #     goal_selection_strategy="future",
                     # ),
                     verbose=0,
-                    tensorboard_log=(tensorboard_path + "/SAC_tensorboard/") if self.args.savemodel else None,
+                    tensorboard_log=tensorboard_path if self.args.savemodel else None,
                     train_freq=1,
                     gradient_steps=2,
                     buffer_size=int(1e6),
@@ -220,13 +223,13 @@ class PBDroneSimulator:
 
         elif self.args.run_type == "cont":
             print("Train the model from save file. -----------------------------------")
-            saved_filename = "Sol/model_chkpts/save-05.04.2024_17.38.21/best_model.zip"
-            saved_filename = "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"
-            saved_filename = "Sol/model_chkpts/save-05.11.2024_21.24.21/best_model.zip"
-            saved_filename = "Sol/model_chkpts/save-05.12.2024_13.59.59/best_model.zip"
+            # saved_filename = "Sol/model_chkpts/save-05.04.2024_17.38.21/best_model.zip"
+            # saved_filename = "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"
+            # saved_filename = "Sol/model_chkpts/save-05.11.2024_21.24.21/best_model.zip"
+            # saved_filename = "Sol/model_chkpts/save-05.12.2024_13.59.59/best_model.zip"
 
             if self.args.agent == "SAC":
-                model = SAC.load(saved_filename, env=train_env)
+                model = SAC.load(self.continued_agent, env=train_env)
                 print(model.get_parameters())
                 print(model.actor)
                 print(model.critic)
@@ -235,7 +238,7 @@ class PBDroneSimulator:
 
             elif self.args.agent == "PPO":
 
-                model = PPO.load(saved_filename,
+                model = PPO.load(self.continued_agent,
                                  env=train_env,
                                  print_system_info=True)
 
@@ -407,26 +410,23 @@ class PBDroneSimulator:
     def run_full_training(self):
         start = time.perf_counter()
 
-        tensorboard_path = "./Sol/logs/" + self.args.agent + " " + datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+        now = datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
 
-        chckpt_path = os.path.join("./Sol/model_chkpts", 'save-' + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+        chckpt_path, tensorboard_path, wandb_path = self.setup_paths(now)
+        print(chckpt_path, tensorboard_path, wandb_path)
 
-        if not os.path.exists(chckpt_path) and self.args.savemodel:
-            os.makedirs(chckpt_path + '/')
-
-        train_env = self.make_env(multi=False, gui=False)
-        print(train_env.action_space)
-        #    check_env(train_env, warn=True, skip_render_check=True)
+        # train_env = self.make_env(multi=False, gui=False)
+        # print(train_env.action_space)
+        # check_env(train_env, warn=True, skip_render_check=True)
 
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
                                                  rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
                                                  initial_xyzs=self.initial_xyzs,
-                                                 ) for i in range(self.args.num_envs)
+                                                 )
+                                   for i in range(self.args.num_envs)
                                    ])
-
-        # eval_env = make_env(multi=False, gui=False, rank=0)
 
         eval_env = SubprocVecEnv([self.make_env(multi=True,
                                                 save_path=chckpt_path if self.args.savemodel else None,
@@ -434,6 +434,8 @@ class PBDroneSimulator:
                                                 initial_xyzs=self.initial_xyzs,
                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])),
                                   ])
+
+        # eval_env = make_env(multi=False, gui=False, rank=0)
         # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
 
         if self.args.vec_check_nan:
@@ -441,10 +443,8 @@ class PBDroneSimulator:
             eval_env = VecCheckNan(eval_env)
 
         if self.args.vec_normalize:
-            train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True,
-                                     clip_obs=1)
-            eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True,
-                                    clip_obs=1)
+            train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True, clip_obs=1)
+            eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=True, clip_obs=1)
 
         # TODO: MaxAndSkipEnv 
 
@@ -464,13 +464,15 @@ class PBDroneSimulator:
 
         if self.args.wandb:
             callbacks.append(
-                WandbCallback(gradient_save_freq=100, model_save_path=chckpt_path + "/wand/", verbose=2, ))
+                WandbCallback(gradient_save_freq=100, model_save_path=wandb_path, verbose=2, ))
+
+        # AimCallback(repo='.Aim/', experiment_name='sb3_test')
 
         callbacks.append(
             EvalCallback(eval_env,
                          # callback_on_new_best=callback_on_best,
-                         best_model_save_path=chckpt_path + '/' if self.args.savemodel else None,
-                         log_path=(chckpt_path + '/') if self.args.savemodel else None,
+                         best_model_save_path=chckpt_path if self.args.savemodel else None,
+                         log_path=chckpt_path if self.args.savemodel else None,
                          eval_freq=max(10000 // self.num_envs, 1),
                          n_eval_episodes=10,
                          deterministic=False,
@@ -478,13 +480,16 @@ class PBDroneSimulator:
                          verbose=1,
                          )
         )
-        # AimCallback(repo='.Aim/', experiment_name='sb3_test')
+
+        # # set up logger
+        #         # new_logger = configure(tensorboard_path, ["stdout", "csv", "tensorboard"])
+        #         # model.set_logger(new_logger)
 
         trained_model = model.learn(
             total_timesteps=self.args.total_timesteps,
             callback=callbacks,
             log_interval=1000,
-            tb_log_name=self.args.agent + "_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
+            # tb_log_name=self.args.agent + "_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
         )
 
         if self.args.savemodel:
@@ -502,7 +507,7 @@ class PBDroneSimulator:
         # model.load_replay_buffer("sac_replay_buffer")
 
         # Test the model #########################################
-        if self.args.autotest:
+        if True:
 
             test_env = self.make_env(multi=False)
             test_env_nogui = self.make_env(multi=False)
@@ -580,6 +585,72 @@ class PBDroneSimulator:
         pitch = np.arcsin(target_vector[2] / distance)  # Angle with respect to the horizontal plane
 
         return 0, pitch, yaw
+
+    def setup_paths(self, now, base_dir='Sol'):
+
+        # model_count = sum(len(files) for _, _, files in os.walk('Sol/model_chkpts/'))
+        # model_count = sum(os.path.isdir(os.path.join(directory_path, entry)) for entry in os.listdir(directory_path))
+        # log_count = sum(len(files) for _, _, files in os.walk('Sol/log/'))
+
+
+        # Constructing base paths for checkpoints and logs
+        base_chkpt_path = os.path.join(base_dir, 'model_chkpts')
+        base_log_path = os.path.join(base_dir, 'logs')
+
+        # Deciding the checkpoint and tensorboard log directory based on run type
+        if self.args.run_type == "cont":
+            # If continued, use the checkpoint path from the existing best model path
+            chckpt_path = self.continued_agent.rstrip("best_model.zip")
+            tensorboard_path = os.path.join(base_log_path, self.continued_agent.lstrip(str(base_chkpt_path)).lstrip("PPO_save_"))
+        else:
+            # If a new run, create new directories with the current date and time
+            unique_path = self.args.agent + '_save_' + now
+            chckpt_path = os.path.join(base_chkpt_path, unique_path)
+            tensorboard_path = os.path.join(base_log_path, unique_path)
+
+        # Ensure the checkpoint and tensorboard directories exist
+        os.makedirs(chckpt_path, exist_ok=True)
+        os.makedirs(tensorboard_path, exist_ok=True)
+
+        # Setting up the Weights & Biases path if applicable
+        wandb_path = ''
+        if self.args.wandb:
+            wandb_path = os.path.join(tensorboard_path, "wandb")
+            os.makedirs(wandb_path, exist_ok=True)
+
+        return chckpt_path, tensorboard_path, wandb_path
+
+
+
+
+        # if self.args.run_type == "cont":
+        #     chckpt_path = os.path.join("./Sol/model_chkpts", self.args.agent + '_save_' + str(model_count - 1))
+        #     tensorboard_path = os.path.join("./Sol/logs/", self.args.agent + " " + str(log_count - 1))
+        # else:
+        #     chckpt_path = os.path.join("./Sol/model_chkpts", self.args.agent + '_save_' + str(model_count))
+        #     tensorboard_path = os.path.join("./Sol/logs/", self.args.agent + " " + str(log_count - 1))
+
+        if self.args.run_type == "cont":
+            chckpt_path = self.continued_agent.rstrip("best_model.zip")
+            tensorboard_path = os.path.join("./Sol/logs/", self.continued_agent.lstrip("PPO_save_"))
+        else:
+            chckpt_path = os.path.join("./Sol/model_chkpts", self.args.agent + '_save_' + now)
+            tensorboard_path = os.path.join("./Sol/logs/", self.args.agent + " " + now)
+
+        if self.args.wandb:
+            wandb_path = tensorboard_path + "/wand/"
+            if not os.path.exists(wandb_path):
+                os.makedirs(wandb_path + '/')
+        else:
+            wandb_path = ""
+
+        if not os.path.exists(chckpt_path):
+            os.makedirs(chckpt_path + '/')
+        if not os.path.exists(tensorboard_path):
+            os.makedirs(tensorboard_path + '/')
+
+        return chckpt_path, tensorboard_path, wandb_path
+
 
 #TODO
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
