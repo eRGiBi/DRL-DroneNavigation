@@ -470,7 +470,7 @@ class PBDroneEnv(
 
             self._last_position = copy.deepcopy(self._current_position)
 
-            reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
+            reward += (np.exp(-2 * self._distance_to_target)) * 3
             reward += ((self._prev_distance_to_target - self._distance_to_target) * 10) if not self.just_found else 0
             self.just_found = False
             return reward / 4
@@ -509,23 +509,24 @@ class PBDroneEnv(
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 1000  # * self._discount ** self._steps/10
+                reward += 1000
                 # reward += self.smoothness_reward(0.9, 0.9)
                 self._is_done = True
 
             else:
                 # Reward for reaching a target
-                reward += 75  # * (self._discount ** (self._steps / 10))
+                reward += 75
                 reward += self.orientation_reward(self._target_points[self._current_target_index]) * 5
                 self.just_found = True
 
         else:
-            reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
+            reward += (np.exp(-2 * self._distance_to_target)) * 3
+            # reward += (np.exp(-2 * abs(self._distance_to_target))) * 3
             reward += ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0
             reward += self.orientation_reward(self._target_points[self._current_target_index]) * 3
             reward += self.smoothness_reward()
 
-            # print("smooothnes", self.smoothness_reward())
+            # print("smoothness", self.smoothness_reward())
             # print("ori", self.orientation_reward(self._target_points[self._current_target_index])* 3)
             # print("prev dis", ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0)
             # print(self._prev_distance_to_target , self._distance_to_target)
@@ -539,10 +540,9 @@ class PBDroneEnv(
         return reward / 25
 
     def orientation_reward(self, target_pos):
-
         threshold_angle = np.radians(10)
 
-        forward_vector = self.get_forward_vector(self.quat[0])
+        forward_vector = self.get_forward_vector()
         drone_to_target_vector = np.array(target_pos) - np.array(self.pos[0])
         drone_to_target_vector /= np.linalg.norm(drone_to_target_vector)  # Normalize
 
@@ -557,7 +557,7 @@ class PBDroneEnv(
 
         return reward
 
-    def get_forward_vector(self, quat):
+    def get_forward_vector(self):
         euler = self.rpy[0]
         # Assuming the drone's forward vector points along the x-axis in its local frame
         forward_vector = np.array([
@@ -568,7 +568,6 @@ class PBDroneEnv(
         return forward_vector
 
     def smoothness_reward(self, accel_threshold=0.1, ang_accel_threshold=0.1):
-
         # Calculate linear and angular accelerations
         lin_acc = np.linalg.norm(self.current_vel - self.prev_vel)
         ang_acc = np.linalg.norm(self.current_ang_v - self.prev_ang_v)

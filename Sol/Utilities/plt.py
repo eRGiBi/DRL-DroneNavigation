@@ -32,17 +32,17 @@ def activation_functions():
 
     plt.subplot(131)
     plt.plot(x_values, logistic_values, label='Logistic')
-    plt.title('Logisztikus') # Logistic function
+    plt.title('Logisztikus')  # Logistic function
     plt.legend()
 
     plt.subplot(132)
     plt.plot(x_values, tanh_values, label='Tanh')
-    plt.title('Hiperbolikus tangens') #Hyperbolic tangent function
+    plt.title('Hiperbolikus tangens')  #Hyperbolic tangent function
     plt.legend()
 
     plt.subplot(133)
     plt.plot(x_values, relu_values, label='ReLU')
-    plt.title('ReLU') # ReLU functions
+    plt.title('ReLU')  # ReLU functions
     plt.legend()
 
     plt.subplot(133)
@@ -53,9 +53,31 @@ def activation_functions():
     plt.show()
 
 
-if __name__ == "__main__":
+def reward_func():
+    # Define the function g(x)
+    def g(x):
+        return 3 * np.exp(-4 * np.abs(x))
 
+    # Create an array of x values
+    x_values = np.linspace(-2, 2, 400)
+
+    # Calculate the y values
+    y_values = g(x_values)
+
+    # Create the plot
+    plt.figure(figsize=(8, 6))
+    plt.plot(x_values, y_values, label=r"$g(x) = 3 e^{-4 |x|}$", color='blue')
+    plt.xlabel('Distance to target')
+    plt.ylabel('Reward')
+    plt.title('Exp Reward based on distance $g(x) = 3 e^{-4 |x|}$')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+
+if __name__ == "__main__":
     activation_functions()
+    reward_func()
 
     # Define the function
     # def reciprocal(x):

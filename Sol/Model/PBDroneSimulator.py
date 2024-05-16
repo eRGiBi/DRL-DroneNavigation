@@ -40,7 +40,7 @@ import Sol.Utilities.Waypoints as Waypoints
 
 from Sol.PyBullet.enums import ActionType
 
-from Sol.Utilities.Plotter import plot_learning_curve
+from Sol.Utilities.Plotter import plot_learning_curve, vis_policy
 import Sol.Utilities.Callbacks as Callbacks
 from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
 
@@ -92,7 +92,8 @@ class PBDroneSimulator:
 
         self.initial_xyzs = np.array([[1, 0, 1]])
 
-        self.continued_agent = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
+        # self.continued_agent = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
+        self.continued_agent = "Sol/model_chkpts/PPO_save_05.15.2024_00.03.17/best_model.zip"
 
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
@@ -147,6 +148,11 @@ class PBDroneSimulator:
                                    net_arch=dict(vf=[256, 256],
                                                  pi=[256, 256]),
                                    )
+            onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
+                                   share_features_extractor=True,
+                                   net_arch=dict(vf=[512, 512, 256],
+                                                 pi=[512, 512, 256]),
+                                   )
 
             custom_policy = dict(net_arch=[dict(share=[512, 512], vf=[256, 128], pi=[256, 128])],
                                  activation_fn=th.nn.Tanh)
@@ -172,7 +178,7 @@ class PBDroneSimulator:
                             # use_sde=True,
                             # sde_sample_freq=4,
                             normalize_advantage=True,
-                            clip_range=0.2,
+                            clip_range=0.1,
                             learning_rate=2.5e-4,
                             tensorboard_log=tensorboard_path if self.args.savemodel else None,
                             device="auto",
@@ -304,6 +310,7 @@ class PBDroneSimulator:
                                           initial_xyzs=self.initial_xyzs)
 
         saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_17.34.06/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -319,6 +326,7 @@ class PBDroneSimulator:
             # model.learn(total_timesteps=1000)
             # print(model.get_parameters())
             print_ppo_conf(model)
+            # vis_policy(model, drone_environment)
 
         # model = PPO.load(os.curdir + "\model_chkpts\success_model.zip")
         # model = SAC.load(os.curdir + "\model_chkpts\success_model.zip")
@@ -337,7 +345,7 @@ class PBDroneSimulator:
         #         for j in range(data['timesteps'].shape[0]):
         #             print(str(data['timesteps'][j])+","+str(data['results'][j][0]))
 
-        for b in [False, False]:
+        for b in [True, False]:
             for j in range(5):
                 i = 0
                 terminated = False
