@@ -455,7 +455,7 @@ class PBDroneEnv(
         if self.random_spawn and self.total_steps < 100_000:
             min_dis = 0
             if self._current_target_index == len(self._target_points):
-                return 1000
+                return 200
             for i, target in enumerate(self._target_points):
                 dis = np.linalg.norm(self._current_position - target)
                 if dis < self._threshold and not self._reached_targets[i]:
@@ -509,7 +509,7 @@ class PBDroneEnv(
 
             if self._current_target_index == len(self._target_points):
                 # Reward for reaching all targets
-                reward += 1000
+                reward += 200
                 # reward += self.smoothness_reward(0.9, 0.9)
                 self._is_done = True
 

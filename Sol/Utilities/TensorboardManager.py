@@ -1,28 +1,26 @@
 import os
-import tempfile
-import matplotlib.pyplot as plt
-from tbparse import SummaryReader
-
-import numpy as np
-from packaging import version
+import re
+from collections import defaultdict
+from datetime import datetime
 
 import pandas as pd
-from matplotlib import pyplot as plt
-# import seaborn as sns
-from scipy import stats
-import tensorboard as tb
+import seaborn as sns
 import tensorflow as tf
-
-from tensorflow.python.summary.summary_iterator import summary_iterator
-
+from matplotlib import pyplot as plt
+from tbparse import SummaryReader
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-
-# from tbparse import SummaryReader
-
-import time
 
 
 class TBM:
+    """Half of this doesn't even work."""
+    def extract_datetime_from_filename(self, filename):
+        match = (re.search(r'PPO_(\d{2}\.\d{2}\.\d{4}_\d{2}\.\d{2}\.\d{2})_', filename) or
+                 re.search(r'PPO_save_(\d{2}\.\d{2}\.\d{4}_\d{2}\.\d{2}\.\d{2})\\', filename))
+        if match:
+            date_str = match.group(1)
+            return datetime.strptime(date_str, "%m.%d.%Y_%H.%M.%S")
+        else:
+            return None
 
     def concatenate_tf_events(self, root_dir, output_file):
 
@@ -70,7 +68,6 @@ class TBM:
 
         return all_dfs
 
-
     def write_df_to_tfevents(self, dataframe, output_path):
         # Assuming 'step' column exists and is used for indexing summaries in TensorBoard
         assert 'step' in dataframe.columns, "'step' column must be present in the DataFrame"
@@ -108,139 +105,100 @@ class TBM:
 
         return tf_files
 
-    def find_tensorflow_files_to_df(self, root_directory):
-        """
-        Traverses the given directory and its subdirectories to find TensorFlow files and organize them into a DataFrame.
-        The DataFrame will include paths to TensorFlow files and an incremental step count based on timestamps in filenames.
+    def create_data_dict(self, merged_df):
+        unique_tags = merged_df['tag'].unique()
+        data_dict = {tag: [] for tag in unique_tags}
 
-        Parameters:
-            root_directory (str): The path to the directory to search.
+        for tag in unique_tags:
+            tag_data = merged_df[merged_df['tag'] == tag]
+            for _, row in tag_data.iterrows():
+                data_dict[tag].append((row['step'], row['value']))
 
-        Returns:
-            DataFrame: A DataFrame containing the paths to TensorFlow files and step counts.
-        """
-        tf_files = []
-        for dirpath, dirnames, filenames in os.walk(root_directory):
-            for file in filenames:
-                if file.startswith("events.out.tfevents."):
-                    timestamp = float(file.split('.')[-2])  # Extract timestamp from filename
-                    full_path = os.path.join(dirpath, file)
-                    tf_files.append((full_path, timestamp))
-                    print(full_path)
-                    print(timestamp)
+        return data_dict
 
-        # Create DataFrame
-        df = pd.DataFrame(tf_files, columns=['FilePath', 'Timestamp'])
-        df.sort_values('Timestamp', inplace=True)
-        df['Step'] = range(len(df))  # Incremental step count
+    def sort_em_up(self, filenames):
+        sorted_filenames = sorted(filenames, key=self.extract_datetime_from_filename)
 
-        return df
+        unique_tags = set()
+        all_data = []
+        step_increment = 0
 
-    def export_tensorflow_events_to_csv(self, root_directory, output_csv_path):
-        """
-        Corrected function to traverse directories, find TensorFlow files, and organize them into a DataFrame
-        with continuous step counts across files, then export to a CSV file considering correct timestamp parsing.
+        for f_name in sorted_filenames:
+            reader = SummaryReader(f_name)
+            df = reader.scalars
+            if not df.empty:
+                unique_tags.update(df['tag'].unique())
+                df['step'] += step_increment
+                step_increment = df['step'].max() + 1
+                all_data.append(df)
 
-        Parameters:
-            root_directory (str): The path to the directory to search.
-            output_csv_path (str): The path where the resulting CSV file will be saved.
+        merged_df = pd.concat(all_data, ignore_index=True)
+        return merged_df
 
-        Returns:
-            None: Outputs a CSV file at the specified path.
-        """
-        tf_files = []
-        # Extract information from directories and files
-        for dirpath, dirnames, filenames in os.walk(root_directory):
-            # Correct timestamp extraction based on expected location in the directory name
-            dir_parts = dirpath.split('/')[-1].split('.')
-            if len(dir_parts) > 1 and dir_parts[1].isdigit():
-                dir_timestamp = float(dir_parts[1])
+    def visualize_dict(self, data_dict, tags_to_plot=None):
+        # Plot settings
+        plt.figure(figsize=(12, 8))
+        sns.set(style="whitegrid")
+
+        # Determine which tags to plot
+        if tags_to_plot is None:
+            tags_to_plot = data_dict.keys()
+
+        # Plot each tag
+        for tag in tags_to_plot:
+            if tag in data_dict and data_dict[tag]:
+                values = data_dict[tag]
+                steps, vals = zip(*values)
+                plt.plot(steps, vals, label=tag)
             else:
-                dir_timestamp = 0  # Fallback if no valid timestamp is found
+                print(f"Tag {tag} not found in data or has no values.")
 
-            for file in filenames:
-                if file.startswith("events.out.tfevents."):
-                    file_parts = file.split('.')
-                    if len(file_parts) > 4 and file_parts[4].isdigit():
-                        file_timestamp = float(file_parts[4])
-                    else:
-                        file_timestamp = 0  # Fallback if no valid timestamp is found
+        if plt.gca().has_data():
+            # Adding titles and labels
+            plt.title('Trends of Different Tags Over Steps')
+            plt.xlabel('Step')
+            plt.ylabel('Value')
+            plt.legend()
+            plt.show()
+        else:
+            print("No data to plot.")
 
-                    # Create a combined timestamp from dir and file timestamps for more accurate sorting
-                    combined_timestamp = dir_timestamp * 1e6 + file_timestamp
-                    full_path = os.path.join(dirpath, file)
-                    tf_files.append((full_path, combined_timestamp))
+    def visualize_each_tag_separately(self, data_dict, output_dir=None):
+        if output_dir is not None and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-        # Create DataFrame and sort it based on the combined timestamps
-        df = pd.DataFrame(tf_files, columns=['FilePath', 'CombinedTimestamp'])
-        df.sort_values('CombinedTimestamp', inplace=True)
+        for tag, values in data_dict.items():
+            if values:  # Check if values is not empty
+                steps, vals = zip(*values)
+                plt.figure(figsize=(12, 8))
+                sns.set(style="whitegrid")
+                plt.plot(steps, vals, label=tag)
+                plt.title(f'Trend of {tag} Over Steps')
+                plt.xlabel('Step')
+                plt.ylabel('Value')
+                plt.legend()
+                plot_filename = os.path.join(output_dir, f"{tag.replace('/', '_')}.png")
+                plt.savefig(plot_filename)
+                plt.close()
+                print(f"Saved plot for {tag} to {plot_filename}")
 
-        # Simulate continuous step counts across files
-        df['Step'] = range(len(df))  # Simulated step data
-        # Adjust step count to be continuous across files
-        max_step = 0
-        for i in range(1, len(df)):
-            current_max = df.loc[i - 1, 'Step'] + 10  # Assuming each file contributes an arbitrary number of 10 steps
-            df.loc[i, 'Step'] += current_max  # Increment current file's start step by the max step of the previous file
+    def plot_runs(self, tag, runs, names):
 
-        # Export to CSV
-        df.to_csv(output_csv_path, index=False)
+        plt.figure(figsize=(12, 8))
+        sns.set(style="whitegrid")
 
+        for i, run in enumerate(runs):
+            values = run[tag]
+            steps, vals = zip(*values)
+            plt.plot(steps, vals, label=names[i])
 
-if __name__ == '__main__':
+        plt.title('Effects of Different minibatch sizes')
+        plt.xlabel('Step')
+        plt.ylabel('Value')
 
-    experiment_id = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
-    out = "Sol/logs/concats/PPO 05.11.2024_11.37.31.csv"
-#
-    tbm = TBM()
-    # tbm.export_tensorflow_events_to_csv(experiment_id, out)
-
-
-#     # tbm.concatenate_tf_events(experiment_id, out)
-#
-
-    # reader = SummaryReader(experiment_id)
-    # df = reader.tensors
-    # print(df)
-    # print(SummaryReader(experiment_id, pivot=True).scalars)
-#
-#     # run_dir = os.path.join(log_dir, 'run0')
-#
-#     # dfs = tbm.read_and_concatenate_events(experiment_id)
-#     #
-#     # for df in dfs:
-#     #     print(df)
-#     #     tbm.write_df_to_tfevents(df, out)
-#
-    f_names = tbm.find_tensorflow_files("Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard")
-    print(f_names)
-
-    reader = SummaryReader(os.path.join(experiment_id))
-    df = reader.scalars
-    print(df)
-
-    dfs = pd.DataFrame()
-
-    m_steps = 0
-
-    for f_name in f_names:
-        print(f_name)
-        reader = SummaryReader(os.path.join(f_name))
-        df = reader.scalars
-        # if len(df) != 0:
-        #     df['steps'] += m_steps
-        # m_steps = df['steps'][-1]
-
-#
-#     # dfs = tbm.find_tensorflow_files_to_df(experiment_id)
-#     print(dfs)
-
-import os
-import numpy as np
-import pandas as pd
-
-from collections import defaultdict
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+        if plt.gca().has_data():
+            plt.legend(title="Batch sizes", fontsize=20)
+            plt.show()
 
 
 def tabulate_events(dpath):
@@ -266,39 +224,13 @@ def tabulate_events(dpath):
     return out, steps
 
 
-def to_csv(dpath):
-    dirs = os.listdir(dpath)
+# reader = SummaryReader(os.path.join(
+#     "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/PPO_05.11.2024_11.37.54_1/events.out.tfevents.1715420274.Ozymandias-II.18828.0"))
+#
+# df = reader.scalars
+# print(df)
+# print(reader.get_tags())
 
-    d, steps = tabulate_events(dpath)
-    tags, values = zip(*d.items())
-    np_values = np.array(values)
-
-    for index, tag in enumerate(tags):
-        df = pd.DataFrame(np_values[index], index=steps, columns=dirs)
-        df.to_csv(get_file_path(dpath, tag))
-
-
-def get_file_path(dpath, tag):
-    file_name = tag.replace("/", "_") + '.csv'
-    folder_path = os.path.join(dpath, 'csv')
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    return os.path.join(folder_path, file_name)
-
-
-# if __name__ == '__main__':
-#     path = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
-#     to_csv(path)
-
-
-    # reader = SummaryReader(os.path.join(
-    #     "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/PPO_05.11.2024_11.37.54_1/events.out.tfevents.1715420274.Ozymandias-II.18828.0"))
-    #
-    # df = reader.scalars
-    # print(df)
-    # print(reader.get_tags())
-
-    
 
 # with np.load(os.path.join(experiment_id + "evaluations.npz")) as data:
 #     for key in data.keys():
@@ -346,4 +278,56 @@ def get_file_path(dpath, tag):
 
 # dfw = experiment.get_scalars(pivot=True)
 # print(dfw)
-#
+
+
+if __name__ == '__main__':
+
+    experiment_id = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
+
+    tbm = TBM()
+
+    # reader = SummaryReader(experiment_id)
+    # df = reader.tensors
+    # print(df)
+    # print(SummaryReader(experiment_id, pivot=True).scalars)
+    #
+    #     # run_dir = os.path.join(log_dir, 'run0')
+    #
+    #     # dfs = tbm.read_and_concatenate_events(experiment_id)
+    #     #
+    #     # for df in dfs:
+    #     #     print(df)
+    #     #     tbm.write_df_to_tfevents(df, out)
+
+    # f_names = tbm.find_tensorflow_files("Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/")
+    f_names = tbm.find_tensorflow_files("Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/PPO_05.11.2024_11.37.54_1")
+    f_names2 = tbm.find_tensorflow_files("Sol/logs/PPO_save_05.15.2024_00.03.17")
+
+    print(f_names)
+
+    sorted_filenames = sorted(f_names, key=tbm.extract_datetime_from_filename)
+    print(f_names)
+
+    l = []
+    for f_name in f_names:
+        l.append(SummaryReader(os.path.join(f_name)).scalars)
+        print(f"Checking file: {f_name}")
+        if os.path.exists(f_name):
+            print(f"File exists: {f_name}")
+        else:
+            print(f"File does NOT exist: {f_name}")
+    print(l)
+
+    merged_df = tbm.sort_em_up(f_names)
+    # merged_df.to_csv("Sol/visual/based.csv", index=False)
+    data_dict = tbm.create_data_dict(merged_df)
+
+    tags = [
+        # "eval/mean_ep_length",
+        "eval/mean_reward"
+            ]
+    # tbm.visualize_dict(data_dict, tags_to_plot=tags)
+    # tbm.visualize_each_tag_separately(data_dict, output_dir="Sol/logs/concats")
+
+    tbm.plot_runs("eval/mean_reward", [data_dict, tbm.create_data_dict(tbm.sort_em_up(f_names2))],
+    names=["256", "512", "1024", "4096"])

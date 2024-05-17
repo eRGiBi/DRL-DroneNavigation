@@ -169,7 +169,7 @@ class PBDroneSimulator:
                             env=train_env,
                             verbose=2,
                             n_steps=4096,
-                            batch_size=512,
+                            batch_size=1024,
                             n_epochs=20,
                             gamma=0.99,
                             # ent_coef=0.1,
@@ -178,8 +178,8 @@ class PBDroneSimulator:
                             # use_sde=True,
                             # sde_sample_freq=4,
                             normalize_advantage=True,
-                            clip_range=0.1,
-                            learning_rate=2.5e-4,
+                            clip_range=0.2,
+                            learning_rate=3e-4,
                             tensorboard_log=tensorboard_path if self.args.savemodel else None,
                             device="auto",
                             policy_kwargs=onpolicy_kwargs
@@ -233,6 +233,7 @@ class PBDroneSimulator:
             # saved_filename = "Sol/model_chkpts/save-05.11.2024_17.33.04/best_model.zip"
             # saved_filename = "Sol/model_chkpts/save-05.11.2024_21.24.21/best_model.zip"
             # saved_filename = "Sol/model_chkpts/save-05.12.2024_13.59.59/best_model.zip"
+            saved_filename = "Sol/model_chkpts/save-05.15.2024_00.03.17/best_model.zip"
 
             if self.args.agent == "SAC":
                 model = SAC.load(self.continued_agent, env=train_env)
@@ -311,6 +312,10 @@ class PBDroneSimulator:
 
         saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"
         saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_17.34.06/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_00.03.17/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -345,7 +350,7 @@ class PBDroneSimulator:
         #         for j in range(data['timesteps'].shape[0]):
         #             print(str(data['timesteps'][j])+","+str(data['results'][j][0]))
 
-        for b in [True, False]:
+        for b in [False, True]:
             for j in range(5):
                 i = 0
                 terminated = False
@@ -596,22 +601,13 @@ class PBDroneSimulator:
 
     def setup_paths(self, now, base_dir='Sol'):
 
-        # model_count = sum(len(files) for _, _, files in os.walk('Sol/model_chkpts/'))
-        # model_count = sum(os.path.isdir(os.path.join(directory_path, entry)) for entry in os.listdir(directory_path))
-        # log_count = sum(len(files) for _, _, files in os.walk('Sol/log/'))
-
-
-        # Constructing base paths for checkpoints and logs
         base_chkpt_path = os.path.join(base_dir, 'model_chkpts')
         base_log_path = os.path.join(base_dir, 'logs')
 
-        # Deciding the checkpoint and tensorboard log directory based on run type
         if self.args.run_type == "cont":
-            # If continued, use the checkpoint path from the existing best model path
             chckpt_path = self.continued_agent.rstrip("best_model.zip")
             tensorboard_path = os.path.join(base_log_path, self.continued_agent.lstrip(str(base_chkpt_path)).lstrip("PPO_save_"))
         else:
-            # If a new run, create new directories with the current date and time
             unique_path = self.args.agent + '_save_' + now
             chckpt_path = os.path.join(base_chkpt_path, unique_path)
             tensorboard_path = os.path.join(base_log_path, unique_path)
@@ -620,16 +616,19 @@ class PBDroneSimulator:
         os.makedirs(chckpt_path, exist_ok=True)
         os.makedirs(tensorboard_path, exist_ok=True)
 
-        # Setting up the Weights & Biases path if applicable
         wandb_path = ''
         if self.args.wandb:
-            wandb_path = os.path.join(tensorboard_path, "wandb")
+            wandb_path = os.path.join("Sol/wandb" + self.args.agent)
             os.makedirs(wandb_path, exist_ok=True)
 
         return chckpt_path, tensorboard_path, wandb_path
 
 
+        # Counting
 
+        # model_count = sum(len(files) for _, _, files in os.walk('Sol/model_chkpts/'))
+        # model_count = sum(os.path.isdir(os.path.join(directory_path, entry)) for entry in os.listdir(directory_path))
+        # log_count = sum(len(files) for _, _, files in os.walk('Sol/log/'))
 
         # if self.args.run_type == "cont":
         #     chckpt_path = os.path.join("./Sol/model_chkpts", self.args.agent + '_save_' + str(model_count - 1))
@@ -638,26 +637,19 @@ class PBDroneSimulator:
         #     chckpt_path = os.path.join("./Sol/model_chkpts", self.args.agent + '_save_' + str(model_count))
         #     tensorboard_path = os.path.join("./Sol/logs/", self.args.agent + " " + str(log_count - 1))
 
-        if self.args.run_type == "cont":
-            chckpt_path = self.continued_agent.rstrip("best_model.zip")
-            tensorboard_path = os.path.join("./Sol/logs/", self.continued_agent.lstrip("PPO_save_"))
-        else:
-            chckpt_path = os.path.join("./Sol/model_chkpts", self.args.agent + '_save_' + now)
-            tensorboard_path = os.path.join("./Sol/logs/", self.args.agent + " " + now)
-
-        if self.args.wandb:
-            wandb_path = tensorboard_path + "/wand/"
-            if not os.path.exists(wandb_path):
-                os.makedirs(wandb_path + '/')
-        else:
-            wandb_path = ""
-
-        if not os.path.exists(chckpt_path):
-            os.makedirs(chckpt_path + '/')
-        if not os.path.exists(tensorboard_path):
-            os.makedirs(tensorboard_path + '/')
-
-        return chckpt_path, tensorboard_path, wandb_path
+        # if self.args.wandb:
+        #     wandb_path = tensorboard_path + "/wand/"
+        #     if not os.path.exists(wandb_path):
+        #         os.makedirs(wandb_path + '/')
+        # else:
+        #     wandb_path = ""
+        #
+        # if not os.path.exists(chckpt_path):
+        #     os.makedirs(chckpt_path + '/')
+        # if not os.path.exists(tensorboard_path):
+        #     os.makedirs(tensorboard_path + '/')
+        #
+        # return chckpt_path, tensorboard_path, wandb_path
 
 
 #TODO
