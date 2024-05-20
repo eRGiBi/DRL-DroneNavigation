@@ -68,6 +68,13 @@ On root installation for activating the conda environment:
 First, the simulation_controller parses the args, initializes the targets (Waypoints), 
 then starts the chosen function of the PBDroneSimulator class that direct the whole learning process.
 
+### Utilities
+tf.events manipulation:
+   
+    python Sol/Utilities/TensorBoardManager.py   
+
+
+
 ### 5. Results
 
 ### 6. Notes
@@ -96,3 +103,15 @@ Further speed and data efficiency improvements.
 Specific dir for the conda environment.
 
 SAC.
+
+Hyperparams:
+
+no PPO-style value loss clipping
+value function normalization
+number of envs
+frame skipping
+deeper networks
+mlp sharing effects
+
+Testing for added noise
+

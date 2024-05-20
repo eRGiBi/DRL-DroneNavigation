@@ -11,6 +11,10 @@ from Sol.PyBullet.enums import Physics
 
 class SoftAcorCritic():
 
+    """
+    Untested.
+    """
+
     def __init__(self):
         pass
 

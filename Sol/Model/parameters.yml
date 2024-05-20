@@ -1,5 +1,5 @@
 
-best_ppo:
+base_ppo:
   targets:  Waypoints.up_sharp_back_turn()
   n_envs: 12
   n_steps: 4096
@@ -17,6 +17,25 @@ best_ppo:
     net_arch:
       vf: [ 256, 256 ]
       pi: [ 256, 256 ]
+
+best_ppo:
+  targets:
+  n_envs: 12
+  n_steps: 4096
+  batch_size: 512
+  n_epochs: 10
+  gamma: 0.99
+  vf_coef: 0.5
+  gae_lambda: 0.9
+  normalize_advantage: True
+  clip_range: 0.2
+  learning_rate: 2.5e-4
+  policy_kwargs:
+    activation_fn: Tanh
+    share_features_extractor: True
+    net_arch:
+      vf: [ 512, 512, 256 ]
+      pi: [ 512, 512, 256 ]
 
 
 circle_agent:

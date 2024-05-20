@@ -21,6 +21,8 @@ class CustomFeatureExtractor(BaseFeaturesExtractor):
     """
     Custom feature extractor for the actor-critic policy.
     It receives as input the features extracted by the features extractor.
+
+    ""
     """
 
     def __init__(self,

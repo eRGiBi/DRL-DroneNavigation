@@ -28,11 +28,12 @@ def parse_args():
 
     # Wrapper specific arguments
     parser.add_argument('--vec_check_nan', default=False, type=lambda x: bool(strtobool(x)))
+    parser.add_argument('--norm_rew', default=False, type=lambda x: bool(strtobool(x)))
+    parser.add_argument('--clip_rew', default=False, type=lambda x: bool(strtobool(x)))
     parser.add_argument('--vec_normalize', default=False, type=lambda x: bool(strtobool(x)))
-    parser.add_argument('--ve_check_env', default=False, type=lambda x: bool(strtobool(x)))
 
     # General RL Algorithm specific arguments
-    parser.add_argument('--agent', type=str, default='PPO')
+    parser.add_argument('--agent', type=str, default='PPO', choices=["PPO", "SAC", "DDPG", "RECPPO"])
     parser.add_argument('--agent-config', type=str, default='default')
 
     parser.add_argument("--num_envs", type=int, default=12, help="the number of parallel game environments")
@@ -49,14 +50,8 @@ def parse_args():
     parser.add_argument('--clip_range', type=int, default=def_ppo_params['clip_range'])
     parser.add_argument('--ent_coef', type=int, default=def_ppo_params['ent_coef'])
 
-    parser.add_argument('--eval-criterion', type=str, default='default')
-    parser.add_argument('--eval-criterion-config', type=str, default='default')
-    parser.add_argument('--metric', type=str, default='default')
-    parser.add_argument('--metric-config', type=str, default='default')
     parser.add_argument('--optimizer', type=str, default='default')
     parser.add_argument('--optimizer-config', type=str, default='default')
-    parser.add_argument('--criterion', type=str, default='default')
-    parser.add_argument('--criterion-config', type=str, default='default')
 
     # Wandb
     parser.add_argument("--wandb", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,

@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
 
 
-def manual_pb_env():
+# def manual_pb_env():
     # Connect to the PyBullet physics server
     # physicsClient = p.connect(p.GUI)
     # p.setGravity(0, 0, -9.81)

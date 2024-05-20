@@ -143,6 +143,11 @@ class PBDroneEnv(
         obs, reward, terminated, truncated, info = (
             super().step(action)
         )
+        # print(self.getDroneLookDirection(0))
+        # print(self.get_forward_vector(), self.gasd())
+        # print(self.orientation_reward(self._target_points[self._current_target_index]))
+        # self._showDroneLocalAxes(0)
+
         # print("ACTION", action)
         # print("OBS", obs)
         # print("pos", self.pos[0])
@@ -193,9 +198,9 @@ class PBDroneEnv(
                           high=self.physical_action_bounds[1],
                           dtype=np.float32)
 
-        return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
-                          high=np.ones(4, dtype=np.float32),
-                          shape=(4,), dtype=np.float32)
+        # return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
+        #                   high=np.ones(4, dtype=np.float32),
+        #                   shape=(4,), dtype=np.float32)
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
@@ -551,11 +556,9 @@ class PBDroneEnv(
 
         # Check if the angle is within the threshold
         if angle > threshold_angle:
-            reward = -1  # Negative reward
+            return -1  # Negative reward
         else:
-            reward = 0  # No penalty
-
-        return reward
+            return 0  # No penalty
 
     def get_forward_vector(self):
         euler = self.rpy[0]
@@ -565,7 +568,16 @@ class PBDroneEnv(
             np.sin(euler[2]) * np.cos(euler[1]),  # Sin(yaw) * Cos(pitch)
             np.sin(euler[1])  # Sin(pitch)
         ])
+
         return forward_vector
+    def gasd(self):
+        quat = self.quat[0]
+        # Convert quaternion to rotation matrix
+        rot_mat = np.array(p.getMatrixFromQuaternion(quat)).reshape(3, 3)
+        # Assuming the drone's forward vector points along the x-axis in its local frame
+        forward_vector = rot_mat[:, 0]
+        return forward_vector
+
 
     def smoothness_reward(self, accel_threshold=0.1, ang_accel_threshold=0.1):
         # Calculate linear and angular accelerations
@@ -752,6 +764,32 @@ class PBDroneEnv(
         distance = np.linalg.norm(np.cross(line_end - line_start, point - line_start)) / np.linalg.norm(line_vector)
 
         return distance
+
+    def getDroneLookDirection(self, nth_drone):
+        """Returns the direction the n-th drone is looking at.
+
+        Parameters
+        ----------
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        Returns
+        -------
+        ndarray
+            (3,)-shaped array of floats representing the direction vector.
+        """
+        nth_drone = 0
+        # Get the drone's orientation quaternion
+        # self.quat[0]
+        _, quat = p.getBasePositionAndOrientation(self.DRONE_IDS[nth_drone], physicsClientId=self.CLIENT)
+
+        # Convert quaternion to rotation matrix
+        rot_mat = np.array(p.getMatrixFromQuaternion(quat)).reshape(3, 3)
+
+        # The drone's forward direction is typically the first column of the rotation matrix
+        forward_direction = rot_mat[:, 0]
+
+        return forward_direction
 
     def show_targets(self):
         """Shows the targets in PyBullet visualization."""

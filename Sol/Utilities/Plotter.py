@@ -3,10 +3,13 @@ import numpy as np
 
 import stable_baselines3
 import torch
+import torch.onnx
 
 import torchviz
 import graphviz
 from torchviz import make_dot
+
+import hiddenlayer as hl
 
 def plot_metrics(episode_rewards, avg_rewards,
                  exploration_rate, episode_durations,
@@ -96,10 +99,28 @@ def plot_3d_targets(targets):
 
 def vis_policy(model, env):
 
+    print(model.policy)
+    print(model.policy.named_parameters())
+
+    # P
     dummy_input = torch.randn(1, env.observation_space.shape[0])
-    action, _ = model.policy.forward(dummy_input)
+    # action, _ = model.policy.forward(dummy_input)
+    action, _ = model.predict(dummy_input.numpy())
+    if isinstance(action, np.ndarray):
+        action = torch.tensor(action)
     dot = make_dot(action, params=dict(list(model.policy.named_parameters())))
-    dot.render('policy_graph', format='png')
+    dot.render('policy_graph', format='png', outfile="Sol/visual/graphviz_policy_graph.png")
+
+    # onnx
+    torch.onnx.export(model.policy, dummy_input.numpy(), "policy_model.onnx")
+
+    # hl
+    trans = hl.transforms.Compose([hl.transforms.Prune('Constant')])
+    graph = hl.build_graph(model.policy, list(dummy_input.numpy()), transforms=trans)
+    graph.theme = hl.graph.THEMES['blue'].copy()
+    graph.save('sb3_policy_graph.png', format='png', path="Sol/visual/")
+
+
 
 class Plotter:
     pass
