@@ -1,3 +1,4 @@
+import os
 import random
 import sys
 
@@ -13,6 +14,14 @@ sys.path.append("../")
 sys.path.append("./")
 sys.path.append("Sol/Model")
 sys.path.append("Sol.Model")
+
+# Get the root directory
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(root_dir)
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '.', '.'))
+
+# Add the root directory to the sys.path
+sys.path.append(root_dir)
 
 import numpy as np
 import torch as th
