@@ -34,7 +34,7 @@ class PBDroneEnv(
 
     def __init__(self,
                  target_points, threshold, discount, max_steps, aviary_dim,
-                 save_model=False, save_folder=None,
+                 save_folder=None,
                  drone_model: DroneModel = DroneModel.CF2X,
                  initial_xyzs=None,
                  initial_rpys=None,
@@ -48,7 +48,8 @@ class PBDroneEnv(
                  vision_attributes=False,
                  user_debug_gui=False,
                  obstacles=False,
-                 random_spawn=False
+                 random_spawn=False,
+                 cylinder=True
                  ):
 
         self.ACT_TYPE = act
@@ -66,6 +67,7 @@ class PBDroneEnv(
         self._aviary_dim = aviary_dim
         self._x_low, self._y_low, self._z_low, self._x_high, self._y_high, self._z_high = aviary_dim
         self.circle_radius = 1
+        self.cylinder = cylinder
 
         self.random_spawn = random_spawn
         print("AVIARY DIM", self._aviary_dim)
@@ -84,10 +86,11 @@ class PBDroneEnv(
                          # act=ActionType.RPM
                          )
 
-        a_low = self.KF * (self.PWM2RPM_SCALE * self.MIN_PWM + self.PWM2RPM_CONST) ** 2
-        a_high = self.KF * (self.PWM2RPM_SCALE * self.MAX_PWM + self.PWM2RPM_CONST) ** 2
-        self.physical_action_bounds = (np.full(4, a_low, np.float32),
-                                       np.full(4, a_high, np.float32))
+        if self.ACT_TYPE == ActionType.THRUST:
+            a_low = self.KF * (self.PWM2RPM_SCALE * self.MIN_PWM + self.PWM2RPM_CONST) ** 2
+            a_high = self.KF * (self.PWM2RPM_SCALE * self.MAX_PWM + self.PWM2RPM_CONST) ** 2
+            self.physical_action_bounds = (np.full(4, a_low, np.float32),
+                                           np.full(4, a_high, np.float32))
 
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
@@ -155,14 +158,14 @@ class PBDroneEnv(
         # print("TERMINATED", terminated)
 
         #
-        # if True and len(obs) > 0:
-        #     with open(self.rollout_path, mode='a+') as f:
-        #         with self.lock: # Doesnt work even with thread locking with multiple envs
-        #             for x in obs.tolist():
-        #                 f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
-        #             f.write(str(reward))
-        #             f.write("\n")
-        #     f.close()
+        if True and len(obs) > 0:
+            with open(self.rollout_path, mode='a+') as f:
+                with self.lock:  # Doesnt work even with thread locking with multiple envs
+                    for x in obs.tolist():
+                        f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
+                    f.write(str(reward))
+                    f.write("\n")
+            f.close()
 
         if not terminated:
             self.update_state_post_step(action)
@@ -194,13 +197,15 @@ class PBDroneEnv(
 
         # return super()._actionSpace()
 
-        return spaces.Box(low=self.physical_action_bounds[0],
-                          high=self.physical_action_bounds[1],
-                          dtype=np.float32)
+        if self.ACT_TYPE == ActionType.THRUST:
+            return spaces.Box(low=self.physical_action_bounds[0],
+                              high=self.physical_action_bounds[1],
+                              dtype=np.float32)
 
-        # return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
-        #                   high=np.ones(4, dtype=np.float32),
-        #                   shape=(4,), dtype=np.float32)
+        elif self.ACT_TYPE == ActionType.RPM:
+            return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
+                              high=np.ones(4, dtype=np.float32),
+                              shape=(4,), dtype=np.float32)
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
@@ -457,28 +462,30 @@ class PBDroneEnv(
             return -10.0
 
         reward = np.float32(0.0)
-        if self.random_spawn and self.total_steps < 100_000:
-            min_dis = 0
-            if self._current_target_index == len(self._target_points):
-                return 200
-            for i, target in enumerate(self._target_points):
-                dis = np.linalg.norm(self._current_position - target)
-                if dis < self._threshold and not self._reached_targets[i]:
-                    self.remove_target(i)
-                    # self.remove_target(target, i)
-                    self._reached_targets[i] = True
-                    return 100
-                elif min_dis == 0 or dis < min_dis:
-                    min_dis = dis
-                    self._current_target_index = i
-                    self._distance_to_target = min_dis
-
-            self._last_position = copy.deepcopy(self._current_position)
-
-            reward += (np.exp(-2 * self._distance_to_target)) * 3
-            reward += ((self._prev_distance_to_target - self._distance_to_target) * 10) if not self.just_found else 0
-            self.just_found = False
-            return reward / 4
+        # if self.random_spawn and self.total_steps < 300_000:
+        #     min_dis = 0
+        #     if self._current_target_index == len(self._target_points):
+        #         return 8
+        #     for i, target in enumerate(self._target_points):
+        #         dis = np.linalg.norm(self._current_position - target)
+        #         if dis < self._threshold and not self._reached_targets[i]:
+        #             self.remove_target(i)
+        #             # self.remove_target(target, i)
+        #             self._reached_targets[i] = True
+        #             return 3
+        #         elif min_dis == 0 or dis < min_dis:
+        #             min_dis = dis
+        #             self._current_target_index = i
+        #             self._distance_to_target = min_dis
+        #
+        #     self._last_position = copy.deepcopy(self._current_position)
+        #
+        #     reward += (np.exp(-2 * self._distance_to_target)) * 3
+        #     reward += ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0
+        #     reward += self.orientation_reward(self._target_points[self._current_target_index]) * 3
+        #     reward += self.smoothness_reward()
+        #     self.just_found = False
+        #     return reward / 25
 
         # try:
         #
@@ -570,14 +577,6 @@ class PBDroneEnv(
         ])
 
         return forward_vector
-    def gasd(self):
-        quat = self.quat[0]
-        # Convert quaternion to rotation matrix
-        rot_mat = np.array(p.getMatrixFromQuaternion(quat)).reshape(3, 3)
-        # Assuming the drone's forward vector points along the x-axis in its local frame
-        forward_vector = rot_mat[:, 0]
-        return forward_vector
-
 
     def smoothness_reward(self, accel_threshold=0.1, ang_accel_threshold=0.1):
         # Calculate linear and angular accelerations
@@ -609,8 +608,13 @@ class PBDroneEnv(
 
         return rp_t
 
-    def progress_reward(self):
-        """https://arxiv.org/pdf/2310.10943"""
+    def reaching_progress_reward(self):
+        """
+        Reaching the Limit in Autonomous Racing: Optimal Control versus Reinforcement Learning
+        https://arxiv.org/pdf/2310.10943
+
+        Approximation, as it is not explicitly stated.
+        """
 
         reward = 0
 
@@ -650,15 +654,17 @@ class PBDroneEnv(
         self._steps = 0
         self._target_points = self._or_target_points
 
-        # if self.random_spawn and self.total_steps < 100_000:
+        # if self.random_spawn and self.total_steps < 300_000:
         #     from_p, to_p = self._target_points[np.random.choice(len(self._target_points), size=2, replace=False)]
         #     self.INIT_XYZS[0] = self.PositionGenerator.generate_random_point_around_line(from_p, to_p)
+        #     print(from_p, to_p )
+        #     print(self.INIT_XYZS[0])
         #
         #     self._current_position = self.INIT_XYZS[0]
         #     self._current_target_index = 0
         # else:
-        #     # self.INIT_XYZS[0] = self.INIT_XYZS[0]
-        #     # self.INIT_XYZS[0] = (0,0, self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1)
+        #     self.INIT_XYZS[0] = self.INIT_XYZS[0]
+        #     self.INIT_XYZS[0] = (0,0, self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1)
         #     self._current_position = ret[0][0:3]
 
         # self._current_position = ret[0][0:3]
@@ -707,7 +713,7 @@ class PBDroneEnv(
                 state[1] < self._y_low or
                 (len(p.getContactPoints()) > 0) or
                 state[2] > self._z_high
-                or (self.is_out_of_bounds(state))
+                or (self.cylinder and self.is_out_of_cylinder_bounds(state))
         ):
 
             # print(p.getOverlappingObjects())
@@ -716,7 +722,7 @@ class PBDroneEnv(
         else:
             return False
 
-    def is_out_of_bounds(self, drone_position, circle_center=(0, 0, 1)):
+    def is_out_of_cylinder_bounds(self, drone_position, circle_center=(0, 0, 1)):
         """
         Compute the closest point on the circle to a given position,
         check if the drone is out of the specified bounds from the nearest point on a circle.
@@ -764,32 +770,6 @@ class PBDroneEnv(
         distance = np.linalg.norm(np.cross(line_end - line_start, point - line_start)) / np.linalg.norm(line_vector)
 
         return distance
-
-    def getDroneLookDirection(self, nth_drone):
-        """Returns the direction the n-th drone is looking at.
-
-        Parameters
-        ----------
-        nth_drone : int
-            The ordinal number/position of the desired drone in list self.DRONE_IDS.
-
-        Returns
-        -------
-        ndarray
-            (3,)-shaped array of floats representing the direction vector.
-        """
-        nth_drone = 0
-        # Get the drone's orientation quaternion
-        # self.quat[0]
-        _, quat = p.getBasePositionAndOrientation(self.DRONE_IDS[nth_drone], physicsClientId=self.CLIENT)
-
-        # Convert quaternion to rotation matrix
-        rot_mat = np.array(p.getMatrixFromQuaternion(quat)).reshape(3, 3)
-
-        # The drone's forward direction is typically the first column of the rotation matrix
-        forward_direction = rot_mat[:, 0]
-
-        return forward_direction
 
     def show_targets(self):
         """Shows the targets in PyBullet visualization."""
