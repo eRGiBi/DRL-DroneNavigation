@@ -86,11 +86,11 @@ class PBDroneEnv(
                          # act=ActionType.RPM
                          )
 
-        if self.ACT_TYPE == ActionType.THRUST:
-            a_low = self.KF * (self.PWM2RPM_SCALE * self.MIN_PWM + self.PWM2RPM_CONST) ** 2
-            a_high = self.KF * (self.PWM2RPM_SCALE * self.MAX_PWM + self.PWM2RPM_CONST) ** 2
-            self.physical_action_bounds = (np.full(4, a_low, np.float32),
-                                           np.full(4, a_high, np.float32))
+        # if self.ACT_TYPE == ActionType.THRUST:
+        a_low = self.KF * (self.PWM2RPM_SCALE * self.MIN_PWM + self.PWM2RPM_CONST) ** 2
+        a_high = self.KF * (self.PWM2RPM_SCALE * self.MAX_PWM + self.PWM2RPM_CONST) ** 2
+        self.physical_action_bounds = (np.full(4, a_low, np.float32),
+                                       np.full(4, a_high, np.float32))
 
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
@@ -158,14 +158,14 @@ class PBDroneEnv(
         # print("TERMINATED", terminated)
 
         #
-        if True and len(obs) > 0:
-            with open(self.rollout_path, mode='a+') as f:
-                with self.lock:  # Doesnt work even with thread locking with multiple envs
-                    for x in obs.tolist():
-                        f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
-                    f.write(str(reward))
-                    f.write("\n")
-            f.close()
+        # if True and len(obs) > 0:
+        #     with open(self.rollout_path, mode='a+') as f:
+        #         with self.lock:  # Doesnt work even with thread locking with multiple envs
+        #             for x in obs.tolist():
+        #                 f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
+        #             f.write(str(reward))
+        #             f.write("\n")
+        #     f.close()
 
         if not terminated:
             self.update_state_post_step(action)
@@ -197,15 +197,15 @@ class PBDroneEnv(
 
         # return super()._actionSpace()
 
-        if self.ACT_TYPE == ActionType.THRUST:
-            return spaces.Box(low=self.physical_action_bounds[0],
-                              high=self.physical_action_bounds[1],
-                              dtype=np.float32)
+        # if self.ACT_TYPE == ActionType.THRUST:
+        return spaces.Box(low=self.physical_action_bounds[0],
+                          high=self.physical_action_bounds[1],
+                          dtype=np.float32)
 
-        elif self.ACT_TYPE == ActionType.RPM:
-            return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
-                              high=np.ones(4, dtype=np.float32),
-                              shape=(4,), dtype=np.float32)
+        # elif self.ACT_TYPE == ActionType.RPM:
+        #     return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
+        #                       high=np.ones(4, dtype=np.float32),
+        #                       shape=(4,), dtype=np.float32)
 
     def _observationSpace(self):
         """Returns the observation space of the environment."""
