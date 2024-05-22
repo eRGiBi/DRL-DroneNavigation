@@ -14,6 +14,7 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 
 class TBM:
     """Half of this doesn't even work."""
+
     def extract_datetime_from_filename(self, filename):
         match = (re.search(r'PPO_(\d{2}\.\d{2}\.\d{4}_\d{2}\.\d{2}\.\d{2})_', filename) or
                  re.search(r'PPO_save_(\d{2}\.\d{2}\.\d{4}_\d{2}\.\d{2}\.\d{2})\\', filename))
@@ -193,12 +194,12 @@ class TBM:
             steps, vals = zip(*values)
             plt.plot(steps, vals, label=names[i])
 
-        plt.title('Effects of normalization on ' + tag)
+        plt.title('Effects of different Numbers of Epochs on ' + tag)
         plt.xlabel('Step')
         plt.ylabel('Value')
 
         if plt.gca().has_data():
-            plt.legend(title="Gammas", fontsize=20)
+            plt.legend(title="Number of Epochs", fontsize=20)
             plt.show()
 
     def limit_data(data_dict):
@@ -218,6 +219,7 @@ class TBM:
         for tag, values in data_dict.items():
             data_dict[tag] = [(step, (val / max_reward) * 100) for step, val in values]
         return data_dict
+
 
 def tabulate_events(dpath):
     summary_iterators = [EventAccumulator(os.path.join(dpath, dname)).Reload() for dname in os.listdir(dpath)]
@@ -335,10 +337,9 @@ if __name__ == '__main__':
     tags = [
         # "eval/mean_ep_length",
         "eval/mean_reward"
-            ]
+    ]
     # tbm.visualize_dict(data_dict, tags_to_plot=tags)
     # tbm.visualize_each_tag_separately(data_dict, output_dir="Sol/logs/concats")
-
 
     # f_names = ["Sol/logs/PPO 05.13.2024_20.04.44/PPO_2",
     #
@@ -355,7 +356,6 @@ if __name__ == '__main__':
     # tbm.plot_runs("eval/mean_reward",
     #               [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in f_names],
     #               names=["256", "512", "1024"])
-
 
     # clip range
     # f_names = [
@@ -380,7 +380,6 @@ if __name__ == '__main__':
     #                   # "0.1", "0.2",
     #                   "0.35, lr=3.e-4", "0.35, lr=2.5e-4"])
 
-
     # # gamma
     # f_names = [
     #            "Sol/logs/PPO_save_05.16.2024_09.37.34/PPO_1",
@@ -389,7 +388,6 @@ if __name__ == '__main__':
     # tbm.plot_runs("eval/mean_reward",
     #               [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in f_names],
     #               names=["0.99", "0.999"])
-
 
     # norm
     # f_names = ["Sol/logs/PPO_save_05.17.2024_20.23.13",
@@ -400,25 +398,35 @@ if __name__ == '__main__':
     #               [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in f_names],
     #               names=["0.99", "0.999"])
 
-    # Run 1 (max reward 600)
-    f_names1 = tbm.find_tensorflow_files("Sol/logs/PPO_save_05.19.2024_15.36.44/")
-    # Run 2 (max reward 10)
-    f_names2 = tbm.find_tensorflow_files("Sol/logs/PPO_save_05.17.2024_20.23.13")
-
-    # Process and normalize data
-    data_dict1 = tbm.create_data_dict(tbm.sort_em_up(f_names1))
-    data_dict2 = tbm.create_data_dict(tbm.sort_em_up(f_names2))
-
-    for i, data in enumerate(data_dict1["eval/mean_reward"]):
-        print(data)
-        data_dict1["eval/mean_reward"][i] = (data[0], data[1] / 60)
-        print(data_dict1["eval/mean_reward"][i])
-    # Compare runs using normalized rewards
-    tbm.plot_runs("eval/mean_reward",
-                  [data_dict1, data_dict2],
-                  names=["Without reward normalization, scaled", "Reward normalized"])
+    # # Run 1 (max reward 600)
+    # f_names1 = tbm.find_tensorflow_files("Sol/logs/PPO_save_05.19.2024_15.36.44/")
+    # # Run 2 (max reward 10)
+    # f_names2 = tbm.find_tensorflow_files("Sol/logs/PPO_save_05.17.2024_20.23.13")
+    #
+    # # Process and normalize data
+    # data_dict1 = tbm.create_data_dict(tbm.sort_em_up(f_names1))
+    # data_dict2 = tbm.create_data_dict(tbm.sort_em_up(f_names2))
+    #
+    # for i, data in enumerate(data_dict1["eval/mean_reward"]):
+    #     print(data)
+    #     data_dict1["eval/mean_reward"][i] = (data[0], data[1] / 60)
+    #     print(data_dict1["eval/mean_reward"][i])
+    # # Compare runs using normalized rewards
+    # tbm.plot_runs("eval/mean_reward",
+    #               [data_dict1, data_dict2],
+    #               names=["Without reward normalization, scaled", "Reward normalized"])
 
     # # Compare runs using percentage rewards
     # tbm.plot_runs("eval/mean_reward",
     #               [data_dict_percentage_1, data_dict_percentage_2],
     #               names=["0.99", "0.999"])
+
+    # n epoch
+    f_names = ["Sol/logs/PPO_save_05.20.2024_13.28.07/",
+               "Sol/logs/PPO_save_05.20.2024_18.38.56/PPO_1",
+               "Sol/logs/PPO_save_05.19.2024_23.11.04/PPO_1",
+               "Sol/logs/PPO_save_05.19.2024_15.36.44/"
+               ]
+    tbm.plot_runs("eval/mean_reward",
+                  [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in f_names],
+                  names=["3", "5", "10", "20"])
