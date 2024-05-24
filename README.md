@@ -91,7 +91,7 @@ Value function regression with other methods (requires collecting rollouts):
 ### 5. Results
 
 
-![](www.github.com/eRGiBi/DRL-DroneNavigation/assets/gifs/viz.gif)
+![](assets/gifs/viz.gif)
 
 
 ### 6. Notes
