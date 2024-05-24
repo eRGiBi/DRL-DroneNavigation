@@ -90,6 +90,10 @@ Value function regression with other methods (requires collecting rollouts):
 
 ### 5. Results
 
+
+![](www.github.com/eRGiBi/DRL-DroneNavigation/assets/gifs/viz.gif)
+
+
 ### 6. Notes
 
 The OpenGl 3 engine doesn't work in virtual machines, so in order to have a visual representation of the simulation,
@@ -119,12 +123,12 @@ SAC.
 
 Hyperparams:
 
-no PPO-style value loss clipping
-value function normalization
-number of envs
-frame skipping
-deeper networks
-mlp sharing effects
+1. PPO-style value loss clipping
+2. value function normalization
+3. number of envs
+4. frame skipping
+5. deeper networks
+6. mlp sharing effects
 
 Testing for added noise
 
