@@ -1,15 +1,15 @@
 import numpy as np
 
+"""
+    Yet unused.
+"""
 
-class Rewarder():
-    pass
 
-
-
-class RewardCalculator:
+class BootstrappedImiVisionRewardCalculator:
     """
-    https://arxiv.org/pdf/2403.12203
+        https://arxiv.org/pdf/2403.12203
     """
+
     def __init__(self):
         self.lambda1 = 0.5
         self.lambda2 = 0.025
@@ -45,4 +45,53 @@ class RewardCalculator:
         r_crash_t = self.collision_penalty(crashed)
 
         total_reward = r_prog_t + r_perc_t + r_act_t + r_br_t + r_pass_t + r_crash_t
+        return total_reward
+
+
+class ChampRewardCalculator:
+    """
+        https://www.nature.com/articles/s41586-023-06419-4.pdf
+
+    """
+
+    def __init__(self):
+        lambda1 = 1.0
+        lambda2 = 0.02
+        lambda3 = -10.0
+        lambda4 = -2e-4
+        lambda5 = -1e-4
+        c1 = 5.0
+        c2 = 0
+
+        self.lambda1 = lambda1
+        self.lambda2 = lambda2
+        self.lambda3 = lambda3
+        self.lambda4 = lambda4
+        self.lambda5 = lambda5
+        self.c1 = c1
+        self.c2 = c2
+
+    def progress_reward(self, dGate_t_minus_1, dGate_t):
+        return self.lambda1 * (dGate_t_minus_1 - dGate_t)
+
+    def perception_reward(self, delta_cam):
+        """delta_cam:
+        This represents the angle between the camera's optical axis
+        and the direction towards the center of the next gate.
+        """
+        return self.lambda2 * np.exp(self.lambda3 * (delta_cam ** 4))
+
+    def command_smoothness_reward(self, a_t, a_t_minus_1, omega_t):
+        return self.lambda4 * np.linalg.norm(omega_t) ** 2 + self.lambda5 * np.linalg.norm(a_t - a_t_minus_1) ** 2
+
+    def collision_penalty(self, p_z, in_collision):
+        return self.c1 if p_z < 0 or in_collision else 0
+
+    def calculate_reward(self, dGate_t_minus_1, dGate_t, delta_cam, a_t, a_t_minus_1, omega_t, p_z, in_collision):
+        r_prog_t = self.progress_reward(dGate_t_minus_1, dGate_t)
+        r_perc_t = self.perception_reward(delta_cam)
+        r_cmd_t = self.command_smoothness_reward(a_t, a_t_minus_1, omega_t)
+        r_crash_t = self.collision_penalty(p_z, in_collision)
+
+        total_reward = r_prog_t + r_perc_t + r_cmd_t - r_crash_t
         return total_reward

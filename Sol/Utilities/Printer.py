@@ -11,7 +11,7 @@ def print_ppo_conf(model):
     print("  GAE Lambda:", model.gae_lambda)
     print("  Max Grad Norm:", model.max_grad_norm)
     print("  Target KL Divergence:", model.target_kl)
-    print("  Use SDE (Stochastic Differential Equations):", model.use_sde)
+    print("  Use SDE:", model.use_sde)
     print("  SDE Sample Frequency:", model.sde_sample_freq)
     print("  Learning Rate Scheduler:", model.lr_schedule)
     # print("  Use Optimizer:", model.optimizer_class)

@@ -202,13 +202,14 @@ class TBM:
             plt.legend(title="Number of Epochs", fontsize=20)
             plt.show()
 
-    def limit_data(data_dict):
+    def limit_data(self, data_dict):
 
         for tag, values in data_dict.items():
             n_values = len(values)
             print(n_values)
-            if n_values > 1000:
-                data_dict[tag] = values[:int(n_values * 0.6)]
+            # if n_values > 1000:
+            data_dict[tag] = values[:int(n_values * 0.99)]
+
 
     def normalize_rewards(self, data_dict, max_reward):
         for tag, values in data_dict.items():
@@ -422,11 +423,22 @@ if __name__ == '__main__':
     #               names=["0.99", "0.999"])
 
     # n epoch
-    f_names = ["Sol/logs/PPO_save_05.20.2024_13.28.07/",
-               "Sol/logs/PPO_save_05.20.2024_18.38.56/PPO_1",
-               "Sol/logs/PPO_save_05.19.2024_23.11.04/PPO_1",
-               "Sol/logs/PPO_save_05.19.2024_15.36.44/"
-               ]
+    # f_names = ["Sol/logs/PPO_save_05.20.2024_13.28.07/",
+    #            "Sol/logs/PPO_save_05.20.2024_18.38.56/PPO_1",
+    #            "Sol/logs/PPO_save_05.19.2024_23.11.04/PPO_1",
+    #            "Sol/logs/PPO_save_05.19.2024_15.36.44/"
+    #            ]
+    # tbm.plot_runs("eval/mean_reward",
+    #               [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in f_names],
+    #               names=["3", "5", "10", "20"])
+    # lr
+    f_names = [
+        "Sol/logs/PPO_save_05.19.2024_23.11.04/PPO_1",
+        "Sol/logs/PPO_save_05.23.2024_18.13.59",
+        "Sol/logs/PPO_save_05.23.2024_12.22.23",
+        "Sol/logs/PPO_save_05.23.2024_16.10.52",
+    ]
     tbm.plot_runs("eval/mean_reward",
-                  [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in f_names],
-                  names=["3", "5", "10", "20"])
+                  [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in
+                   f_names],
+                  names=["2.5e-4", "5e-4", "1e-3", "5e-3"])

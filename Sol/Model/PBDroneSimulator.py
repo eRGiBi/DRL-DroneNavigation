@@ -1,4 +1,5 @@
 import os
+import re
 import time
 from datetime import datetime
 
@@ -10,8 +11,11 @@ from typing import Callable
 # import pybullet as p
 import gym
 import torch.nn
+import yaml
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.logger import configure
+
+from Sol.Model.Environments import normalize
 
 # TODO
 sys.path.append("../")
@@ -40,11 +44,11 @@ from stable_baselines3.common.utils import set_random_seed
 from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
 from Sol.PyBullet.Logger import Logger
 import Sol.Utilities.Waypoints as Waypoints
+import Sol.Utilities.Callbacks as Callbacks
 
 from Sol.PyBullet.enums import ActionType
 
 from Sol.Utilities.Plotter import plot_learning_curve, vis_policy
-import Sol.Utilities.Callbacks as Callbacks
 from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
 
 # from tf_agents.environments import py_environment
@@ -52,6 +56,7 @@ from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
 
 # import aim
 from wandb.integration.sb3 import WandbCallback
+
 
 # import rl_zoo3
 # import rl_zoo3.train
@@ -61,6 +66,11 @@ from wandb.integration.sb3 import WandbCallback
 # rl_zoo3.ALGOS["sac"] = SAC
 # rl_zoo3.ALGOS["ppo"] = PPO
 # rl_zoo3.ALGOS["tqc"] = TQC
+
+# import ray
+# from ray import tune
+# from ray.rllib.agents.ppo import PPOTrainer
+# from ray.rllib.env.env_context import EnvContext
 
 
 def dilate_targets(targets, factor: int) -> list:
@@ -106,9 +116,11 @@ class PBDroneSimulator:
         self.initial_xyzs = np.array([[1, 0, 1]])
 
         # self.continued_agent = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
-        self.continued_agent = "Sol/model_chkpts/PPO_save_05.17.2024_20.23.13/best_model.zip"
-        self.continued_agent = "Sol/model_chkpts/PPO_save_05.19.2024_00.41.25/best_model.zip"
-        self.continued_agent = "Sol/model_chkpts/PPO_save_05.20.2024_13.28.07/best_model.zip"
+        # self.continued_agent = "Sol/model_chkpts/PPO_save_05.17.2024_20.23.13/best_model.zip"
+        # self.continued_agent = "Sol/model_chkpts/PPO_save_05.19.2024_00.41.25/best_model.zip"
+        # self.continued_agent = "Sol/model_chkpts/PPO_save_05.20.2024_13.28.07/best_model.zip"
+        # self.continued_agent = "Sol/model_chkpts/SAC_save_05.21.2024_23.28.56/best_model.zip"
+        self.continued_agent = "Sol/model_chkpts/SAC_save_05.22.2024_17.14.15/best_model.zip"  # "best"_sac
 
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
@@ -143,8 +155,10 @@ class PBDroneSimulator:
             #     env = gym.wrappers.RecordVideo(env, "results/videos/")
 
             # env = gym.wrappers.ClipAction(env)
-            # env = gym.wrappers.NormalizeObservation(env)
+            # env = normalize.NormalizeObservation(env)
             # env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, -10, 10))
+
+            # TODO: MaxAndSkipEnv
 
             if self.args.vec_check_nan:
                 env = VecCheckNan(env)
@@ -166,7 +180,7 @@ class PBDroneSimulator:
         else:
             return _init()
 
-    def setup_agent(self, tensorboard_path, train_env) -> BaseAlgorithm:
+    def setup_agent(self, tensorboard_path, train_env, chkpt_path=None) -> BaseAlgorithm:
 
         if self.args.agent == "RECPPO":
             lstm_kwargs = dict(activation_fn=th.nn.Tanh,
@@ -201,15 +215,13 @@ class PBDroneSimulator:
 
         if self.args.run_type == "full":
 
-            net_arch = dict(vf=[256, 256],
-                            pi=[256, 256]),
-            net_arch = dict(vf=[512, 512, 256, 256],
-                            pi=[256, 256, 256])
+            net_arch = dict(vf=[256, 256],              pi=[256, 256]),
+            net_arch = dict(vf=[512, 512, 256, 256],    pi=[256, 256])
+            # net_arch = dict(vf=[512, 512, 256],         pi=[512, 512, 256])
 
             onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
                                    share_features_extractor=False,
-                                   net_arch=dict(vf=[512, 512, 256],
-                                                 pi=[512, 512, 256]),
+                                   net_arch=net_arch,
                                    # log_std_init=0.5
                                    )
 
@@ -239,19 +251,16 @@ class PBDroneSimulator:
 
             elif self.args.agent == 'SAC':
 
-                # Off-policy algorithms #################################
                 offpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
                                         net_arch=[256, 256, ]
                                         )
 
                 offpolicy_kwargs = dict(activation_fn=torch.nn.Tanh,
-                                        net_arch=dict(qf=[256, 256],
-                                                      pi=[256, 256]),
-                                        share_features_extractor=True,
+                                        net_arch=dict(qf=[512, 512, 256],
+                                                      pi=[512, 512, 256]),
+                                        share_features_extractor=False,
                                         )
 
-
-
                 model = SAC(
                     "MlpPolicy",
                     train_env,
@@ -260,40 +269,23 @@ class PBDroneSimulator:
                     #     n_sampled_goal=len(self.targets),
                     #     goal_selection_strategy="future",
                     # ),
-                    verbose=1,
+                    verbose=2,
                     tensorboard_log=tensorboard_path if self.args.savemodel else None,
                     learning_starts=1000,
-                    train_freq=2,
-                    gradient_steps=3,
-                    batch_size=256,
-                    buffer_size=5_000_00,
-                    learning_rate=1e-3,
+                    train_freq=5,
+                    gradient_steps=2,
+                    batch_size=512,
+                    ent_coef="auto",
+                    target_update_interval=1,
+                    target_entropy="auto",
+                    buffer_size=1_000_000,
+                    learning_rate=3e-4,
                     gamma=0.99,
                     policy_kwargs=offpolicy_kwargs,
                     device="auto",
+                    # use_sde=True,
+                    # sde_sample_freq=-1,
                 )
-
-                model = SAC(
-                    "MlpPolicy",
-                    train_env,
-                    # replay_buffer_class=HerReplayBuffer,
-                    # replay_buffer_kwargs=dict(
-                    #     n_sampled_goal=len(self.targets),
-                    #     goal_selection_strategy="future",
-                    # ),
-                    verbose=1,
-                    tensorboard_log=tensorboard_path if self.args.savemodel else None,
-                    learning_starts=1000,
-                    train_freq=100,
-                    gradient_steps=3,
-                    batch_size=256,
-                    buffer_size=5_000_00,
-                    learning_rate=1e-3,
-                    gamma=0.99,
-                    policy_kwargs=offpolicy_kwargs,
-                    device="auto",
-                )
-
                 print_sac_conf(model)
 
             elif self.args.agent == 'DDPG':
@@ -318,10 +310,11 @@ class PBDroneSimulator:
 
             if self.args.agent == "SAC":
                 model = SAC.load(self.continued_agent, env=train_env)
-                print(model.get_parameters())
+                model.load_replay_buffer(os.path.join(load_most_recent_replay_buffer(chkpt_path)))
                 print(model.actor)
                 print(model.critic)
                 print(model.replay_buffer_class)
+                print(model.replay_buffer)
                 print_sac_conf(model)
 
             elif self.args.agent == "PPO":
@@ -400,7 +393,6 @@ class PBDroneSimulator:
                                           initial_xyzs=self.initial_xyzs)
 
         saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"
-        saved_filename = "Sol/model_chkpts/save-12.30.2023_02.57.41/best_model.zip" # sac
         saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_17.34.06/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_00.03.17/best_model.zip"
         # saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
@@ -408,9 +400,11 @@ class PBDroneSimulator:
         # saved_filename = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
         saved_filename = "Sol/model_chkpts/PPO_save_05.17.2024_01.36.12/best_model.zip"
         saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
+        saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"
+
 
         if self.args.agent == "SAC":
-            model = SAC.load(saved_filename, env=drone_environment)
+            model = SAC.load(self.continued_agent, env=drone_environment)
             # print(model.get_parameters())
             print(model.actor)
             print(model.critic)
@@ -485,6 +479,10 @@ class PBDroneSimulator:
 
     def test_learning(self):
 
+        """
+            Testing purpose, doesn't work.
+        """
+
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
                                                  aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
                                    for i in range(1)]
@@ -532,10 +530,6 @@ class PBDroneSimulator:
         else:
             chckpt_path, tensorboard_path, wandb_path = None, None, None
 
-        # train_env = self.make_env(multi=False, gui=False)
-        # print(train_env.action_space)
-        # check_env(train_env, warn=True, skip_render_check=True)
-
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
                                                  rank=i,
@@ -551,25 +545,28 @@ class PBDroneSimulator:
                                                 initial_xyzs=self.initial_xyzs,
                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2])),
                                   ])
-
-        # eval_env = make_env(multi=False, gui=False, rank=0)
-        # eval_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i) for i in range(self.num_cpu)])
-
-        # TODO: MaxAndSkipEnv 
+        print(eval_env.observation_space)
+        print(eval_env.action_space)
+        # check_env(train_env, warn=True, skip_render_check=True)
 
         model = self.setup_agent(tensorboard_path, train_env)
 
-        # model.set_random_seed(1)
+        model.set_random_seed(42)
+
+        # with open(os.path.join(chckpt_path, 'config.yaml'), 'w', encoding='UTF-8') as file:
+        #     yaml.dump(munch.unmunchify(config), file, default_flow_style=False)
 
         callbacks = []
 
         callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
         stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
-        # if self.args.savemodel:
-        # callbacks.append(Callbacks.FoundTargetsCallback(log_dir=chckpt_path + '/'))
-        # callbacks.append(CheckpointCallback(save_freq=1000, save_path=chckpt_path + '/',
-        #                  save_replay_buffer=True if (self.args.agent == "SAC" and True) else False, verbose=1))
+        if self.args.savemodel:
+            # callbacks.append(Callbacks.FoundTargetsCallback(log_dir=chckpt_path + '/'))
+            # callbacks.append(CheckpointCallback(save_freq=1000, save_path=chckpt_path + '/',
+            #                  save_replay_buffer=True if (self.args.agent == "SAC" and True) else False, verbose=1))
+            if self.args.agent == 'SAC':
+                callbacks.append(Callbacks.SaveReplayBufferCallback(save_freq=100000, save_path=chckpt_path))
 
         if self.args.wandb:
             callbacks.append(
@@ -685,6 +682,79 @@ class PBDroneSimulator:
         end = time.perf_counter()
         print(end - start)
 
+    def ray_train(self, env, args):
+
+        # Initialize Ray
+        ray.init()
+
+        env_config = {
+            "multi": True,
+            "aviary_dim": np.array([-2, -2, 0, 2, 2, 2]),
+            "initial_xyzs": self.initial_xyzs,  # Assuming initial_xyzs is defined somewhere
+        }
+
+        train_env_config = env_config.copy()
+        train_env_config.update({
+            "multi": True,
+            "gui": False,
+        })
+
+        eval_env_config = env_config.copy()
+        eval_env_config.update({
+            "gui": args.gui,
+            # "save_path": chckpt_path if args.savemodel else None,
+        })
+
+        config = {
+            "env": env,
+            "env_config": train_env_config,
+            "num_workers": self.num_envs,
+            "num_envs_per_worker": 1,
+            "framework": "torch",
+            "train_batch_size": 512,
+            "sgd_minibatch_size": 512,
+            "num_sgd_iter": 10,
+            "gamma": 0.99,
+            "vf_loss_coeff": 0.5,
+            "lambda": 0.9,
+            "normalize_advantages": True,
+            "clip_param": 0.2,
+            "lr": 2.5e-4,
+            "num_steps_sampled_before_learning_starts": 4096,
+            "model": {
+                "custom_model": "my_custom_model",
+            },
+            "evaluation_interval": 1,
+            "evaluation_num_episodes": 10,
+            "evaluation_config": {
+                "env_config": eval_env_config,
+            },
+            "log_level": "INFO",
+            "framework": "torch",
+            # "callbacks": callbacks,
+            # "loggers": [
+            #     {"type": "ray.tune.logger.TBXLogger",
+            #      "logdir": tensorboard_path if args.savemodel else None}
+            # ]
+        }
+
+        # Train the model
+        analysis = tune.run(
+            PPOTrainer,
+            config=config,
+            stop={"timesteps_total": args.total_timesteps},
+            # local_dir="path/to/logs",
+            checkpoint_at_end=True,
+            checkpoint_freq=1000,
+            verbose=3,
+        )
+
+        # Get the trained model
+        trained_model = analysis.get_best_trained_model()
+
+        # Save the trained model
+        checkpoint_path = analysis.get_best_checkpoint(trial=analysis.get_best_trial(), metric="episode_reward_mean")
+
     def face_target(self):
         target_vector = np.array(self.targets[0]) - np.array(self.initial_xyzs[0])
         target_vector_xy = np.array([target_vector[0], target_vector[1]])  # Projection on the XY plane
@@ -784,3 +854,34 @@ def lrsched():
         return lr
 
     return reallr
+
+
+def load_most_recent_replay_buffer(directory) -> str:
+    """
+    Load the recentest replay buffer from a given directory.
+
+    Parameters:
+    model (BaseAlgorithm): The RL model for which the replay buffer should be loaded.
+    directory (str | Path): Path to the directory containing the replay buffer files.
+
+    Returns:
+    Path
+    """
+    replay_buffer_files = os.listdir(directory)
+    replay_buffer_pattern = re.compile(r'replay_buffer_(\d+)\.pkl')
+
+    highest_count = -1
+    highest_file = None
+
+    for file in replay_buffer_files:
+        match = replay_buffer_pattern.match(file)
+        if match:
+            count = int(match.group(1))
+            if count > highest_count:
+                highest_count = count
+                highest_file = file
+
+    if not highest_file:
+        print("No replay buffer files found.")
+
+    return highest_file
