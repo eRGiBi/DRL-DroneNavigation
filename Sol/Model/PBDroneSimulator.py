@@ -108,9 +108,9 @@ class PBDroneSimulator:
         self.targets.pop(0)
 
         # Different for each track
-        self.initial_xyzs = track.initial_xyzs
+        self.initial_xyzs =  np.array([[1, 0, 1]])
 
-        self.continued_agent = "Sol/model_chkpts/SAC_save_05.22.2024_17.14.15/best_model.zip"
+        self.continued_agent = "Sol/model_chkpts/PPO_save_05.25.2024_02.21.23/best_model.zip"
 
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
@@ -664,7 +664,7 @@ class PBDroneSimulator:
         env_config = {
             "multi": True,
             "aviary_dim": np.array([-2, -2, 0, 2, 2, 2]),
-            "initial_xyzs": self.initial_xyzs,  # Assuming initial_xyzs is defined somewhere
+            "initial_xyzs": self.initial_xyzs,
         }
 
         train_env_config = env_config.copy()
