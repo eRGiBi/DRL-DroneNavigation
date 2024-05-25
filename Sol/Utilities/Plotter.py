@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import stable_baselines3
 import torch
 import torch.onnx
 

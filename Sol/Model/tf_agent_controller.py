@@ -1,3 +1,5 @@
+"""Early trials, unused."""
+
 import numpy as np
 import tensorflow as tf
 
@@ -12,10 +14,8 @@ from tf_agents.utils import common
 
 from Sol.Model.Environments.DroneEnvironment import DroneEnvironment
 
-from stable_baselines3 import TD3
 
-
-class AgentController():
+class AgentController:
     def __init__(self,
                  target_points,
                  gui=False,
@@ -62,7 +62,6 @@ class AgentController():
         tf_env = tf_py_environment.TFPyEnvironment(discrete_action_env)
         train_env = tf_py_environment.TFPyEnvironment(train_py_env)
         eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
-
 
         # Define the underlying Neural Network
 
@@ -133,13 +132,13 @@ class AgentController():
             num_steps=collect_steps_per_iteration
         )
 
-    # Initialize the agent and collect initial data
-    collect_driver.run()
+        # Initialize the agent and collect initial data
+        collect_driver.run()
 
-    # Train the agent
-    for _ in range(num_iterations):
-        trajectories, _ = collect_driver.run()
-        train_loss = agent.train(experience=trajectories)
+        # Train the agent
+        for _ in range(num_iterations):
+            trajectories, _ = collect_driver.run()
+            train_loss = agent.train(experience=trajectories)
 
     def policy_initialisation(self, env):
         model = TD3(
@@ -148,8 +147,6 @@ class AgentController():
             verbose=1
         )
         model.learn(total_timesteps=1000000)
-
-
 
     def dense_layer(self, num_units):
         return tf.keras.layers.Dense(
@@ -175,6 +172,3 @@ class AgentController():
 
         avg_return = total_return / num_episodes
         return avg_return.numpy()[0]
-
-    # See also the metrics module for standard implementations of different metrics.
-    # https://github.com/tensorflow/agents/tree/master/tf_agents/metrics

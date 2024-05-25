@@ -194,12 +194,12 @@ class TBM:
             steps, vals = zip(*values)
             plt.plot(steps, vals, label=names[i])
 
-        plt.title('Effects of different Numbers of Epochs on ' + tag)
+        plt.title('Effects of different Learning Rates on ' + tag)
         plt.xlabel('Step')
         plt.ylabel('Value')
 
         if plt.gca().has_data():
-            plt.legend(title="Number of Epochs", fontsize=20)
+            plt.legend(title="Learning Rates", fontsize=20)
             plt.show()
 
     def limit_data(self, data_dict):

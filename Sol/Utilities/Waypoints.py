@@ -6,6 +6,38 @@ from mpl_toolkits.mplot3d import Axes3D
 import Sol.Utilities.Plotter as Plotter
 
 
+class Track:
+    def __init__(self, track):
+
+        self.waypoints, self.initial_xyzs = track
+
+def normalize_coordinates(coordinates, new_size):
+    """
+    Normalize the coordinates to fit within a new size range.
+
+    Args:
+        coordinates (np.array): Original coordinates as a numpy array of shape (n, 3).
+        new_size (float): The desired new size for normalization.
+
+    Returns:
+        np.array: Normalized coordinates.
+    """
+    # Get the min and max of the current coordinates
+    min_coords = coordinates.min(axis=0)
+    max_coords = coordinates.max(axis=0)
+
+    # Calculate the current range
+    current_range = max_coords - min_coords
+
+    # Calculate the scaling factor
+    scaling_factor = new_size / current_range
+
+    # Normalize the coordinates
+    normalized_coords = (coordinates - min_coords) * scaling_factor
+
+    return normalized_coords
+
+
 def parametric_eq(num_points=5):
     """Parametric equations for a racetrack."""
 
@@ -28,7 +60,7 @@ def up():
         np.array([0.0, 0.0, 0.5]),
         np.array([0.0, 0.0, 0.7]),
         np.array([0.0, 0.0, 1]),
-    ]
+    ], np.array([0.0, 0.0, 0.1])
 
 
 def half_up_forward():
@@ -38,7 +70,7 @@ def half_up_forward():
         np.array([0., 1, 1.5]),
         # np.array([0.5, 1.5, 1.5]),
         # np.array([1.5, 1.5, 1.5]),
-    ]
+    ], np.array([0., 0., 0.1]),
 
 
 def up_circle():
@@ -55,7 +87,7 @@ def up_circle():
         np.array([1, 0.5, 0.5]),
         np.array([0.5, 0.2, 0.2]),
         np.array([0.0, 0.0, 0.2]),
-    ]
+    ], np.array([0.0, 0.0, 0.1]),
 
 
 def up_sharp_back_turn():
@@ -65,7 +97,8 @@ def up_sharp_back_turn():
         np.array([0.3, 0.5, 0.7]),
         np.array([1, 0.5, 1]),
         np.array([1.5, 1., 1.2])
-    ]
+    ], np.array([0.0, 0.0, 0.1]),
+
 
 def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
     """
@@ -84,7 +117,6 @@ def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
     angles = np.linspace(0, 2 * np.pi, num_points + 1, endpoint=True)
     circle_points = np.zeros((num_points + 1, 3))
 
-
     if plane == "XY":
         circle_points[:, 0] = center[0] + radius * np.cos(angles)  # X coordinate
         circle_points[:, 1] = center[1] + radius * np.sin(angles)  # Y coordinate
@@ -100,7 +132,7 @@ def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
     else:
         raise ValueError("Invalid plane specified. Choose 'XY', 'XZ', or 'YZ'.")
 
-    return circle_points
+    return circle_points, (radius, 0, center[2] + radius)
 
 
 def generate_random_targets(num_targets: int) -> np.ndarray:
@@ -133,6 +165,17 @@ def generate_random_targets(num_targets: int) -> np.ndarray:
     print(targets)
     return targets
 
+def reachin():
+    return np.array([
+    [-.75, -0.5, 3.5],  # G1
+    [8.5, 6, 1],       # G2
+    [8.5, -3.5, 1], # G3
+    [-5, -6, 3.2],    # G4
+    [-5, -4.5, 1],  # G5
+    [4, -4.5, 1.3],        # G6
+    [-2.3, 7, 1.3]      # G7
+])
+
 
 if __name__ == '__main__':
     targets = up()
@@ -158,11 +201,18 @@ if __name__ == '__main__':
     print(c)
     Plotter.plot_3d_targets(c)
 
-    point = (0, 0, 2)  # Adjust coordinates to test
+    point = (0, 0, 2)
     radius = 1
     height = 3
     center = (0, 0, 0)
     plane = "XY"
 
     # print(is_point_inside_cylinder(point, radius, height, center, plane))
+
+    targets = reaching()
+    Plotter.plot_3d_targets(targets)
+    targets = reachin()
+    Plotter.plot_3d_targets(targets)
+
+
 

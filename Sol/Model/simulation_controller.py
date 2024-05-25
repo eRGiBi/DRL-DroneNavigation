@@ -1,27 +1,23 @@
 import os
-import random
 import sys
+import time
 
 import cProfile
 import pstats
 
-import time
-
-import yaml
-
-# TODO
-sys.path.append("../")
-sys.path.append("./")
-sys.path.append("Sol/Model")
-sys.path.append("Sol.Model")
-
-# Get the root directory
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.append(root_dir)
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '.', '.'))
-
-# Add the root directory to the sys.path
-sys.path.append(root_dir)
+# # TODO
+# sys.path.append("../")
+# sys.path.append("./")
+# sys.path.append("Sol/Model")
+# sys.path.append("Sol.Model")
+#
+# # Get the root directory
+# root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# sys.path.append(root_dir)
+# root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '.', '.'))
+#
+# # Add the root directory to the sys.path
+# sys.path.append(root_dir)
 
 import numpy as np
 import torch as th
@@ -37,22 +33,14 @@ from gymnasium.envs.registration import register
 from torch.utils.tensorboard import SummaryWriter
 
 
-# from tf_agents.environments import py_environment
-
-
 def init_env():
     th.autograd.set_detect_anomaly(True)
 
     np.seterr(all="raise")
 
     register(
-        # unique identifier for the env `name-version`
         id="DroneEnv",
-        # path to the class for creating the env
-        # Note: entry_point also accept a class as input (and not only a string)
         entry_point="PBDroneSimulator",
-        # Max number of steps per episode, using a `TimeLimitWrapper`
-        max_episode_steps=3000,
     )
 
 
@@ -92,11 +80,11 @@ if __name__ == "__main__":
     print(args)
 
     # Seeding
-    seed = args.seed
-    random.seed(seed)
-    np.random.seed(seed)
-    th.manual_seed(seed)
-    th.backends.cudnn.deterministic = False
+    # seed = args.seed
+    # random.seed(seed)
+    # np.random.seed(seed)
+    # th.manual_seed(seed)
+    # th.backends.cudnn.deterministic = False
 
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
 
@@ -104,16 +92,17 @@ if __name__ == "__main__":
     # targets = Waypoints.up_sharp_back_turn()
     # targets = Waypoints.half_up_forward()
 
-    targets = Waypoints.circle(radius=1, num_points=6, height=1, )
+    # targets = Waypoints.circle(radius=1, num_points=6, height=1, )
+    track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1))
 
-    sim = PBDroneSimulator(args, targets, target_factor=0)
+    sim = PBDroneSimulator(args, track, target_factor=0)
 
     if args.wandb:
         init_wandb(args)
 
     if args.run_type == "full" or args.run_type == "cont":
         profiler = cProfile.Profile()
-        # profiler.enable()
+        profiler.enable()
         try:
             sim.run_full_training()
             profiler.disable()
