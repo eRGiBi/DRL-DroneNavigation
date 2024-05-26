@@ -11,6 +11,11 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class SaveReplayBufferCallback(BaseCallback):
+    """
+    Custom Callback for saving the replay buffer of SAC (and possibly other off-policy methods).
+    A single buffer is about 126MB.
+    """
+
     def __init__(self, save_freq: int, save_path: str, verbose=0):
         super(SaveReplayBufferCallback, self).__init__(verbose)
         self.save_freq = save_freq
@@ -38,6 +43,7 @@ class FoundTargetsCallback(BaseCallback):
     """
     Callback for plotting the number of found targets during training.
     """
+
     def __init__(self, log_dir, log_freq, verbose=1):
         super(FoundTargetsCallback, self).__init__(verbose)
         self.log_dir = log_dir
@@ -52,7 +58,6 @@ class FoundTargetsCallback(BaseCallback):
         if self.n_calls % self._log_freq == 0:
             found_targets = self.locals["infos"][0]["found_targets"]
             self.tb_formatter.writer.add_scalar("found_targets", found_targets)
-
 
         return True
 
@@ -75,6 +80,7 @@ class HParamCallback(BaseCallback):
     """
     Saves the hyperparameters and metrics at the start of the training, and logs them to TensorBoard.
     """
+
     def _on_training_start(self) -> None:
         self.hparams = self.model.get_parameters()
 
@@ -99,6 +105,7 @@ class HParamCallback(BaseCallback):
         if self.writer is not None:
             self.writer.close()
 
+
 class SummaryWriterCallback2(BaseCallback):
     """
     Snippet skeleton from Stable baselines3 documentation here:
@@ -111,7 +118,8 @@ class SummaryWriterCallback2(BaseCallback):
         output_formats = self.logger.output_formats
         # Save reference to tensorboard formatter object
         # note: the failure case (not formatter found) is not handled here, should be done with try/except.
-        self.tb_formatter = next(formatter for formatter in output_formats if isinstance(formatter, TensorBoardOutputFormat))
+        self.tb_formatter = next(
+            formatter for formatter in output_formats if isinstance(formatter, TensorBoardOutputFormat))
 
     def _on_step(self) -> bool:
         """
@@ -123,9 +131,9 @@ class SummaryWriterCallback2(BaseCallback):
         if self.n_calls % self._log_freq == 0:
             rewards = self.locals['my_custom_info_dict']['my_custom_reward']
             for i in range(self.locals['env'].num_envs):
-                self.tb_formatter.writer.add_scalar("rewards/env #{}".format(i+1),
-                                                     rewards[i],
-                                                     self.n_calls)
+                self.tb_formatter.writer.add_scalar("rewards/env #{}".format(i + 1),
+                                                    rewards[i],
+                                                    self.n_calls)
 
         # self.writer.add_scalar('reward', reward, steps_counter)
 

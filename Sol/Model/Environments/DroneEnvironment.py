@@ -27,6 +27,8 @@ class DroneEnvironment(
     # py_environment.PyEnvironment,
 ):
 
+    """Early trials, unused."""
+
     def __init__(self,
                  race_track, target_points, threshold, drone, discount=1,
                  drone_model: DroneModel = DroneModel.CF2X,

@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import time
 
@@ -80,10 +81,10 @@ if __name__ == "__main__":
     print(args)
 
     # Seeding
-    # seed = args.seed
-    # random.seed(seed)
-    # np.random.seed(seed)
-    # th.manual_seed(seed)
+    seed = args.seed
+    random.seed(seed)
+    np.random.seed(seed)
+    th.manual_seed(seed)
     # th.backends.cudnn.deterministic = False
 
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")

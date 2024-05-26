@@ -184,23 +184,40 @@ class TBM:
                 plt.close()
                 print(f"Saved plot for {tag} to {plot_filename}")
 
-    def plot_runs(self, tag, runs, names):
+    def plot_runs(self, tag, runs, names, smoothing_factor=0.0):
 
         plt.figure(figsize=(12, 8))
         sns.set(style="whitegrid")
+        # sns.set_style("darkgrid", {"axes.facecolor": ".9"})
 
         for i, run in enumerate(runs):
             values = run[tag]
             steps, vals = zip(*values)
-            plt.plot(steps, vals, label=names[i])
 
-        plt.title('Effects of different Learning Rates on ' + tag)
+            if smoothing_factor > 0:
+                smoothed_vals = self.smooth(vals, smoothing_factor)
+            else:
+                smoothed_vals = vals
+
+            plt.plot(steps, smoothed_vals, label=names[i])
+
+        plt.title('Effects of different learning rates on ' + tag +
+                  (" (with smoothing)") if smoothing_factor > 0 else "")
         plt.xlabel('Step')
         plt.ylabel('Value')
 
         if plt.gca().has_data():
-            plt.legend(title="Learning Rates", fontsize=20)
+            plt.legend(title="Learning rates", fontsize=20, loc='best')
             plt.show()
+
+    def smooth(self, values, factor):
+        smoothed_values = []
+        for i in range(len(values)):
+            if i == 0:
+                smoothed_values.append(values[i])
+            else:
+                smoothed_values.append(smoothed_values[-1] * factor + values[i] * (1 - factor))
+        return smoothed_values
 
     def limit_data(self, data_dict):
 
@@ -208,7 +225,9 @@ class TBM:
             n_values = len(values)
             print(n_values)
             # if n_values > 1000:
-            data_dict[tag] = values[:int(n_values * 0.99)]
+            data_dict[tag] = values[:int(n_values * 0.95)]
+
+        return data_dict
 
 
     def normalize_rewards(self, data_dict, max_reward):
@@ -437,8 +456,29 @@ if __name__ == '__main__':
         "Sol/logs/PPO_save_05.23.2024_18.13.59",
         "Sol/logs/PPO_save_05.23.2024_12.22.23",
         "Sol/logs/PPO_save_05.23.2024_16.10.52",
+        "Sol/logs/PPO_save_05.25.2024_18.40.52"
     ]
     tbm.plot_runs("eval/mean_reward",
-                  [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in
+                  [tbm.limit_data(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name)))) for f_name in
                    f_names],
-                  names=["2.5e-4", "5e-4", "1e-3", "5e-3"])
+                  names=["2.5e-4", "5e-4", "1e-3", "5e-3",
+                         "linear decay from 2.5e-4 to 0"],
+                  smoothing_factor=0.75)
+
+    # target kl, value clip, entropy
+
+    # f_names = [
+    #     "Sol/logs/PPO_save_05.24.2024_18.39.12",
+    #     "Sol/logs/PPO_save_05.24.2024_21.27.54",
+    #     "Sol/logs/PPO_save_05.25.2024_02.21.23",
+    #     "Sol/logs/PPO_save_05.25.2024_15.52.28",
+    # ]
+    # for tag in ["eval/mean_reward", "train/approx_kl", "train/value_loss"]:
+    #     tbm.plot_runs(tag,
+    #                   [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in
+    #                    f_names],
+    #                   names=["Only target_kl=0.05",
+    #                          "with vf_clip=0.3",
+    #                          "with vf_clip=0.3, entropy=0.01",
+    #                          "with vf_clip=0.3, entropy=0.1"],
+    #                   smoothing_factor=0.7)

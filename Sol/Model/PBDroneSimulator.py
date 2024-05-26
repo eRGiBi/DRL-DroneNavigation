@@ -10,7 +10,11 @@ from typing import Callable
 
 # import pybullet as p
 import gym
+import ray
 import torch.nn
+import yaml
+from ray import tune
+from ray.rllib.algorithms import PPOConfig
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.env_checker import check_env
 
@@ -108,7 +112,7 @@ class PBDroneSimulator:
         self.targets.pop(0)
 
         # Different for each track
-        self.initial_xyzs =  np.array([[1, 0, 1]])
+        self.initial_xyzs = np.array([[1, 0, 1]])
 
         self.continued_agent = "Sol/model_chkpts/PPO_save_05.25.2024_02.21.23/best_model.zip"
 
@@ -234,8 +238,8 @@ class PBDroneSimulator:
                                 max_grad_norm=0.5,
                                 clip_range=0.2,
                                 target_kl=0.05,
-                                learning_rate=2.5e-4,
-                                # learning_rate=linear_schedule(2.5e-4),
+                                # learning_rate=2.5e-4,
+                                learning_rate=linear_schedule(2.5e-4),
                                 tensorboard_log=tensorboard_path if self.args.savemodel else None,
                                 device="auto",
                                 policy_kwargs=onpolicy_kwargs,
@@ -250,9 +254,9 @@ class PBDroneSimulator:
                                             net_arch=[256, 256, ]
                                             )
 
-                    offpolicy_kwargs = dict(activation_fn=torch.nn.Tanh,
-                                            net_arch=dict(qf=[512, 512, 256],
-                                                          pi=[512, 512, 256]),
+                    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
+                                            net_arch=dict(qf=[256, 256],
+                                                          pi=[256, 256]),
                                             share_features_extractor=False,
                                             )
 
@@ -267,8 +271,8 @@ class PBDroneSimulator:
                         verbose=2,
                         tensorboard_log=tensorboard_path if self.args.savemodel else None,
                         learning_starts=8192,
-                        train_freq=1,
-                        gradient_steps=8,
+                        train_freq=5,
+                        gradient_steps=2,
                         batch_size=1024,
                         ent_coef="auto",
                         target_update_interval=1,
@@ -533,12 +537,17 @@ class PBDroneSimulator:
         print(eval_env.action_space)
         # check_env(train_env, warn=True, skip_render_check=True)
 
-        model = self.setup_agent(tensorboard_path, train_env)
+        if self.args.lib == "sb3":
+            model = self.setup_agent(tensorboard_path, train_env)
+        elif self.args.lib == "ray":
+            self.ray_train()
+            exit()
 
         model.set_random_seed(42)
 
-        # with open(os.path.join(chckpt_path, 'config.yaml'), 'w', encoding='UTF-8') as file:
-        #     yaml.dump(munch.unmunchify(config), file, default_flow_style=False)
+        # if self.args.save_model:
+        #     with open(os.path.join(chckpt_path, 'config.yaml'), 'w', encoding='UTF-8') as file:
+        #         yaml.dump(munch.unmunchify(self.args), file, default_flow_style=False)
 
         callbacks = []
 
@@ -550,7 +559,7 @@ class PBDroneSimulator:
             # callbacks.append(CheckpointCallback(save_freq=1000, save_path=chckpt_path + '/',
             #                  save_replay_buffer=True if (self.args.agent == "SAC" and True) else False, verbose=1))
             if self.args.agent == 'SAC':
-                callbacks.append(Callbacks.SaveReplayBufferCallback(save_freq=100000, save_path=chckpt_path))
+                callbacks.append(Callbacks.SaveReplayBufferCallback(save_freq=100_000, save_path=chckpt_path))
 
         if self.args.wandb:
             callbacks.append(
@@ -657,35 +666,27 @@ class PBDroneSimulator:
             if self.plot:
                 logger.plot()
 
-    def ray_train(self, env, args):
+    def ray_train(self):
+        """Impossible to make it work."""
+        pass
 
-        ray.init()
+        ray.init(ignore_reinit_error=True)
 
         env_config = {
-            "multi": True,
-            "aviary_dim": np.array([-2, -2, 0, 2, 2, 2]),
+            "target_points": self.targets,  # Assuming this is defined in your context
+            "threshold": self.threshold,
+            "discount": self.discount,
+            "max_steps": self.args.max_env_steps,
+            "aviary_dim": [-2, -2, 0, 2, 2, 2],
             "initial_xyzs": self.initial_xyzs,
-        }
-
-        train_env_config = env_config.copy()
-        train_env_config.update({
             "multi": True,
             "gui": False,
-        })
-
-        eval_env_config = env_config.copy()
-        eval_env_config.update({
-            "gui": args.gui,
-            # "save_path": chckpt_path if args.savemodel else None,
-        })
-        # Initialize Ray
-        ray.init()
+        }
 
         config = {
-            "env": env,
-            "env_config": train_env_config,
-            "num_workers": 1, #self.num_envs,
-            "num_envs_per_worker": 1,
+            "env": PBDroneEnv,
+            "env_config": env_config,
+            "num_workers": 1,
             "framework": "torch",
             "train_batch_size": 512,
             "sgd_minibatch_size": 512,
@@ -693,40 +694,58 @@ class PBDroneSimulator:
             "gamma": 0.99,
             "vf_loss_coeff": 0.5,
             "lambda": 0.9,
-            "normalize_advantages": True,
             "clip_param": 0.2,
             "lr": 2.5e-4,
-            "num_steps_sampled_before_learning_starts": 4096,
-            "model": {
-                "custom_model": "my_custom_model",
-            },
-            "evaluation_interval": 1,
-            "evaluation_num_episodes": 10,
-            "evaluation_config": {
-                "env_config": eval_env_config,
-            },
-            "log_level": "INFO",
-            "framework": "torch",
-            # "callbacks": callbacks,
-            # "loggers": [
-            #     {"type": "ray.tune.logger.TBXLogger",
-            #      "logdir": tensorboard_path if args.savemodel else None}
-            # ]
         }
 
-        analysis = tune.run(
-            PPOTrainer,
-            config=config,
-            stop={"timesteps_total": args.total_timesteps},
-            # local_dir="path/to/logs",
-            checkpoint_at_end=True,
-            checkpoint_freq=1000,
-            verbose=3,
+        config = (
+            PPOConfig()
+            .api_stack(
+                enable_rl_module_and_learner=True,
+                enable_env_runner_and_connector_v2=True,
+            )
+            .env_runners(num_env_runners=1)
+            .environment(env="PBDroneEnv", env_config=train_env_config)
+            .rl_module(
+                model_config_dict={
+                    "fcnet_hiddens": [32],
+                    "fcnet_activation": "linear",
+                    "vf_share_layers": True,
+                }
+            )
+            .training(
+                gamma=0.99,
+                lr=0.0003,
+                num_sgd_iter=6,
+                vf_loss_coeff=0.01,
+                use_kl_loss=True,
+            )
+            .evaluation(
+                evaluation_num_env_runners=1,
+                evaluation_interval=1,
+                evaluation_parallel_to_training=True,
+            )
         )
 
-        trained_model = analysis.get_best_trained_model()
+        stop = {
+            "timesteps_total": self.args.total_timesteps,
+            "episode_reward_mean": 150.0,
+        }
 
-        checkpoint_path = analysis.get_best_checkpoint(trial=analysis.get_best_trial(), metric="episode_reward_mean")
+        from ray.rllib.algorithms.ppo import PPO
+
+        analysis = tune.run(
+            PPO,
+            config=config.to_dict(),
+            stop=stop,
+            verbose=1,
+        )
+
+        best_checkpoint = analysis.get_best_checkpoint(analysis.get_best_trial(), metric="episode_reward_mean")
+
+        # Load the best checkpoint
+        trainer = PPO(config=config)
+        trainer.restore(best_checkpoint)
 
     def face_target(self):
         target_vector = np.array(self.targets[0]) - np.array(self.initial_xyzs[0])
@@ -792,7 +811,6 @@ class PBDroneSimulator:
         # return chckpt_path, tensorboard_path, wandb_path
 
 
-#TODO
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     """
     Linear learning rate schedule.
@@ -811,6 +829,25 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
         :return: current learning rate
         """
         return progress_remaining * initial_value
+
+    return func
+
+
+def lr_incrase(initial_value: float) -> Callable[[float], float]:
+    """
+    Linear learning rate schedule.
+
+    :param initial_value: initial learning rate
+    :return: schedule that computes the current learning rate depending on remaining progress
+    """
+    if isinstance(initial_value, str):
+        initial_value = float(initial_value)
+
+    def func(progress_remaining: float) -> float:
+        """
+
+        """
+        return
 
     return func
 
