@@ -168,7 +168,7 @@ class PBDroneEnv(
         # print("TERMINATED", terminated)
 
         # Rollout collection
-        self.collect_rollout(obs, reward)
+        # self.collect_rollout(obs, reward)
 
         if not terminated:
             self.update_state_post_step(action)
@@ -452,8 +452,8 @@ class PBDroneEnv(
         # print(self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC)
         # print(self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100)
 
-        if (self._has_collision_occurred()
-                or self._is_done
+        if (self._is_done or
+                self._has_collision_occurred()
                 # or (self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC)
         ):
             return True
@@ -678,7 +678,8 @@ class PBDroneEnv(
             return False
 
     def current_target(self):
-        return self._target_points[self._current_target_index]
+        return self._target_points[self._current_target_index] if self._current_target_index < len(
+            self._target_points) else None
 
     def next_target(self):
         return self._target_points[self._current_target_index + 1] if (
@@ -714,7 +715,41 @@ class PBDroneEnv(
 
         else:
 
-          return False
+            point = np.array(drone_position)
+
+            if self._current_target_index == 0:
+                base1 = np.array(self.INIT_XYZS[0])
+                base2 = np.array(self.current_target())
+            else:
+                base1 = np.array(self._target_points[self._current_target_index - 1])
+                base2 = np.array(self.current_target())
+
+            # Vector from point1 to point2
+            line_vec = base2 - base1
+            line_length = np.linalg.norm(line_vec)
+
+            # Handle degenerate case where point1 and point2 are the same
+            if line_length == 0:
+                return np.linalg.norm(drone_position - base1) > self._threshold
+
+            line_unit_vec = line_vec / line_length
+
+            # Vector from point1 to drone
+            point1_to_drone_vec = drone_position - base1
+
+            # Projection of drone vector onto the line segment
+            projection_length = np.dot(point1_to_drone_vec, line_unit_vec)
+
+            # Clamp the projection length to the bounds of the line segment
+            projection_length = np.clip(projection_length, 0, line_length)
+
+            # Closest point on the line segment
+            closest_point_on_line = base1 + projection_length * line_unit_vec
+
+            # Distance from the drone to the closest point on the line
+            distance_from_line = np.linalg.norm(drone_position - closest_point_on_line)
+
+            return distance_from_line > self._threshold
 
     def save_model(self, save_folder):
         """

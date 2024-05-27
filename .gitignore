@@ -65,3 +65,4 @@ Sol/visual/graphviz_policy_graph.png
 flightmare/
 safe-control-gym/
 Sol/logs/concats/PPO 05.11.2024_11.37.31.csv
+Sol/rollouts/

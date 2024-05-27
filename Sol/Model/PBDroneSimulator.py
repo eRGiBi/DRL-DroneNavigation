@@ -246,10 +246,10 @@ class PBDroneSimulator:
                                 max_grad_norm=0.5,
                                 clip_range=0.2,
                                 target_kl=0.05,
-                                # learning_rate=2.5e-4,
+                                learning_rate=2.5e-4,
                                 # learning_rate=linear_schedule(2.5e-4),
                                 # learning_rate=lr_increase(2.5e-4, 5e-4, 0.4),
-                                learning_rate=exponential_schedule(2.5e-4),
+                                # learning_rate=exponential_schedule(2.5e-4),
                                 tensorboard_log=tensorboard_path if self.args.savemodel else None,
                                 device="auto",
                                 policy_kwargs=onpolicy_kwargs,
@@ -402,11 +402,14 @@ class PBDroneSimulator:
         saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_17.34.06/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_00.03.17/best_model.zip"
         # saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
-        saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
-        saved_filename = "Sol/model_chkpts/PPO_save_05.17.2024_01.36.12/best_model.zip"
-        saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
-        saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.17.2024_01.36.12/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"
+        # wrong observation spaces
+
+
 
         if self.args.agent == "SAC":
             model = SAC.load(self.continued_agent, env=drone_environment)
