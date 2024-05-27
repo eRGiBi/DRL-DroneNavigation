@@ -49,7 +49,10 @@ class PBDroneEnv(
                  user_debug_gui=False,
                  obstacles=False,
                  random_spawn=False,
-                 cylinder=True
+                 cylinder=True,
+                 circle=False,
+                 include_target=False,
+                 include_distance=False,
                  ):
 
         self.ACT_TYPE = act
@@ -68,13 +71,15 @@ class PBDroneEnv(
         self._x_low, self._y_low, self._z_low, self._x_high, self._y_high, self._z_high = aviary_dim
         self.circle_radius = 1
         self.cylinder = cylinder
+        self.circle = circle
 
-        self.include_target = False
+        self.include_target = include_target
         self.obs_goal_horizon = 1
-        self.include_distance = False
+        self.include_distance = include_distance
         self._max_target_dist = max(abs(self._x_low) + self._x_high, abs(self._y_low) + self._y_high, self._z_high)
 
         self.random_spawn = random_spawn
+
         print("AVIARY DIM", self._aviary_dim)
 
         super().__init__(drone_model=drone_model,
@@ -128,7 +133,7 @@ class PBDroneEnv(
         # Saving
         self.save_folder = save_folder
         self.rollout_path = os.path.join('Sol/rollouts/', 'rollout_' +
-                                         str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/'))) + '.txt')
+                                         str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/')) + 1) + '.txt')
         self.lock = threading.Lock()
 
         if save_folder is not None:
@@ -163,7 +168,7 @@ class PBDroneEnv(
         # print("TERMINATED", terminated)
 
         # Rollout collection
-        # self.collect_rollout(obs, reward)
+        self.collect_rollout(obs, reward)
 
         if not terminated:
             self.update_state_post_step(action)
@@ -180,8 +185,8 @@ class PBDroneEnv(
         self.prev_vel, self.prev_ang_v = self.current_vel, self.current_ang_v
 
         # Calculate the Euclidean distance between the drone and the next target
-        self._distance_to_target = abs(np.linalg.norm(
-            self._target_points[self._current_target_index] - self._current_position))
+        self._distance_to_target = np.linalg.norm(
+            self.current_target() - self._current_position)
 
         # distance_to_target = self.distance_between_points(self._computeObs()[:3],
         #                                                   self._target_points[self._current_target_index])
@@ -236,11 +241,8 @@ class PBDroneEnv(
         #                      'phi', 'theta', 'psi', 'p', 'q', 'r']
         # self.STATE_UNITS = ['m', 'm/s', 'm', 'm/s', 'm', 'm/s',
         #                     'rad', 'rad', 'rad', 'rad/s', 'rad/s', 'rad/s']
-        # # Define the state space for the dynamics.
-        #
-        # self.state_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
-        low = np.array([1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32)
+        low = np.array([-1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32)
         high = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32)
 
         # if self.include_target:
@@ -248,9 +250,10 @@ class PBDroneEnv(
         #     mul = 1 + self.obs_goal_horizon
         #     low = np.concatenate([low] * mul)
         #     high = np.concatenate([high] * mul)
-        # if self.include_distance:
-        #     low = np.append(low, 0)
-        #     high = np.append(high, 1)
+
+        if self.include_distance:
+            low = np.append(low, 0)
+            high = np.append(high, 1)
 
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
@@ -268,22 +271,24 @@ class PBDroneEnv(
         """
         Returns the current observation of the environment.
 
-        Kinematic observation of size 12.
+        Kinematic observation of size 12 or 13.
 
         """
-        obs = self._getDroneStateVector(0)
-        # print(obs)
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-
-        # print(obs)
 
         # obs = obs + self.eps
         ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
-        # print(ret)
 
         if self.include_distance:
-            ret = np.append(ret, obs[21])
-        #
+            ret = np.append(ret, [self._distance_to_target / self._max_target_dist])
+
+            # ret = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12, )
+            # for i in range(1, self.obs_goal_horizon + 1):
+            #     future_target = self._target_points[self._current_target_index + i]
+            #     future_target = self._clipAndNormalizeState(future_target)
+            #     ret = np.hstack([ret, future_target[0:3], future_target[7:10], future_target[10:13],
+            #     future_target[13:16]]).reshape(12 * (i + 1), )
+
         # print("x", obs[0], "y", obs[1], "z", obs[2])
         # print("roll", obs[7], "pitch", obs[8], "yaw", obs[9])
         # print("vel_x", obs[10], "vel_y", obs[11], "vel_z", obs[12])
@@ -296,11 +301,10 @@ class PBDroneEnv(
             # Normalize observations to avoid underflow/overflow issues
             ret = np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)
 
-            # Ensure the array is of type float32
             ret = ret.astype(np.float32)
 
-            assert isinstance(ret,
-                              np.ndarray) and ret.dtype == np.float32, "The observation is not a numpy array of type float32"
+            assert isinstance(ret, np.ndarray) and ret.dtype == np.float32, \
+                "The observation is not a numpy array of type float32"
 
             return ret
         except FloatingPointError as e:
@@ -369,9 +373,6 @@ class PBDroneEnv(
                                       state[16:20]
                                       ]).reshape(20, )
         # print("NORM AND CLIPPED", norm_and_clipped)
-
-        # if self.include_distance:
-        #     norm_and_clipped = np.append(norm_and_clipped, self._distance_to_target / self._max_target_dist)
 
         return norm_and_clipped
 
@@ -505,8 +506,8 @@ class PBDroneEnv(
         #     self.just_found = False
         #     return reward / 25
 
-        # try:
-        #
+
+
         #     if self._current_target_index > 0:
         #         # Additional reward for progressing towards the target
         #         reward += self.calculate_progress_reward(self._current_position, self._last_position,
@@ -520,18 +521,7 @@ class PBDroneEnv(
         #         reward += (np.exp(-4 * abs(self._distance_to_target))) * 3
         #         # Additional reward for progressing towards the target
         #         reward += (self._prev_distance_to_target - self._distance_to_target) * 10
-        #
-        #         # Negative reward for spinning too fast
-        #         # reward += -np.linalg.norm(self.ang_v) / 50
-        #
-        #         # reward -= sum(abs (x - y) for x in self._last_action for y in self._action)
-        #
-        #         # Penalize large actions to avoid erratic behavior
-        #         # reward -= 0.01 * np.linalg.norm(self._last_action)
-        #
-        # except ZeroDivisionError:
-        #     # Give a high reward if the drone is at the target (avoiding division by zero)
-        #     reward += 100
+
 
         # Check if the drone has reached a target
         if self._distance_to_target <= self._threshold:
@@ -546,13 +536,13 @@ class PBDroneEnv(
             else:
                 # Reward for reaching a target
                 reward += 75
-                reward += self.orientation_reward(self.next_target()) * 5
+                reward += self.orientation_reward(self.current_target()) * 5
                 self.just_found = True
 
         else:
             reward += (np.exp(-2 * self._distance_to_target)) * 3
             reward += ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0
-            reward += self.orientation_reward(self.next_target()) * 3
+            reward += self.orientation_reward(self.current_target()) * 3
             reward += self.smoothness_reward()
 
             # print("smoothness", self.smoothness_reward())
@@ -575,10 +565,9 @@ class PBDroneEnv(
         drone_to_target_vector = np.array(target_pos) - np.array(self.pos[0])
         drone_to_target_vector /= np.linalg.norm(drone_to_target_vector)  # Normalize
 
-        # Compute the angle between the drone's forward vector and the vector to the target
+        # angle between the drone's forward vector and the vector to the target
         angle = np.arccos(np.clip(np.dot(forward_vector, drone_to_target_vector), -1.0, 1.0))
 
-        # Check if the angle is within the threshold
         if angle > threshold_angle:
             return -1  # Negative reward
         else:
@@ -595,68 +584,17 @@ class PBDroneEnv(
 
         return forward_vector
 
-    def smoothness_reward(self, accel_threshold=0.1, ang_accel_threshold=0.1):
-        # Calculate linear and angular accelerations
+    def smoothness_reward(self, accel_threshold=0.7, ang_accel_threshold=0.3):
+        """
+        Penalizes the drone for sudden changes in velocity or angular velocity.
+        """
         lin_acc = np.linalg.norm(self.current_vel - self.prev_vel)
         ang_acc = np.linalg.norm(self.current_ang_v - self.prev_ang_v)
 
-        # Higher penalties as accelerations exceed thresholds
         linear_penalty = -abs(lin_acc) if lin_acc > accel_threshold else 0
         angular_penalty = -abs(ang_acc) if ang_acc > ang_accel_threshold else 0
 
         return linear_penalty + angular_penalty
-
-    def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
-        """
-            Calculates the progress reward for the current and previous positions of the drone and the current and previous
-            gate positions.
-            Based on the reward function from https://arxiv.org/abs/2103.08624
-            """
-
-        def s(p):
-            g_diff = g2 - g1
-            return np.dot(p - g1, g_diff) / np.linalg.norm(g_diff) ** 2
-
-        if pc_t_minus_1 is None:
-            # Handle the edge case for the first gate
-            rp_t = s(pc_t)
-        else:
-            rp_t = s(pc_t) - s(pc_t_minus_1)
-
-        return rp_t
-
-    def reaching_progress_reward(self):
-        """
-        Reaching the Limit in Autonomous Racing: Optimal Control versus Reinforcement Learning
-        https://arxiv.org/pdf/2310.10943
-
-        Approximation, as it is not explicitly stated.
-        """
-
-        reward = 0
-
-        dist_to_cent = np.linalg.norm(self._current_position - self._target_points[self._current_target_index])
-
-        if dist_to_cent <= self._threshold:
-            self._current_target_index += 1
-            reward += 3
-
-        if self._current_target_index == len(self._target_points):
-            self._is_done = True
-            return 10
-
-        dist_to_prev = np.linalg.norm(self._current_position - self._last_position)
-
-        # Penalty term
-        b = 0.01
-        penalty_term = b * np.linalg.norm(self.pos[10:])
-
-        # Collision penalty
-        collision_penalty = -10.0 if self._has_collision_occurred() else 0.0
-
-        reward += dist_to_prev - dist_to_cent - penalty_term + collision_penalty
-
-        return reward
 
     def reset(self,
               seed: int = None,
@@ -664,7 +602,6 @@ class PBDroneEnv(
         """Resets the environment."""
 
         ret = super().reset(seed, options)
-        # print(ret)
 
         self._is_done = False
         self._current_target_index = 0
@@ -689,6 +626,8 @@ class PBDroneEnv(
         # self._steps_since_last_target = 0
         self._distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
         self._prev_distance_to_target = np.linalg.norm(self._current_position - self._target_points[0])
+        self.prev_vel = np.zeros(3)
+        self.prev_ang_v = np.zeros(3)
         # self._last_action = np.zeros(4, dtype=np.float32)
         # self._last_position = copy.deepcopy(self._current_position)
         self.just_found = False
@@ -729,44 +668,53 @@ class PBDroneEnv(
                 state[1] > self._y_high or
                 state[1] < self._y_low or
                 (len(p.getContactPoints()) > 0) or
-                state[2] > self._z_high
-                or (self.cylinder and self.is_out_of_cylinder_bounds(state))
+                state[2] > self._z_high or
+                (self.cylinder and self.is_out_of_cylinder_bounds(state))
         ):
-
+            return True
             # print(p.getOverlappingObjects())
 
-            return True
         else:
             return False
 
-    def next_target(self):
+    def current_target(self):
         return self._target_points[self._current_target_index]
 
-    def is_out_of_cylinder_bounds(self, drone_position, circle_center=(0, 0, 1)):
+    def next_target(self):
+        return self._target_points[self._current_target_index + 1] if (
+                self._current_target_index + 1 != len(self._target_points)) \
+            else None
+
+    def is_out_of_cylinder_bounds(self, drone_position, circle_center=(0, 0, 1), extension_length=0.2):
         """
         Compute the closest point on the circle to a given position,
         check if the drone is out of the specified bounds from the nearest point on a circle.
         """
+        if self.circle:
 
-        drone_vec = np.array(drone_position)
-        center_vec = np.array(circle_center)
+            drone_vec = np.array(drone_position)
+            center_vec = np.array(circle_center)
 
-        # Vector from center to drone
-        center_to_drone_vec = drone_vec - center_vec
+            # Vector from center to drone
+            center_to_drone_vec = drone_vec - center_vec
 
-        # Ignore z-coordinate for XY plane circle
-        center_to_drone_vec[2] = 0
+            # Ignore z-coordinate for XY plane circle
+            center_to_drone_vec[2] = 0
 
-        # Normalize and scale to circle radius
-        try:
-            norm_vec = center_to_drone_vec / np.linalg.norm(center_to_drone_vec) * self.circle_radius
-        except FloatingPointError:
-            norm_vec = np.zeros_like(center_to_drone_vec)
-        closest_point = center_vec + norm_vec
+            # Normalize and scale to circle radius
+            try:
+                norm_vec = center_to_drone_vec / np.linalg.norm(center_to_drone_vec) * self.circle_radius
+            except FloatingPointError:
+                norm_vec = np.zeros_like(center_to_drone_vec)
+            closest_point = center_vec + norm_vec
 
-        distance_from_closest_point = np.linalg.norm(np.array(drone_position) - closest_point)
+            distance_from_closest_point = np.linalg.norm(np.array(drone_position) - closest_point)
 
-        return distance_from_closest_point > self._threshold
+            return distance_from_closest_point > self._threshold
+
+        else:
+
+          return False
 
     def save_model(self, save_folder):
         """
@@ -802,7 +750,7 @@ class PBDroneEnv(
             f.close()
 
     def show_targets(self):
-        """Visualizes the targets in PyBullet visualization."""
+        """Visualizes the targets in PyBullet."""
 
         self.target_visual = []
         # for _ in range(len(self.target_visual)):
@@ -849,10 +797,10 @@ class PBDroneEnv(
         """
 
         # if self.ACT_TYPE == ActionType.THRUST:
-            # action = self.denormalize_action(action)
-            # self.current_physical_action = action
+        # action = self.denormalize_action(action)
+        # self.current_physical_action = action
 
-            # action = action = (1 + self.norm_act_scale * action) * self.hover_thrust
+        # action = action = (1 + self.norm_act_scale * action) * self.hover_thrust
 
         thrust = np.clip(action, self.physical_action_bounds[0], self.physical_action_bounds[1])
         # self.current_clipped_action = thrust
@@ -883,80 +831,30 @@ class PBDroneEnv(
         #     return rpm
 
     def normalize_action(self, action):
-        '''Converts a physical action into an normalized action if necessary.
+        """Converts a physical action into an normalized action if necessary.
 
         Args:
             action (ndarray): The action to be converted.
 
         Returns:
             normalized_action (ndarray): The action in the correct action space.
-        '''
+        """
         if self.NORMALIZED_RL_ACTION_SPACE:
             action = (action / self.hover_thrust - 1) / self.norm_act_scale
 
         return action
 
     def denormalize_action(self, action):
-        '''Converts a normalized action into a physical action if necessary.
+        """Converts a normalized action into a physical action if necessary.
 
         Args:
             action (ndarray): The action to be converted.
 
         Returns:
             physical_action (ndarray): The physical action.
-        '''
+        """
         if self.NORMALIZED_RL_ACTION_SPACE:
             action = (1 + self.norm_act_scale * action) * self.hover_thrust
 
         return action
-
-    # class NormalizeReward:
-    #     r"""This wrapper will normalize immediate rewards s.t. their exponential moving average has a fixed variance.
-    #
-    #     The exponential moving average will have variance :math:`(1 - \gamma)^2`.
-    #
-    #     Note:
-    #         The scaling depends on past trajectories and rewards will not be scaled correctly if the wrapper was newly
-    #         instantiated or the policy was changed recently.
-    #     """
-    #
-    #     def __init__(
-    #             self,
-    #             env: gym.Env,
-    #             gamma: float = 0.99,
-    #             epsilon: float = 1e-8,
-    #     ):
-    #         """This wrapper will normalize immediate rewards s.t. their exponential moving average has a fixed variance.
-    #
-    #         Args:
-    #             env (env): The environment to apply the wrapper
-    #             epsilon (float): A stability parameter
-    #             gamma (float): The discount factor that is used in the exponential moving average.
-    #         """
-    #         super().__init__(env)
-    #         self.num_envs = getattr(env, "num_envs", 1)
-    #         self.is_vector_env = getattr(env, "is_vector_env", False)
-    #         self.return_rms = RunningMeanStd(shape=())
-    #         self.returns = np.zeros(self.num_envs)
-    #         self.gamma = gamma
-    #         self.epsilon = epsilon
-    #
-    #     def step(self, action):
-    #         """Steps through the environment, normalizing the rewards returned."""
-    #         obs, rews, terminateds, truncateds, infos = self.env.step(action)
-    #         if not self.is_vector_env:
-    #             rews = np.array([rews])
-    #         self.returns = self.returns * self.gamma + rews
-    #         rews = self.normalize(rews)
-    #         dones = np.logical_or(terminateds, truncateds)
-    #         self.returns[dones] = 0.0
-    #         if not self.is_vector_env:
-    #             rews = rews[0]
-    #         return obs, rews, terminateds, truncateds, infos
-    #
-    #     def normalize(self, rews):
-    #         """Normalizes the rewards with the running mean rewards and their variance."""
-    #         self.return_rms.update(self.returns)
-    #         return rews / np.sqrt(self.return_rms.var + self.epsilon)
-
 

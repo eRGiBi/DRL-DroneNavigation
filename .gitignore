@@ -23,6 +23,7 @@ var/
 .installed.cfg
 *.egg
 
+
 Libraries
 
 .idea
@@ -36,6 +37,7 @@ Sol/__pycache__/
 Sol/results
 /Sol/results/
 logs.txt
+
 
 AirSimSol/Blocks/
 AirSimSol/MSBuild2018/
@@ -53,3 +55,13 @@ env.bak/
 venv.bak/
 libstdc++.so.6.0.25
 cuda-keyring_1.1-1_all.deb
+
+Replay Buffer
+*.pkl
+Sol/Utilities/csv_r.py
+Sol/visual/based.csv
+Sol/visual/graphviz_policy_graph.png
+
+flightmare/
+safe-control-gym/
+Sol/logs/concats/PPO 05.11.2024_11.37.31.csv

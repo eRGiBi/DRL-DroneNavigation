@@ -5,6 +5,59 @@ import numpy as np
 """
 
 
+def reaching_progress_reward(self):
+    """
+    Reaching the Limit in Autonomous Racing: Optimal Control versus Reinforcement Learning
+    https://arxiv.org/pdf/2310.10943
+
+    Approximation, as it is not explicitly stated.
+    """
+
+    reward = 0
+
+    dist_to_cent = np.linalg.norm(self._current_position - self._target_points[self._current_target_index])
+
+    if dist_to_cent <= self._threshold:
+        self._current_target_index += 1
+        reward += 3
+
+    if self._current_target_index == len(self._target_points):
+        self._is_done = True
+        return 10
+
+    dist_to_prev = np.linalg.norm(self._current_position - self._last_position)
+
+    # Penalty term
+    b = 0.01
+    penalty_term = b * np.linalg.norm(self.pos[10:])
+
+    # Collision penalty
+    collision_penalty = -10.0 if self._has_collision_occurred() else 0.0
+
+    reward += dist_to_prev - dist_to_cent - penalty_term + collision_penalty
+
+    return reward
+
+
+def calculate_progress_reward(self, pc_t, pc_t_minus_1, g1, g2):
+    """
+        Calculates the progress reward for the current and previous positions of the drone and the current and previous
+        gate positions.
+        Based on the reward function from https://arxiv.org/abs/2103.08624
+        """
+
+    def s(p):
+        g_diff = g2 - g1
+        return np.dot(p - g1, g_diff) / np.linalg.norm(g_diff) ** 2
+
+    if pc_t_minus_1 is None:
+        # Handle the edge case for the first gate
+        rp_t = s(pc_t)
+    else:
+        rp_t = s(pc_t) - s(pc_t_minus_1)
+
+    return rp_t
+
 class BootstrappedImiVisionRewardCalculator:
     """
         https://arxiv.org/pdf/2403.12203

@@ -201,13 +201,14 @@ class TBM:
 
             plt.plot(steps, smoothed_vals, label=names[i])
 
-        plt.title('Effects of different learning rates on ' + tag +
+        # plt.title('Effects of different learning rates on ' + tag +
+        plt.title('Base SAC model\'s ' + tag +
                   (" (with smoothing)") if smoothing_factor > 0 else "")
         plt.xlabel('Step')
         plt.ylabel('Value')
 
         if plt.gca().has_data():
-            plt.legend(title="Learning rates", fontsize=20, loc='best')
+            # plt.legend(title="Learning rates", fontsize=20, loc='best')
             plt.show()
 
     def smooth(self, values, factor):
@@ -314,7 +315,7 @@ def tabulate_events(dpath):
 
 if __name__ == '__main__':
 
-    experiment_id = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
+    # experiment_id = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
 
     tbm = TBM()
 
@@ -331,28 +332,28 @@ if __name__ == '__main__':
     #     #     print(df)
     #     #     tbm.write_df_to_tfevents(df, out)
 
-    # f_names = tbm.find_tensorflow_files("Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/")
-    f_names = tbm.find_tensorflow_files("Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/PPO_05.11.2024_11.37.54_1")
-    f_names2 = tbm.find_tensorflow_files("Sol/logs/PPO_save_05.15.2024_00.03.17")
-
-    print(f_names)
-
-    sorted_filenames = sorted(f_names, key=tbm.extract_datetime_from_filename)
-    print(f_names)
-
-    l = []
-    for f_name in f_names:
-        l.append(SummaryReader(os.path.join(f_name)).scalars)
-        print(f"Checking file: {f_name}")
-        if os.path.exists(f_name):
-            print(f"File exists: {f_name}")
-        else:
-            print(f"File does NOT exist: {f_name}")
-    print(l)
-
-    merged_df = tbm.sort_em_up(f_names)
-    # merged_df.to_csv("Sol/visual/based.csv", index=False)
-    data_dict = tbm.create_data_dict(merged_df)
+    # # f_names = tbm.find_tensorflow_files("Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/")
+    # f_names = tbm.find_tensorflow_files("Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/PPO_05.11.2024_11.37.54_1")
+    # f_names2 = tbm.find_tensorflow_files("Sol/logs/PPO_save_05.15.2024_00.03.17")
+    #
+    # print(f_names)
+    #
+    # sorted_filenames = sorted(f_names, key=tbm.extract_datetime_from_filename)
+    # print(f_names)
+    #
+    # l = []
+    # for f_name in f_names:
+    #     l.append(SummaryReader(os.path.join(f_name)).scalars)
+    #     print(f"Checking file: {f_name}")
+    #     if os.path.exists(f_name):
+    #         print(f"File exists: {f_name}")
+    #     else:
+    #         print(f"File does NOT exist: {f_name}")
+    # print(l)
+    #
+    # merged_df = tbm.sort_em_up(f_names)
+    # # merged_df.to_csv("Sol/visual/based.csv", index=False)
+    # data_dict = tbm.create_data_dict(merged_df)
 
     tags = [
         # "eval/mean_ep_length",
@@ -451,19 +452,19 @@ if __name__ == '__main__':
     #               [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))) for f_name in f_names],
     #               names=["3", "5", "10", "20"])
     # lr
-    f_names = [
-        "Sol/logs/PPO_save_05.19.2024_23.11.04/PPO_1",
-        "Sol/logs/PPO_save_05.23.2024_18.13.59",
-        "Sol/logs/PPO_save_05.23.2024_12.22.23",
-        "Sol/logs/PPO_save_05.23.2024_16.10.52",
-        "Sol/logs/PPO_save_05.25.2024_18.40.52"
-    ]
-    tbm.plot_runs("eval/mean_reward",
-                  [tbm.limit_data(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name)))) for f_name in
-                   f_names],
-                  names=["2.5e-4", "5e-4", "1e-3", "5e-3",
-                         "linear decay from 2.5e-4 to 0"],
-                  smoothing_factor=0.75)
+    # f_names = [
+    #     "Sol/logs/PPO_save_05.19.2024_23.11.04/PPO_1",
+    #     "Sol/logs/PPO_save_05.23.2024_18.13.59",
+    #     "Sol/logs/PPO_save_05.23.2024_12.22.23",
+    #     "Sol/logs/PPO_save_05.23.2024_16.10.52",
+    #     "Sol/logs/PPO_save_05.25.2024_18.40.52"
+    # ]
+    # tbm.plot_runs("eval/mean_reward",
+    #               [tbm.limit_data(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name)))) for f_name in
+    #                f_names],
+    #               names=["2.5e-4", "5e-4", "1e-3", "5e-3",
+    #                      "linear decay from 2.5e-4 to 0"],
+    #               smoothing_factor=0.75)
 
     # target kl, value clip, entropy
 
@@ -482,3 +483,21 @@ if __name__ == '__main__':
     #                          "with vf_clip=0.3, entropy=0.01",
     #                          "with vf_clip=0.3, entropy=0.1"],
     #                   smoothing_factor=0.7)
+
+
+    # sac
+    f_names = ["Sol/logs/SAC_save_05.26.2024_00.12.30"
+               ]
+    tags = [
+        # "eval/mean_ep_length",
+        "eval/mean_reward",
+        "train/critic_loss",
+        "train/ent_coef",
+    ]
+
+    for tag in tags:
+        tbm.plot_runs(tag,
+                      [tbm.limit_data(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))))
+                       for f_name in f_names],
+                      names=[""],
+                      smoothing_factor=0.8)

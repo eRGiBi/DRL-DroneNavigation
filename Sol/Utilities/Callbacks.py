@@ -28,7 +28,7 @@ class SaveReplayBufferCallback(BaseCallback):
     def _on_step(self) -> bool:
         if self.n_calls % self.save_freq == 0:
             # model_path = os.path.join(self.save_path, f"model_{self.n_calls}.zip")
-            replay_buffer_path = os.path.join(self.save_path, f"replay_buffer_{self.n_calls}.pkl")
+            replay_buffer_path = os.path.join(self.save_path, f"replay_buffer.pkl")
 
             # self.model.save(model_path)
             self.model.save_replay_buffer(replay_buffer_path)

@@ -1,6 +1,7 @@
 # docs and experiment results can be found at https://docs.cleanrl.dev/rl-algorithms/ppo/#ppo_continuous_actionpy
 import os
 import random
+import sys
 import time
 from dataclasses import dataclass
 
@@ -12,6 +13,19 @@ import torch.optim as optim
 import tyro
 from torch.distributions.normal import Normal
 from torch.utils.tensorboard import SummaryWriter
+
+from gymnasium.envs.registration import register
+
+sys.path.append("../")
+sys.path.append("./")
+
+from Sol.Model.Environments import PBDroneEnv
+
+register(
+    id='PBDroneEnv-v0',
+    entry_point='Sol/Model/Environments/PBDroneEnv',  # Adjust this according to your module path
+    max_episode_steps=1000,
+)
 
 
 @dataclass
@@ -40,7 +54,7 @@ class Args:
     """the user or org name of the model repository from the Hugging Face Hub"""
 
     # Algorithm specific arguments
-    env_id: str = "HalfCheetah-v4"
+    env_id: str = "PBDroneEnv-v0"
     """the id of the environment"""
     total_timesteps: int = 1000000
     """total timesteps of the experiments"""

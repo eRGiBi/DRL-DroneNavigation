@@ -7,9 +7,19 @@ import Sol.Utilities.Plotter as Plotter
 
 
 class Track:
-    def __init__(self, track):
+    """
+    Initialized with a track function.
 
-        self.waypoints, self.initial_xyzs = track
+    Attributes are the waypoints, init pos and dim.
+    """
+    def __init__(self, track, circle=False):
+        self.waypoints, self.initial_xyzs, self.aviary_dim = track
+        self.is_circle = circle
+
+    def __str__(self):
+        return (f"Track with {len(self.waypoints)} waypoints, "
+                f"initial position {self.initial_xyzs}, and aviary dimensions {self.aviary_dim}")
+
 
 def normalize_coordinates(coordinates, new_size):
     """
@@ -60,7 +70,7 @@ def up():
         np.array([0.0, 0.0, 0.5]),
         np.array([0.0, 0.0, 0.7]),
         np.array([0.0, 0.0, 1]),
-    ], np.array([0.0, 0.0, 0.1])
+    ], np.array([0.0, 0.0, 0.1]), np.array([-2, -2, 0, 2, 2, 2])
 
 
 def half_up_forward():
@@ -70,7 +80,7 @@ def half_up_forward():
         np.array([0., 1, 1.5]),
         # np.array([0.5, 1.5, 1.5]),
         # np.array([1.5, 1.5, 1.5]),
-    ], np.array([0., 0., 0.1]),
+    ], np.array([0., 0., 0.1]), np.array([-2, -2, 0, 2, 2, 2])
 
 
 def up_circle():
@@ -97,7 +107,7 @@ def up_sharp_back_turn():
         np.array([0.3, 0.5, 0.7]),
         np.array([1, 0.5, 1]),
         np.array([1.5, 1., 1.2])
-    ], np.array([0.0, 0.0, 0.1]),
+    ], np.array([0.0, 0.0, 0.1]), np.array([-2, -2, 0, 2, 2, 2])
 
 
 def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
@@ -132,7 +142,7 @@ def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
     else:
         raise ValueError("Invalid plane specified. Choose 'XY', 'XZ', or 'YZ'.")
 
-    return circle_points, (radius, 0, center[2] + radius)
+    return circle_points, np.array([[radius, 0, center[2] + radius]]), np.array([-2, -2, 0, 2, 2, 2])
 
 
 def generate_random_targets(num_targets: int) -> np.ndarray:
@@ -165,33 +175,40 @@ def generate_random_targets(num_targets: int) -> np.ndarray:
     print(targets)
     return targets
 
-def reachin():
-    return np.array([
-    [-.75, -0.5, 3.5],  # G1
-    [8.5, 6, 1],       # G2
-    [8.5, -3.5, 1], # G3
-    [-5, -6, 3.2],    # G4
-    [-5, -4.5, 1],  # G5
-    [4, -4.5, 1.3],        # G6
-    [-2.3, 7, 1.3]      # G7
-])
+
+def reaching():
+
+    arr = np.array([
+        [-.75, -0.5, 3.5],  # G1
+        [8.5, 6, 1],  # G2
+        [8.5, -3.5, 1],  # G3
+        [-5, -6, 3.2],  # G4
+        [-5, -4.5, 1],  # G5
+        [4, -4.5, 1.3],  # G6
+        [-2.3, 7, 1.3]])  # G7
+
+    for i, a in enumerate(arr):
+        arr[i][2] += 2
+        arr[i] /= 5
+
+    return arr, np.array([arr[0]]), np.array([-3, -3, 0, 3, 3, 3])
 
 
 if __name__ == '__main__':
     targets = up()
-    Plotter.plot_3d_targets(targets)
+    Plotter.plot_3d_targets(targets[0])
 
     targets = half_up_forward()
-    Plotter.plot_3d_targets(targets)
+    Plotter.plot_3d_targets(targets[0])
 
     targets = parametric_eq()
     Plotter.plot_3d_targets(targets)
 
     targets = up_sharp_back_turn()
-    Plotter.plot_3d_targets(targets)
+    Plotter.plot_3d_targets(targets[0])
 
     targets = up_circle()
-    Plotter.plot_3d_targets(targets)
+    Plotter.plot_3d_targets(targets[0])
 
     targets = generate_random_targets(10)
     Plotter.plot_3d_targets(targets)
@@ -199,7 +216,7 @@ if __name__ == '__main__':
     c = circle(radius=1, num_points=6, height=1, )
 
     print(c)
-    Plotter.plot_3d_targets(c)
+    Plotter.plot_3d_targets(c[0])
 
     point = (0, 0, 2)
     radius = 1
@@ -210,9 +227,6 @@ if __name__ == '__main__':
     # print(is_point_inside_cylinder(point, radius, height, center, plane))
 
     targets = reaching()
-    Plotter.plot_3d_targets(targets)
-    targets = reachin()
-    Plotter.plot_3d_targets(targets)
-
-
-
+    Plotter.plot_3d_targets(targets[0])
+    targets = reaching()
+    Plotter.plot_3d_targets(targets[0])

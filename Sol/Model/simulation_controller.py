@@ -94,7 +94,8 @@ if __name__ == "__main__":
     # targets = Waypoints.half_up_forward()
 
     # targets = Waypoints.circle(radius=1, num_points=6, height=1, )
-    track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1))
+    track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
+    # track = Waypoints.Track(Waypoints.reaching())
 
     sim = PBDroneSimulator(args, track, target_factor=0)
 
@@ -103,7 +104,7 @@ if __name__ == "__main__":
 
     if args.run_type == "full" or args.run_type == "cont":
         profiler = cProfile.Profile()
-        profiler.enable()
+        # profiler.enable()
         try:
             sim.run_full_training()
             profiler.disable()
