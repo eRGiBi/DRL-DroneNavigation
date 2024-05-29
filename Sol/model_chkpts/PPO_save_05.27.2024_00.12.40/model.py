@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class PBDroneEnv(
     # BaseAviary,
     # FlyThruGateAviary,
@@ -698,7 +701,7 @@ class PBDroneEnv(
             return distance_from_closest_point > self._threshold
 
         else:
-            return False
+
             point = np.array(drone_position)
 
             if self._current_target_index == 0:
