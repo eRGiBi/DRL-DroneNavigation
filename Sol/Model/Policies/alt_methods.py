@@ -5,6 +5,7 @@ from functools import wraps
 
 import numpy as np
 import pandas as pd
+import torch
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import fcluster
 # from matplotlib.backend_managers.ToolManager import tools
@@ -32,6 +33,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 from sklearn.tree import DecisionTreeRegressor, export_graphviz
+from torch.utils.data import TensorDataset, DataLoader
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.model_selection import train_test_split
+import optuna
+import numpy as np
+
+
+from torchviz import make_dot
+import hiddenlayer as hl
 
 
 def filter_lines_by_length(file_path, length):
@@ -84,6 +97,16 @@ def read_data():
     print(f"type(x[0]): {type(x[0])}, type(y[0]): {type(y[0])}")
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+
+    x_train = np.array(x_train, dtype=np.float32)
+    print(x_train.max())
+    x_train = np.clip(x_train, -10, 10, out=x_train)
+    y_train = np.array(y_train, dtype=np.float32)
+    y_train = np.clip(y_train, -10, 10, out=y_train)
+    x_test = np.array(x_test, dtype=np.float32)
+    x_test = np.clip(x_test, -10, 10, out=x_test)
+    y_test = np.array(y_test, dtype=np.float32)
+    y_test = np.clip(y_test, -10, 10, out=y_test)
 
     x_train = x_train.tolist()
     x_test = x_test.tolist()
@@ -167,33 +190,6 @@ def svm_param_search(X_train, y_train, X_test, y_test):
 
     return acc
 
-
-def naive_bayes(x_train, y_train, x_test, y_test):
-    naive_bayes_classifier = GaussianNB()
-
-    naive_bayes_classifier.fit(x_train, y_train)
-
-    y_pred = naive_bayes_classifier.predict(x_test)
-
-    return accuracy_score(y_test, y_pred)
-
-
-def naive_bayes_search(x_train, y_train, x_test, y_test):
-    pipeline = make_pipeline(
-        StandardScaler(),
-        GaussianNB()
-    )
-    param_grid = {
-        'gaussiannb__var_smoothing': [1e-9, 1e-8, 1e-7]  # Smoothing parameter
-    }
-    grid_search = GridSearchCV(pipeline, param_grid, cv=5)
-    grid_search.fit(x_train, y_train)
-
-    print("Best NB parameters:", grid_search.best_params_)
-    best_model = grid_search.best_estimator_
-    y_pred = best_model.predict(x_test)
-
-    return accuracy_score(y_test, y_pred)
 
 
 @measure_time
@@ -318,32 +314,42 @@ def lasso_reg(x_train, x_test, y_train, y_test):
 
 @measure_time
 def poly_reg(x_train, x_test, y_train, y_test):
-    degrees = [1, 3, 4, ]
+    degrees = [3, 4, 5]
 
     for degree in degrees:
-        print(f"Polynomial Regression Results for degree of {degree}: -------------------")
+        poly_plus(x_train, x_test, y_train, y_test, degree)
 
-        poly_features = PolynomialFeatures(degree=degree)
 
-        poly_regression = make_pipeline(poly_features, LinearRegression())
+@measure_time
+def poly_plus(x_train, x_test, y_train, y_test, degree):
+    print(f"Polynomial Regression Results for degree of {degree}: -------------------")
 
-        y_pred_cv = cross_val_predict(poly_regression, x_train, y_train, cv=5)
-        print(f'Predicted values: {y_pred_cv[:5]}')
-        print(f'Actual values: {y_test[:5]}')
+    poly_features = PolynomialFeatures(degree=degree)
 
-        R_squared = r2_score(y_train, y_pred_cv)
-        MSE = mean_squared_error(y_train, y_pred_cv)
-        RMSE = mean_squared_error(y_train, y_pred_cv, squared=False)
-        MAE = mean_absolute_error(y_train, y_pred_cv)
-        MAPE = np.mean(np.abs((y_train - y_pred_cv) / y_train)) * 100  # Mean Absolute Percentage Error
+    poly_regression = make_pipeline(poly_features, LinearRegression())
 
-        print(f'For Degree of Polynomial: {degree}')
-        print(f'R-squared: {round(R_squared * 100, 2)}%')
-        print(f'Mean Absolute Error (MAE): {round(MAE, 2)}')
-        print(f'Mean Squared Error (MSE): {round(MSE, 2)}')
-        print(f'Root Mean Squared Error (RMSE): {round(RMSE, 2)}')
-        print(f'Mean Absolute Percentage Error (MAPE): {round(MAPE, 2)}%')
-        print()
+    y_pred_cv = cross_val_predict(poly_regression, x_train, y_train, cv=5)
+    y_pred_test = poly_regression.fit(x_train, y_train).predict(x_test)
+
+    print(f'Predicted values (CV): {y_pred_cv[:5]}')
+    print(f'Actual values: {y_test[:5]}')
+
+    R_squared_train = r2_score(y_train, y_pred_cv)
+    MSE_train = mean_squared_error(y_train, y_pred_cv)
+    RMSE_train = mean_squared_error(y_train, y_pred_cv, squared=False)
+    MAE_train = mean_absolute_error(y_train, y_pred_cv)
+    MAPE_train = np.mean(np.abs((y_train - y_pred_cv) / y_train)) * 100  # Mean Absolute Percentage Error
+
+    R_squared_test = r2_score(y_test, y_pred_test)
+
+    print(f'For Degree of Polynomial: {degree}')
+    print(f'Training R-squared: {round(R_squared_train * 100, 2)}%')
+    print(f'Mean Absolute Error (MAE): {round(MAE_train, 2)}')
+    print(f'Mean Squared Error (MSE): {round(MSE_train, 2)}')
+    print(f'Root Mean Squared Error (RMSE): {round(RMSE_train, 2)}')
+    print(f'Mean Absolute Percentage Error (MAPE): {round(MAPE_train, 2)}%')
+    print(f'Test R-squared: {round(R_squared_test * 100, 2)}%')
+    print()
 
 
 @measure_time
@@ -388,7 +394,7 @@ def decision_tree_regressor(x_train, x_test, y_train, y_test, viz=False):
 
 @measure_time
 def Hierach(x_train, x_test, y_train, y_test, truncate_mode=None, p=None, show_contracted=False,
-            method='ward', metric='euclidean', criterion='maxclust', t=3,            viz=False):
+            method='ward', metric='euclidean', criterion='maxclust', t=3, viz=False):
     from scipy.cluster.hierarchy import dendrogram, linkage
     from sklearn.preprocessing import StandardScaler
 
@@ -483,19 +489,266 @@ def kmeans_clustering(x_train, x_test):
         print()
 
 
+def optim_neural_net(x_train, x_test, y_train, y_test):
+    train_dataset = TensorDataset(torch.tensor(x_train, dtype=torch.float32),
+                                  torch.tensor(y_train, dtype=torch.float32))
+    val_dataset = TensorDataset(torch.tensor(x_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
+
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+
+    class Net(nn.Module):
+        def __init__(self, hidden_size1, hidden_size2, hidden_size3, hidden_size4, dropout_rate):
+            super(Net, self).__init__()
+            self.fc1 = nn.Linear(12, hidden_size1)
+            self.fc2 = nn.Linear(hidden_size1, hidden_size2)
+            self.fc3 = nn.Linear(hidden_size2, hidden_size3)
+            self.fc4 = nn.Linear(hidden_size3, hidden_size4)
+            self.fc5 = nn.Linear(hidden_size4, 1)
+            self.dropout = nn.Dropout(dropout_rate)
+
+        def forward(self, x):
+            x = torch.tanh(self.fc1(x))
+            x = self.dropout(x)
+            x = torch.tanh(self.fc2(x))
+            x = self.dropout(x)
+            x = torch.tanh(self.fc3(x))
+            x = self.dropout(x)
+            x = torch.tanh(self.fc4(x))
+            x = self.dropout(x)
+            x = self.fc5(x)
+            return x
+
+    def objective(trial):
+        hidden_size1 = trial.suggest_int('hidden_size1', 64, 512)
+        hidden_size2 = trial.suggest_int('hidden_size2', 64, 512)
+        hidden_size3 = trial.suggest_int('hidden_size3', 1, 512)
+        hidden_size4 = trial.suggest_int('hidden_size4', 1, 256)
+        dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+        learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2)
+
+        model = Net(hidden_size1, hidden_size2, hidden_size3, hidden_size4,
+                    dropout_rate)
+        criterion = nn.MSELoss()
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+        for epoch in range(50):
+            model.train()
+            for batch_x, batch_y in train_loader:
+                optimizer.zero_grad()
+                outputs = model(batch_x)
+                loss = criterion(outputs.squeeze(), batch_y)
+                loss.backward()
+                optimizer.step()
+
+            model.eval()
+            val_loss = 0
+            with torch.no_grad():
+                for batch_x, batch_y in val_loader:
+                    outputs = model(batch_x)
+                    loss = criterion(outputs.squeeze(), batch_y)
+                    val_loss += loss.item()
+
+        return val_loss / len(val_loader)
+
+    study = optuna.create_study(direction='minimize')
+    study.optimize(objective,
+                   n_trials=20,
+                   show_progress_bar=True)
+
+    print("Best trial:")
+    trial = study.best_trial
+
+    print("  Value: {}".format(trial.value))
+    print("  Params: ")
+    for key, value in trial.params.items():
+        print("    {}: {}".format(key, value))
+
+    best_model = Net(trial.params['hidden_size1'], trial.params['hidden_size2'],
+                     trial.params['hidden_size3'], trial.params['hidden_size4'],
+                     trial.params['dropout_rate'])
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(best_model.parameters(), lr=trial.params['learning_rate'])
+
+    for epoch in range(100):
+        best_model.train()
+        for batch_x, batch_y in train_loader:
+            optimizer.zero_grad()
+            outputs = best_model(batch_x)
+            loss = criterion(outputs.squeeze(), batch_y)
+            loss.backward()
+            optimizer.step()
+
+    best_model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for batch_x, batch_y in val_loader:
+            outputs = best_model(batch_x)
+            loss = criterion(outputs.squeeze(), batch_y)
+            val_loss += loss.item()
+
+    print("Final validation loss: ", val_loss / len(val_loader))
+
+
+@measure_time
+def used_neural_network(x_train, x_test, y_train, y_test):
+    # x_train = np.array(x_train, dtype=np.float32)
+    # print(x_train.max())
+    # x_train = np.clip(x_train, -10, 10, out=x_train)
+    # y_train = np.array(y_train, dtype=np.float32)
+    # y_train = np.clip(y_train, -10, 10, out=y_train)
+    # x_test = np.array(x_test, dtype=np.float32)
+    # x_test = np.clip(x_test, -10, 10, out=x_test)
+    # y_test = np.array(y_test, dtype=np.float32)
+    # y_test = np.clip(y_test, -10, 10, out=y_test)
+
+    train_dataset = TensorDataset(torch.tensor(x_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
+    val_dataset = TensorDataset(torch.tensor(x_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
+
+    train_loader = DataLoader(train_dataset, batch_size=512, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False)
+
+    class Net(nn.Module):
+        def __init__(self, ):
+            super(Net, self).__init__()
+            self.extractor = nn.Flatten()
+            self.fc1 = nn.Linear(12, 512)
+            self.fc2 = nn.Linear(512, 512)
+            self.fc3 = nn.Linear(512, 256)
+            self.fc4 = nn.Linear(256, 1)
+
+        def forward(self, x):
+            x = self.extractor(x)
+            x = torch.tanh(self.fc1(x))
+            x = torch.tanh(self.fc2(x))
+            x = torch.tanh(self.fc3(x))
+            x = self.fc4(x)
+            return x
+
+    model = Net()
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=2.5e-3, eps=1e-5)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    num_epochs = 10
+    train_losses = []
+    val_losses = []
+    val_accuracies = []
+
+    for epoch in range(num_epochs):
+        model.train()
+        train_loss = 0
+        for batch_x, batch_y in train_loader:
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            optimizer.zero_grad()
+            outputs = model(batch_x)
+            loss = criterion(outputs.squeeze(), batch_y)
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item()
+
+        train_losses.append(train_loss / len(train_loader))
+
+        model.eval()
+        val_loss = 0
+        with torch.no_grad():
+            for batch_x, batch_y in val_loader:
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+                outputs = model(batch_x)
+                loss = criterion(outputs.squeeze(), batch_y)
+                val_loss += loss.item()
+
+        val_losses.append(val_loss / len(val_loader))
+
+        print(
+            f"Epoch {epoch + 1}/{num_epochs}, "
+            f"Train Loss: {train_loss / len(train_loader):.4f}, "
+            f"Validation Loss: {val_loss / len(val_loader):.4f}"
+        )
+
+    model.eval()
+    x_train_tensor = torch.tensor(x_train, dtype=torch.float32).to(device)
+    x_test_tensor = torch.tensor(x_test, dtype=torch.float32).to(device)
+    with torch.no_grad():
+        y_train_pred = model(x_train_tensor).cpu().numpy()
+        y_test_pred = model(x_test_tensor).cpu().numpy()
+
+    with torch.no_grad():
+        y_pred = model(x_test_tensor).cpu().numpy()
+
+    train_r2 = r2_score(y_train, y_train_pred)
+    test_r2 = r2_score(y_test, y_test_pred)
+    test_mse = mean_squared_error(y_test, y_test_pred)
+    test_rmse = np.sqrt(test_mse)
+    test_mae = mean_absolute_error(y_test, y_test_pred)
+
+    print(f'Train R-squared: {train_r2 * 100:.2f}%')
+    print(f'Test R-squared: {test_r2 * 100:.2f}%')
+    print(f'Test Mean Squared Error (MSE): {test_mse:.2f}')
+    print(f'Test Root Mean Squared Error (RMSE): {test_rmse:.2f}')
+    print(f'Test Mean Absolute Error (MAE): {test_mae:.2f}')
+
+    # Plotting actual vs predicted values
+    plt.figure(figsize=(10, 5))
+    plt.plot(y_test, label='Actual', marker='o', linestyle='None')
+    plt.plot(y_pred, label='Predicted', marker='x', linestyle='None')
+    plt.legend()
+    plt.xlabel('Sample index')
+    plt.ylabel('Value')
+    plt.title('Actual vs Predicted Values')
+    plt.show()
+
+    # Plotting training and validation loss
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Training Loss')
+    plt.plot(val_losses, label='Validation Loss')
+    plt.legend()
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.show()
+
+    sample_input = torch.randn(1, 12).to(device)
+
+    # Check if Graphviz is installed
+    if not os.system("dot -V"):
+        # Visualize model using torchviz
+        sample_input = torch.randn(1, 12).to(device)
+        output = model(sample_input)
+        dot = make_dot(output, params=dict(model.named_parameters()))
+        dot.format = 'png'
+        dot.render('model_architecture')
+    else:
+        print("Graphviz not found. Skipping torchviz visualization.")
+
+    # torch.onnx.export(model, sample_input, "model.onnx")
+
+    # Visualize using hiddenlayer
+    # transforms = [hl.transforms.Prune('Constant')]
+    graph = hl.build_graph(model, sample_input)
+    graph.theme = hl.graph.THEMES['blue'].copy()
+    graph.save('model_hl.png')
+
 if __name__ == "__main__":
     x_train, x_test, y_train, y_test = read_data()
 
-    linear_regression(x_train, y_train, x_test, y_test)
-    ridge_reg(x_train, x_test, y_train, y_test)
-    lasso_reg(x_train, x_test, y_train, y_test)
-    poly_reg(x_train, x_test, y_train, y_test)
+    # linear_regression(x_train, y_train, x_test, y_test)
+    # ridge_reg(x_train, x_test, y_train, y_test)
+    # lasso_reg(x_train, x_test, y_train, y_test)
+    # poly_reg(x_train, x_test, y_train, y_test)
+    #
+    # random_forest_regressor(x_train, x_test, y_train, y_test)
+    #
+    # decision_tree_regressor(x_train, x_test, y_train, y_test)
 
-    random_forest_regressor(x_train, x_test, y_train, y_test)
+    # Hierach(x_train, x_test, y_train, y_test)
+    #
+    # kmeans_clustering(x_train, x_test)
 
-    decision_tree_regressor(x_train, x_test, y_train, y_test)
-
-    Hierach(x_train, x_test, y_train, y_test)
+    used_neural_network(x_train, x_test, y_train, y_test)
+    #
+    # optim_neural_net(x_train, x_test, y_train, y_test)
 
     # aas = KNeighbors(x_train, x_test, y_train, y_test)
     # print(aas)
@@ -507,9 +760,3 @@ if __name__ == "__main__":
     # optim_svm = svm_param_search(x_train, y_train, x_test, y_test)
     #
     # print(f"Optimized SVM accuracy: {optim_svm}")
-    #
-    #
-    # naive_bayes_acc = naive_bayes(x_train, y_train, x_test, y_test)
-    #
-    # print(f"Naive Bayes accuracy: {naive_bayes_acc}")
-    #
