@@ -57,15 +57,14 @@ The CleanRL and RLLib implementations also need to be installed separately.
 Example args for Windows:
 
 ```
-$ python Sol\Model\simulation_controller.py --agent PPO --run_type full --wandb
- False --savemodel False --total_timesteps 10e6
+$ python Sol/Model/simulation_controller.py --agent PPO --run_type full  --wandb f --savemodel t --gui f --norm_rew f --lib sb3 --num_envs 12 
 ``` 
 For Ubuntu:
 ```
 python3 ./Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb f
 ``` 
 
-Args for Ubuntu with WSL:
+For Ubuntu with WSL:
 ```
  python3 Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb False --savemodel False
  ```
@@ -90,9 +89,13 @@ Value function regression with other methods (requires collecting rollouts):
 
 ### 5. Results
 
+I optimized the learning environment and fine-tuned the PPO algorithm's hyperparameters so that 
+PPO has shown to be an effective solution for the drone navigation problem.
+The PPO agent learns to navigate through the waypoints in about 4 hours of training on a low-spec machine.
 
-![](assets/gifs/viz.gif)
+![](assets/gifs/example.gif)
 
+Without fine tuned hyperparameters SAC only manages to learn to track in 15 hours of training. 
 
 ### 6. Notes
 
@@ -115,20 +118,16 @@ StableBaselines3 and other packages that have '_' in them might not be installed
 
 ### 7. To Do
 
-Further algorithmic speed and data efficiency improvements.
+Further algorithmic speed and data efficiency improvements. 
 
 Specific dir for the conda environment.
 
 SAC.
 
-Hyperparams:
+1. Frame skipping
+2. Deeper networks
+3. MLP sharing effects
+4. Testing for added noise
 
-1. PPO-style value loss clipping
-2. value function normalization
-3. number of envs
-4. frame skipping
-5. deeper networks
-6. mlp sharing effects
 
-Testing for added noise
 
