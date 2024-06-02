@@ -1,7 +1,7 @@
 
 # Deep reinforcement learning Simulator and Algorithm environment for optimal path finding
 
-### Based on Stable-Baseline3 and PyBullet-drones, for PPO and SAC
+### Working model based on Stable-Baseline3 and pybullet-drones with PPO and SAC.
 
 
 ### 1. Introduction
@@ -12,13 +12,13 @@ control and intelligent decision-making when unexpected events occur.
 Deep reinforcement learning (DRL) has shown promise in solving these problems,
 but it is still an open question how to best apply it.
 
-My original goal with this project was to develop a DRL-based framework for autonomous drone racing, 
+My original goal with was to develop a DRL-based framework for autonomous drone racing, 
 but this same model could be utilized for other, perhaps more relevant real-world scenarios, 
 such as search and rescue, surveillance and package delivery.
 
 The simulator is based on the PyBullet-drones environment, 
-and the algorithms are used from the Stable-Baselines3 library. 
-I also have used Tensorflow's TF-Agents library, the OpenAI Gym library, and run tests using AirSim.
+and the algorithms are from the Stable-Baselines3 library. 
+I also have used Tensorflow's TF-Agents, CleanRL, RLLib library, the OpenAI Gym library, and run tests using AirSim.
 I focus on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, 
 which are optimized for continuous control tasks. 
 I evaluate the performance of the algorithms with a variety of differing hyperparameters.
@@ -50,7 +50,6 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 ```
 
 The CleanRL and RLLib implementations also need to be installed separately.
-.
 
 
 ### 3. Example
@@ -68,12 +67,12 @@ For Ubuntu with WSL:
 ```
  python3 Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb False --savemodel False
  ```
-On root installation for activating the conda environment:
+On root installation for activating the example conda environment:
 ```
  source activate  /root/miniconda3/envs/RL-WSL
 ```
 
-### 4. Basic opertion
+### 4. Basic operation
 
 First, the simulation_controller parses the args, initializes the targets (Waypoints), 
 then starts the chosen function of the PBDroneSimulator class that direct the whole learning process.
@@ -85,7 +84,7 @@ tf.events manipulation:
 
 Value function regression with other methods (requires collecting rollouts):
 
-    python Sol/Model/Policies/alt_methods.py    
+    python Sol/Model/Policies/alt_methods.py
 
 ### 5. Results
 
