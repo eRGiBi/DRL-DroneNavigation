@@ -1,3 +1,4 @@
+import os
 import warnings
 from typing import Any, ClassVar, Dict, Optional, Type, TypeVar, Union
 
@@ -134,6 +135,9 @@ class PPO(OnPolicyAlgorithm):
                 spaces.MultiBinary,
             ),
         )
+        self.rollout_path = os.path.join('Sol/rollouts/', 'train_rollout_' +
+                                         str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/')) + 1) +
+                                         '.txt')
 
         # Sanity check, otherwise it will lead to noisy gradient and NaN
         # because of the advantage normalization
@@ -204,7 +208,12 @@ class PPO(OnPolicyAlgorithm):
         for epoch in range(self.n_epochs):
             approx_kl_divs = []
             # Do a complete pass on the rollout buffer
+
             for rollout_data in self.rollout_buffer.get(self.batch_size):
+
+            #     for ob, re in zip(rollout_data.observations, rollout_data.returns,):
+            #         self.collect_rollout_pair(ob, re)
+
                 actions = rollout_data.actions
                 if isinstance(self.action_space, spaces.Discrete):
                     # Convert discrete action from float to long
@@ -321,3 +330,14 @@ class PPO(OnPolicyAlgorithm):
             reset_num_timesteps=reset_num_timesteps,
             progress_bar=progress_bar,
         )
+
+    def collect_rollout_pair(self, obs, a_return):
+        """Collects the rollout data."""
+        # if self._steps % freq == 0:
+        if len(obs) > 0:
+            with open(self.rollout_path, mode='a+') as f:
+                for x in obs.tolist():
+                    f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
+                f.write(str(a_return.cpu().numpy()))
+                f.write("\n")
+            f.close()

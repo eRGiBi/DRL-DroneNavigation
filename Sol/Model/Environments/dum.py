@@ -183,8 +183,7 @@ class PBDroneEnv(
         self.prev_vel, self.prev_ang_v = self.current_vel, self.current_ang_v
         self.prev_vel, self.prev_ang_v = deepcopy(self.current_vel), deepcopy(self.current_ang_v)
         self.current_vel, self.current_ang_v = deepcopy(self.vel[0]), deepcopy(self.ang_v[0])
-        print("current vel", self.current_vel)
-        print("current vel", self.vel[0])
+
 
         # Calculate the Euclidean distance between the drone and the next target
         self._distance_to_target = abs(np.linalg.norm(

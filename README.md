@@ -118,16 +118,12 @@ StableBaselines3 and other packages that have '_' in them might not be installed
 
 ### 7. To Do
 
-Further algorithmic speed and data efficiency improvements. 
+Further algorithmic speed and data efficiency improvements.
 
 Specific dir for the conda environment.
 
-SAC.
-
 1. Frame skipping
-2. Deeper networks
-3. MLP sharing effects
-4. Testing for added noise
+2. Testing for added noise
 
 
 

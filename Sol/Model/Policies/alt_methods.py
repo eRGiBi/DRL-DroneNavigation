@@ -33,13 +33,17 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 from sklearn.tree import DecisionTreeRegressor, export_graphviz
+from torch import GradScaler, autocast
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
+
 import optuna
+import optuna.visualization as vis
+
 import numpy as np
 
 
@@ -96,17 +100,17 @@ def read_data():
     print(f"x[0]: {x[0]}, y[0]: {y[0]}")
     print(f"type(x[0]): {type(x[0])}, type(y[0]): {type(y[0])}")
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=73)
 
-    x_train = np.array(x_train, dtype=np.float32)
-    print(x_train.max())
-    x_train = np.clip(x_train, -10, 10, out=x_train)
-    y_train = np.array(y_train, dtype=np.float32)
-    y_train = np.clip(y_train, -10, 10, out=y_train)
-    x_test = np.array(x_test, dtype=np.float32)
-    x_test = np.clip(x_test, -10, 10, out=x_test)
-    y_test = np.array(y_test, dtype=np.float32)
-    y_test = np.clip(y_test, -10, 10, out=y_test)
+    # x_train = np.array(x_train, dtype=np.float32)
+    # print(x_train.max())
+    # x_train = np.clip(x_train, -10, 10, out=x_train)
+    # y_train = np.array(y_train, dtype=np.float32)
+    # y_train = np.clip(y_train, -10, 10, out=y_train)
+    # x_test = np.array(x_test, dtype=np.float32)
+    # x_test = np.clip(x_test, -10, 10, out=x_test)
+    # y_test = np.array(y_test, dtype=np.float32)
+    # y_test = np.clip(y_test, -10, 10, out=y_test)
 
     x_train = x_train.tolist()
     x_test = x_test.tolist()
@@ -489,74 +493,76 @@ def kmeans_clustering(x_train, x_test):
 
 
 def optim_neural_net(x_train, x_test, y_train, y_test):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     train_dataset = TensorDataset(torch.tensor(x_train, dtype=torch.float32),
                                   torch.tensor(y_train, dtype=torch.float32))
-    val_dataset = TensorDataset(torch.tensor(x_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
+    val_dataset = TensorDataset(torch.tensor(x_test, dtype=torch.float32),
+                                torch.tensor(y_test, dtype=torch.float32))
 
-    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=512, shuffle=True, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False, pin_memory=True)
 
     class Net(nn.Module):
-        def __init__(self, hidden_size1, hidden_size2, hidden_size3, hidden_size4
-                     # , dropout_rate
-                     ):
+        def __init__(self, hidden_size1, hidden_size2, hidden_size3, hidden_size4):
             super(Net, self).__init__()
             self.fc1 = nn.Linear(12, hidden_size1)
             self.fc2 = nn.Linear(hidden_size1, hidden_size2)
             self.fc3 = nn.Linear(hidden_size2, hidden_size3)
             self.fc4 = nn.Linear(hidden_size3, hidden_size4)
             self.fc5 = nn.Linear(hidden_size4, 1)
-            # self.dropout = nn.Dropout(dropout_rate)
 
         def forward(self, x):
             x = torch.tanh(self.fc1(x))
-            # x = self.dropout(x)
             x = torch.tanh(self.fc2(x))
-            # x = self.dropout(x)
             x = torch.tanh(self.fc3(x))
-            # x = self.dropout(x)
             x = torch.tanh(self.fc4(x))
-            # x = self.dropout(x)
             x = self.fc5(x)
             return x
 
-    def objective(trial):
-        hidden_size1 = trial.suggest_int('hidden_size1', 64, 512)
-        hidden_size2 = trial.suggest_int('hidden_size2', 64, 512)
-        hidden_size3 = trial.suggest_int('hidden_size3', 1, 512)
-        hidden_size4 = trial.suggest_int('hidden_size4', 1, 256)
-        # dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
-        learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2)
-
-        model = Net(hidden_size1, hidden_size2, hidden_size3, hidden_size4,
-                    # dropout_rate
-                    )
-        criterion = nn.MSELoss()
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-        for epoch in range(50):
+    def train_model(model, criterion, optimizer, train_loader, val_loader, epochs=20):
+        scaler = GradScaler()
+        for epoch in range(epochs):
             model.train()
             for batch_x, batch_y in train_loader:
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                 optimizer.zero_grad()
-                outputs = model(batch_x)
-                loss = criterion(outputs.squeeze(), batch_y)
-                loss.backward()
-                optimizer.step()
+                with autocast(device_type="cuda" if torch.cuda.is_available() else "cpu"):
+                    outputs = model(batch_x)
+                    loss = criterion(outputs.squeeze(), batch_y)
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
 
             model.eval()
             val_loss = 0
             with torch.no_grad():
                 for batch_x, batch_y in val_loader:
+                    batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                     outputs = model(batch_x)
                     loss = criterion(outputs.squeeze(), batch_y)
                     val_loss += loss.item()
 
         return val_loss / len(val_loader)
 
+    def objective(trial):
+        hidden_size1 = trial.suggest_int('hidden_size1', 128, 640)
+        hidden_size2 = trial.suggest_int('hidden_size2', 128, 640)
+        hidden_size3 = trial.suggest_int('hidden_size3', 1, 512)
+        hidden_size4 = trial.suggest_int('hidden_size4', 1, 360)
+        learning_rate = trial.suggest_float('learning_rate', 1e-4, 1e-3)
+
+        model = Net(hidden_size1, hidden_size2, hidden_size3, hidden_size4).to(device)
+        criterion = nn.MSELoss()
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate,
+                               eps=1e-5)
+
+        return train_model(model, criterion, optimizer, train_loader, val_loader)
+
     study = optuna.create_study(direction='minimize')
-    study.optimize(objective,
-                   n_trials=20,
-                   show_progress_bar=True)
+
+    study.optimize(objective, n_trials=200, show_progress_bar=True)
 
     print("Best trial:")
     trial = study.best_trial
@@ -591,6 +597,11 @@ def optim_neural_net(x_train, x_test, y_train, y_test):
             val_loss += loss.item()
 
     print("Final validation loss: ", val_loss / len(val_loader))
+
+    vis.plot_param_importances(study).show()
+    vis.plot_optimization_history(study).show()
+    vis.plot_parallel_coordinate(study).show()
+    vis.plot_slice(study).show()
 
 
 @measure_time
@@ -634,7 +645,7 @@ def used_neural_network(x_train, x_test, y_train, y_test):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    num_epochs = 10
+    num_epochs = 30
     train_losses = []
     val_losses = []
     val_accuracies = []
@@ -749,9 +760,9 @@ if __name__ == "__main__":
     #
     # kmeans_clustering(x_train, x_test)
 
-    # used_neural_network(x_train, x_test, y_train, y_test)
+    used_neural_network(x_train, x_test, y_train, y_test)
     #
-    optim_neural_net(x_train, x_test, y_train, y_test)
+    # optim_neural_net(x_train, x_test, y_train, y_test)
 
     # aas = KNeighbors(x_train, x_test, y_train, y_test)
     # print(aas)

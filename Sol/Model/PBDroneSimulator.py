@@ -417,23 +417,23 @@ class PBDroneSimulator:
 
     def test_saved(self):
         """
-        Tests the best saved model during a training process.
+        Tests the best model saved during a training process.
         Might need to tune the observation and action spaces for each model to work.
         """
-        drone_environment = self.make_env(gui=True,
-                                          aviary_dim=self.aviary_dim,
-                                          initial_xyzs=self.initial_xyzs,
-                                          include_distance=True,
-                                          normalize_actions=True
-                                          )
-        # from Sol.Model.Environments.dum import PBDroneEnv
-        # drone_environment = PBDroneEnv(gui=False,
-        #                                target_points=self.targets,
-        #                                threshold=self.threshold,
-        #                                discount=self.discount,
-        #                                max_steps=self.env_steps,
-        #                                aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
-        #                                initial_xyzs=self.initial_xyzs)
+        # drone_environment = self.make_env(gui=True,
+        #                                   aviary_dim=self.aviary_dim,
+        #                                   initial_xyzs=self.initial_xyzs,
+        #                                   include_distance=True,
+        #                                   normalize_actions=True
+        #                                   )
+        from Sol.Model.Environments.dum import PBDroneEnv
+        drone_environment = PBDroneEnv(gui=False,
+                                       target_points=self.targets,
+                                       threshold=self.threshold,
+                                       discount=self.discount,
+                                       max_steps=self.env_steps,
+                                       aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
+                                       initial_xyzs=self.initial_xyzs)
         print(drone_environment.observation_space)
         print(drone_environment.action_space)
 
@@ -443,18 +443,19 @@ class PBDroneSimulator:
         # saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
-        saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"  # decent
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"  # decent
         # saved_filename = "Sol/model_chkpts/SAC_save_05.26.2024_00.12.30/best_model.zip"
-        saved_filename = "Sol/model_chkpts/SAC_save_05.21.2024_23.28.56/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/SAC_save_05.21.2024_23.28.56/best_model.zip"
         # wrong observation spaces,
 
-        saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
+        saved_filename = "Sol/model_chkpts/exp/ver.zip"
 
         # The learning processes of these models are good,
         # yet something is wrong with checkpointing them or loading them.
         # saved_filename = "Sol/model_chkpts/PPO_save_05.30.2024_23.25.58/best_model.zip"
-        saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
-        saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_04.57.44/rl_model_2652000_steps.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_04.57.44/rl_model_2652000_steps.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -465,8 +466,8 @@ class PBDroneSimulator:
             print_sac_conf(model)
 
         elif self.args.agent == "PPO":
-            model = PPO.load(saved_filename, env=drone_environment)
-            # model.learn(100000)
+            model = PPO.load(saved_filename, env=drone_environment, tb_log_name="test")
+            model.learn(100_000)
             # print(model.get_parameters())
             print_ppo_conf(model)
             # vis_policy(model, drone_environment)

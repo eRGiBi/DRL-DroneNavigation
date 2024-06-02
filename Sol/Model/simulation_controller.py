@@ -93,9 +93,8 @@ if __name__ == "__main__":
     # targets = Waypoints.up_sharp_back_turn()
     # targets = Waypoints.half_up_forward()
 
-    # targets = Waypoints.circle(radius=1, num_points=6, height=1, )
-    # track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
-    track = Waypoints.Track(Waypoints.reaching())
+    track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
+    # track = Waypoints.Track(Waypoints.reaching())
     # track = Waypoints.Track(Waypoints.up_sharp_back_turn())
 
     sim = PBDroneSimulator(args, track, target_factor=0)
@@ -126,8 +125,7 @@ if __name__ == "__main__":
 
     wandb.finish()
 
-
-# def manual_pb_env():
+    # def manual_pb_env():
 
     # physicsClient = p.connect(p.GUI)
     # p.setGravity(0, 0, -9.81)
