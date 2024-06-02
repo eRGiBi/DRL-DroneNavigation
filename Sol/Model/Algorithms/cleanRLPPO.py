@@ -14,19 +14,6 @@ import tyro
 from torch.distributions.normal import Normal
 from torch.utils.tensorboard import SummaryWriter
 
-from gymnasium.envs.registration import register
-
-sys.path.append("../")
-sys.path.append("./")
-
-from Sol.Model.Environments import PBDroneEnv
-
-register(
-    id='PBDroneEnv-v0',
-    entry_point='Sol/Model/Environments/PBDroneEnv',  # Adjust this according to your module path
-    max_episode_steps=1000,
-)
-
 
 @dataclass
 class Args:

@@ -32,6 +32,9 @@ class PBDroneEnv(
     # FlyThruGateAviary,
     BaseSingleAgentAviary,
 ):
+    """
+    The PyBullet environment for drone navigation.
+    """
 
     def __init__(self,
                  target_points, threshold, discount, max_steps, aviary_dim,
@@ -55,6 +58,7 @@ class PBDroneEnv(
                  include_target=False,
                  include_distance=False,
                  normalize_actions=False,
+                 collect_rollouts=False,
                  ):
 
         self.ACT_TYPE = act
@@ -63,7 +67,7 @@ class PBDroneEnv(
         self._OBS_TYPE = obs
 
         self._target_points = np.array(target_points)
-        self._target_points = np.append(self._target_points, target_points)
+        # self._target_points = np.append(self._target_points, target_points)
         self._or_target_points = np.array(target_points)
         self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
 
@@ -138,12 +142,15 @@ class PBDroneEnv(
         self.total_steps = 0
 
         # Saving
-        self.save_folder = save_folder
-        self.rollout_path = os.path.join('Sol/rollouts/', 'rollout_' +
-                                         str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/')) + 1) + '.txt')
-        self.lock = threading.Lock()
+        self.collect_rollouts = collect_rollouts
+        if self.collect_rollouts:
+            self.rollout_path = os.path.join('Sol/rollouts/', 'rollout_' +
+                                             str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/')) + 1) +
+                                             '.txt')
+            self.lock = threading.Lock()
 
         if save_folder is not None:
+            self.save_folder = save_folder
             self.save_model(save_folder)
 
         # Visualization
@@ -180,7 +187,8 @@ class PBDroneEnv(
         # print("TERMINATED", terminated)
 
         # Rollout collection
-        # self.collect_rollout(obs, reward)
+        if self.collect_rollouts:
+            self.collect_rollout(obs, reward, freq=1)
 
         if not terminated:
             self.update_state_post_step(action)
@@ -253,7 +261,7 @@ class PBDroneEnv(
         #     np.finfo(np.float32).max, np.finfo(np.float32).max, np.finfo(np.float32).max
         # ])
 
-        low = np.array([1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32)
+        low = np.array([-1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32)
         high = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32)
 
         # if self.include_target:
@@ -309,7 +317,7 @@ class PBDroneEnv(
         #                 ret[3], ret[4], ret[5], ret[6], ret[7], ret[8], ret[9], ret[10], ret[11]])
 
         try:
-            # Normalize observations to avoid underflow/overflow issues
+            # Normalize observations to avoid underflow/overflow issues, STILL doesn't work
             ret = np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)
 
             ret = ret.astype(np.float32)
@@ -321,7 +329,6 @@ class PBDroneEnv(
         except FloatingPointError as e:
             print("Error in _computeObs():", ret)
             print(f"Underflow error: {e}")
-            # Return a clipped array to handle underflow
             return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)
 
     def _clipAndNormalizeState(self, state):
@@ -465,7 +472,6 @@ class PBDroneEnv(
 
         if (self._is_done or
                 self._has_collision_occurred()
-                # or (self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC)
         ):
             return True
         else:
@@ -560,7 +566,7 @@ class PBDroneEnv(
             # print("smoothness", self.smoothness_reward())
             # print("ori", self.orientation_reward(self._target_points[self._current_target_index])* 3)
             # print("prev dis", ((self._prev_distance_to_target - self._distance_to_target) * 3000) if not self.just_found else 0)
-            # print(self._prev_distance_to_target , self._distance_to_target)
+            # print(self._prev_distance_to_target, self._distance_to_target)
             # print("exp", (np.exp(-2 * self._distance_to_target)) * 3)
 
             self.just_found = False
@@ -581,13 +587,13 @@ class PBDroneEnv(
         angle = np.arccos(np.clip(np.dot(forward_vector, drone_to_target_vector), -1.0, 1.0))
 
         if angle > threshold_angle:
-            return -1  # Negative reward
+            return -1
         else:
-            return 0  # No penalty
+            return 0
 
     def get_forward_vector(self):
         euler = self.rpy[0]
-        # Assuming the drone's forward vector points along the x-axis in its local frame
+
         forward_vector = np.array([
             np.cos(euler[2]) * np.cos(euler[1]),  # Cos(yaw) * Cos(pitch)
             np.sin(euler[2]) * np.cos(euler[1]),  # Sin(yaw) * Cos(pitch)
@@ -634,9 +640,12 @@ class PBDroneEnv(
         #     # self.INIT_XYZS[0] = (0,0, self.COLLISION_H / 2 - self.COLLISION_Z_OFFSET + .1)
         #     # self._current_position = ret[0][0:3]
 
+        #
         # if len(self.initial_state_buffer) > 0:
         #     self.INIT_XYZS[0] = self.initial_state_buffer[np.random.randint(len(self.initial_state_buffer))]
         # else:
+
+        # Spawning halfway
         # segment_index = np.random.randint(len(self._target_points) - 1)
         # segment_center = (self._target_points[segment_index] + self._target_points[segment_index + 1]) / 2
         # self.INIT_XYZS[0] = segment_center
@@ -652,6 +661,7 @@ class PBDroneEnv(
         self.prev_ang_v = np.zeros(3)
         # self._last_action = np.zeros(4, dtype=np.float32)
         # self._last_position = copy.deepcopy(self._current_position)
+        self.current_vel, self.current_ang_v = np.zeros(3), np.zeros(3)
         self.just_found = False
 
         self._reached_targets = np.zeros(len(self._target_points), dtype=bool)
@@ -794,7 +804,7 @@ class PBDroneEnv(
             # Distance from the drone to the closest point on the line
             distance_from_line = np.linalg.norm(drone_position - closest_point_on_line)
 
-            return distance_from_line > self._threshold + extension_length
+            return distance_from_line > self._threshold + extension_length  # - 0.3
 
     def save_model(self, save_folder):
         """
@@ -819,7 +829,9 @@ class PBDroneEnv(
 
         return distance
 
-    def collect_rollout(self, obs, reward):
+    def collect_rollout(self, obs, reward, freq=10000):
+        """Collects the rollout data."""
+        # if self._steps % freq == 0:
         if len(obs) > 0:
             with open(self.rollout_path, mode='a+') as f:
                 with self.lock:  # Doesnt work even with thread locking with multiple envs
@@ -840,7 +852,6 @@ class PBDroneEnv(
             self.target_visual.append(
                 p.loadURDF(
                     fileName=os.path.normpath("./Sol/resources/target.urdf"),
-                    # "/resources/target.urdf",
                     basePosition=target,
                     useFixedBase=True,
                     globalScaling=self._threshold / 4.0,
@@ -913,6 +924,8 @@ class PBDroneEnv(
     def normalize_action(self, action):
         """Converts a physical action into an normalized action if necessary.
 
+        safe-control-gym code, unused.
+
         Args:
             action (ndarray): The action to be converted.
 
@@ -927,6 +940,8 @@ class PBDroneEnv(
     def denormalize_action(self, action):
         """Converts a normalized action into a physical action if necessary.
 
+        safe-control-gym code, unused.
+
         Args:
             action (ndarray): The action to be converted.
 
@@ -939,6 +954,12 @@ class PBDroneEnv(
         return action
 
     def rescale_action(self, action):
+        """
+        Rescales the actions.
+
+        From gym.wrappers.RescaleAction, which has compatibility issues with the newer gymnasium versions.
+        """
+
         min_action = self.physical_action_bounds[0]
         max_action = self.physical_action_bounds[1]
         assert isinstance(self.action_space, spaces.Box), f"expected Box action space, got {type(self.action_space)}"

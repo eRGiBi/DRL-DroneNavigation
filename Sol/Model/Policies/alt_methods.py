@@ -191,7 +191,6 @@ def svm_param_search(X_train, y_train, X_test, y_test):
     return acc
 
 
-
 @measure_time
 def KNeighbors(x_train, y_train, x_test, y_test):
     KNeighborsReg = KNeighborsRegressor()
@@ -498,24 +497,26 @@ def optim_neural_net(x_train, x_test, y_train, y_test):
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
 
     class Net(nn.Module):
-        def __init__(self, hidden_size1, hidden_size2, hidden_size3, hidden_size4, dropout_rate):
+        def __init__(self, hidden_size1, hidden_size2, hidden_size3, hidden_size4
+                     # , dropout_rate
+                     ):
             super(Net, self).__init__()
             self.fc1 = nn.Linear(12, hidden_size1)
             self.fc2 = nn.Linear(hidden_size1, hidden_size2)
             self.fc3 = nn.Linear(hidden_size2, hidden_size3)
             self.fc4 = nn.Linear(hidden_size3, hidden_size4)
             self.fc5 = nn.Linear(hidden_size4, 1)
-            self.dropout = nn.Dropout(dropout_rate)
+            # self.dropout = nn.Dropout(dropout_rate)
 
         def forward(self, x):
             x = torch.tanh(self.fc1(x))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             x = torch.tanh(self.fc2(x))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             x = torch.tanh(self.fc3(x))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             x = torch.tanh(self.fc4(x))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             x = self.fc5(x)
             return x
 
@@ -524,11 +525,12 @@ def optim_neural_net(x_train, x_test, y_train, y_test):
         hidden_size2 = trial.suggest_int('hidden_size2', 64, 512)
         hidden_size3 = trial.suggest_int('hidden_size3', 1, 512)
         hidden_size4 = trial.suggest_int('hidden_size4', 1, 256)
-        dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+        # dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
         learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2)
 
         model = Net(hidden_size1, hidden_size2, hidden_size3, hidden_size4,
-                    dropout_rate)
+                    # dropout_rate
+                    )
         criterion = nn.MSELoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -566,7 +568,8 @@ def optim_neural_net(x_train, x_test, y_train, y_test):
 
     best_model = Net(trial.params['hidden_size1'], trial.params['hidden_size2'],
                      trial.params['hidden_size3'], trial.params['hidden_size4'],
-                     trial.params['dropout_rate'])
+                     # trial.params['dropout_rate']
+                     )
     criterion = nn.MSELoss()
     optimizer = optim.Adam(best_model.parameters(), lr=trial.params['learning_rate'])
 
@@ -739,16 +742,16 @@ if __name__ == "__main__":
     # poly_reg(x_train, x_test, y_train, y_test)
     #
     # random_forest_regressor(x_train, x_test, y_train, y_test)
-    #
-    # decision_tree_regressor(x_train, x_test, y_train, y_test)
 
+    # decision_tree_regressor(x_train, x_test, y_train, y_test)
+    #
     # Hierach(x_train, x_test, y_train, y_test)
     #
     # kmeans_clustering(x_train, x_test)
 
-    used_neural_network(x_train, x_test, y_train, y_test)
+    # used_neural_network(x_train, x_test, y_train, y_test)
     #
-    # optim_neural_net(x_train, x_test, y_train, y_test)
+    optim_neural_net(x_train, x_test, y_train, y_test)
 
     # aas = KNeighbors(x_train, x_test, y_train, y_test)
     # print(aas)

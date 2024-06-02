@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 import time
 from datetime import datetime
 
@@ -16,10 +17,7 @@ import yaml
 from gymnasium import spaces
 from ray import tune
 from ray.rllib.algorithms import PPOConfig
-from stable_baselines3.common.base_class import BaseAlgorithm
-from stable_baselines3.common.env_checker import check_env
 
-from Sol.Model.Environments import normalize
 
 # TODO
 sys.path.append("../")
@@ -32,20 +30,24 @@ import wandb
 import stable_baselines3.common.monitor
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecCheckNan, VecNormalize
+from stable_baselines3.common.env_checker import check_env
 
 from stable_baselines3.common.policies import ActorCriticPolicy
+from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3 import SAC, DDPG
 from Sol.Model.Algorithms.sb3_ppo import PPO
-# from sb3_contrib import RecurrentPPO
-# from sb3_contrib.common.recurrent.policies import RecurrentActorCriticPolicy
+from sb3_contrib import RecurrentPPO
+from sb3_contrib.common.recurrent.policies import RecurrentActorCriticPolicy
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
-    StopTrainingOnNoModelImprovement
+    StopTrainingOnNoModelImprovement, CheckpointCallback
 
 from stable_baselines3.common.evaluation import evaluate_policy
-
 from stable_baselines3.common.utils import set_random_seed
 
 from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
+from Sol.Model.Environments import normalize
+from Sol.Model.Algorithms.utils import *
+
 from Sol.PyBullet.Logger import Logger
 import Sol.Utilities.Waypoints as Waypoints
 import Sol.Utilities.Callbacks as Callbacks
@@ -53,7 +55,7 @@ import Sol.Utilities.Callbacks as Callbacks
 from Sol.PyBullet.enums import ActionType
 
 from Sol.Utilities.Plotter import plot_learning_curve, plot_trajectories, plot_trajectories2, plot_3d_trajectories, \
-    plot_all_trajectories_3d
+    plot_all_trajectories_3d, compute_velocity_acceleration
 from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
 
 # from tf_agents.environments import py_environment
@@ -97,6 +99,9 @@ def dilate_targets(targets, factor: int) -> list:
 
 
 class PBDroneSimulator:
+    """
+    A class to manage the training and testing of the PBDroneEnv environment.
+    """
     def __init__(self, args, track, target_factor=0,
                  plot=True,
                  discount=0.999,
@@ -121,9 +126,7 @@ class PBDroneSimulator:
             self.targets.pop(0)
         print(track)
 
-        self.continued_agent = "Sol/model_chkpts/PPO_save_05.25.2024_02.21.23/best_model.zip"
-        self.continued_agent = "Sol/model_chkpts/SAC_save_05.26.2024_00.12.30/best_model.zip"
-        self.continued_agent = "Sol/model_chkpts/PPO_save_05.29.2024_08.32.25/best_model.zip"
+        self.continued_agent = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
 
     def make_env(self, multi=False, gui=False, initial_xyzs=None,
                  aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
@@ -131,7 +134,8 @@ class PBDroneSimulator:
                  seed: int = 0,
                  save_path: str = None,
                  include_distance=True,
-                 normalize_actions=True
+                 normalize_actions=True,
+                 collect_rollouts=False
                  ):
         """
         Utility function for multi-processed env.
@@ -154,7 +158,8 @@ class PBDroneSimulator:
                 cylinder=True,
                 circle=self.track.is_circle,
                 include_distance=include_distance,
-                normalize_actions=normalize_actions
+                normalize_actions=normalize_actions,
+                collect_rollouts=collect_rollouts
             )
             env.reset(seed=seed + rank)
 
@@ -190,6 +195,9 @@ class PBDroneSimulator:
             return _init()
 
     def setup_agent(self, tensorboard_path, train_env, chkpt_path=None) -> BaseAlgorithm:
+        """
+        Initializes the agent with the specified hyperparameters, from scratch or from a saved model.
+        """
 
         if self.args.lib == "sb3":
 
@@ -199,30 +207,30 @@ class PBDroneSimulator:
                                    net_arch=dict(vf=[512, 512, 256],
                                                  pi=[512, 512, 256]),
                                    enable_critic_lstm=False,
-                                   # lstm_hidden_size=128, # 256 default
+                                   lstm_hidden_size=128,  # 256 default
                                    n_lstm_layers=2,
                                    # log_std_init=0.0,
                                    )
 
-                # model = RecurrentPPO(RecurrentActorCriticPolicy,
-                #                      train_env,
-                #                      verbose=2,
-                #                      n_steps=4096,
-                #                      batch_size=512,
-                #                      n_epochs=10,
-                #                      gamma=0.99,
-                #                      # ent_coef=0.1,
-                #                      vf_coef=0.5,
-                #                      gae_lambda=0.9,
-                #                      # use_sde=True,
-                #                      # sde_sample_freq=4,
-                #                      normalize_advantage=True,
-                #                      clip_range=0.2,
-                #                      learning_rate=2.5e-4,
-                #                      tensorboard_log=tensorboard_path if self.args.savemodel else None,
-                #                      device="auto",
-                #                      policy_kwargs=lstm_kwargs
-                #                      )
+                model = RecurrentPPO(RecurrentActorCriticPolicy,
+                                     train_env,
+                                     verbose=2,
+                                     n_steps=4096,
+                                     batch_size=512,
+                                     n_epochs=10,
+                                     gamma=0.99,
+                                     # ent_coef=0.1,
+                                     vf_coef=0.5,
+                                     gae_lambda=0.9,
+                                     # use_sde=True,
+                                     # sde_sample_freq=4,
+                                     normalize_advantage=True,
+                                     clip_range=0.2,
+                                     learning_rate=2.5e-4,
+                                     tensorboard_log=tensorboard_path if self.args.savemodel else None,
+                                     device="auto",
+                                     policy_kwargs=lstm_kwargs
+                                     )
 
             if self.args.run_type == "full":
 
@@ -244,7 +252,7 @@ class PBDroneSimulator:
                                 batch_size=512,
                                 n_epochs=10,
                                 gamma=0.99,
-                                ent_coef=0.01,
+                                ent_coef=0.02,
                                 vf_coef=0.5,
                                 clip_range_vf=0.3,
                                 gae_lambda=0.95,
@@ -296,8 +304,8 @@ class PBDroneSimulator:
                         target_update_interval=1,
                         tau=0.005,
                         target_entropy="auto",
-                        buffer_size=104_857_6,
-                        learning_rate=8e-4,
+                        buffer_size=1_048_576,
+                        learning_rate=2.5e-4,
                         gamma=0.99,
                         use_sde=False,
                         # sde_sample_freq=-1,
@@ -408,11 +416,16 @@ class PBDroneSimulator:
         # plot_learning_curve(rewards_sum)
 
     def test_saved(self):
+        """
+        Tests the best saved model during a training process.
+        Might need to tune the observation and action spaces for each model to work.
+        """
         drone_environment = self.make_env(gui=True,
-                                          aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
+                                          aviary_dim=self.aviary_dim,
                                           initial_xyzs=self.initial_xyzs,
-                                          include_distance=False,
-                                          normalize_actions=False)
+                                          include_distance=True,
+                                          normalize_actions=True
+                                          )
         # from Sol.Model.Environments.dum import PBDroneEnv
         # drone_environment = PBDroneEnv(gui=False,
         #                                target_points=self.targets,
@@ -427,19 +440,21 @@ class PBDroneSimulator:
         saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"
         saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_17.34.06/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_00.03.17/best_model.zip"
-        saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.13.2024_20.04.44/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.17.2024_01.36.12/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"  # decent
         # saved_filename = "Sol/model_chkpts/SAC_save_05.26.2024_00.12.30/best_model.zip"
-        saved_filename = "Sol/model_chkpts/PPO_save_05.29.2024_18.36.18/best_model.zip"
-
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"
+        saved_filename = "Sol/model_chkpts/SAC_save_05.21.2024_23.28.56/best_model.zip"
         # wrong observation spaces,
 
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
+
+        # The learning processes of these models are good,
+        # yet something is wrong with checkpointing them or loading them.
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.30.2024_23.25.58/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
+        saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_04.57.44/rl_model_2652000_steps.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -465,6 +480,8 @@ class PBDroneSimulator:
 
         for target in self.targets:
             print(target)
+
+        # self.origin_log(model, saved_filename, drone_environment)
 
         # Print training progression ############################
         #     with np.load(filename+'/evaluations.npz') as data:
@@ -500,9 +517,9 @@ class PBDroneSimulator:
                     print("rpy", drone_environment.rpy)
                     print("pos", drone_environment.pos[0])
 
-                    traj.append(obs[:3])
-                    speed.append(np.linalg.norm(drone_environment.current_vel))
-                    print("Speed:", np.linalg.norm(drone_environment.current_vel))
+                    # traj.append(obs[:3])
+                    # speed.append(np.linalg.norm(drone_environment.current_vel))
+                    # print("Speed:", np.linalg.norm(drone_environment.current_vel))
 
                     rewards.append(reward)
                     rewards_sum.append(sum(rewards))
@@ -534,13 +551,15 @@ class PBDroneSimulator:
             plot_3d_trajectories(aver, s)
             plot_all_trajectories_3d(all_trajectories, all_speeds)
 
+            compute_velocity_acceleration(all_trajectories, all_speeds)
+
             break
             # time.sleep(1. / 240.)
 
     def test_learning(self):
 
         """
-            For custom policy testing purposes, doesn't work.
+            For custom policy testing purposes.
         """
 
         train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
@@ -578,8 +597,35 @@ class PBDroneSimulator:
         #             )
 
     def run_full_training(self):
+        """ Run the full training process."""
 
         # # tensorboard --logdir ./Sol/logs/
+
+        if self.args.lib == "clrl" or self.args.lib == "ray":
+            print("Running with", self.args.lib)
+            print("Registering gym environment")
+            import gymnasium as gym
+
+            gym.register(
+                id='PBDroneEnv-v0',
+                entry_point='Sol.Model.Environments.PBDroneEnv:PBDroneEnv',  # Ensure this matches the module and class
+                # max_episode_steps=1000,
+                kwargs={
+                    'multi': True,
+                    'gui': False,
+                    'rank': 0,
+                    'aviary_dim': self.aviary_dim,
+                    'initial_xyzs': self.initial_xyzs
+                }
+            )
+            print(gym.envs.registry)
+
+            if self.args.lib == "clrl":
+                self.run_clrl()
+                exit()
+            elif self.args.lib == "ray":
+                self.ray_train()
+                exit()
 
         now = datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
 
@@ -588,14 +634,6 @@ class PBDroneSimulator:
             print(chckpt_path, tensorboard_path, wandb_path)
         else:
             chckpt_path, tensorboard_path, wandb_path = None, None, None
-
-        gym.envs.register(
-            id='PBDroneEnv-v0',
-            entry_point='gym.envs.classic_control:PBDroneEnv',
-            max_episode_steps=1000,
-            kwargs={'multi': True, 'gui': False, 'rank': 0,
-                    'aviary_dim': self.aviary_dim, 'initial_xyzs': self.initial_xyzs}
-        )
 
         train_env = SubprocVecEnv([self.make_env(multi=True,
                                                  gui=False,
@@ -614,7 +652,8 @@ class PBDroneSimulator:
                                                 initial_xyzs=self.initial_xyzs,
                                                 aviary_dim=self.aviary_dim,
                                                 include_distance=True,
-                                                normalize_actions=True
+                                                normalize_actions=True,
+                                                collect_rollouts=False
                                                 )
                                   ])
 
@@ -624,9 +663,6 @@ class PBDroneSimulator:
 
         if self.args.lib == "sb3":
             model = self.setup_agent(tensorboard_path, train_env, chkpt_path=chckpt_path)
-        elif self.args.lib == "ray":
-            self.ray_train()
-            exit()
 
         model.set_random_seed(42)
 
@@ -636,13 +672,14 @@ class PBDroneSimulator:
 
         callbacks = []
 
-        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
+        # callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=100_000, verbose=1)
         # stop_train_callback = StopTrainingOnNoModelImprovement(max_no_improvement_evals=3, min_evals=5, verbose=1)
 
         if self.args.savemodel:
             # callbacks.append(Callbacks.FoundTargetsCallback(log_dir=chckpt_path + '/'))
             # callbacks.append(CheckpointCallback(save_freq=1000, save_path=chckpt_path + '/',
-            #                  save_replay_buffer=True if (self.args.agent == "SAC") else False, verbose=1))
+            #                  save_replay_buffer=True if (self.args.agent == "SAC") else False, verbose=2))
+
             if self.args.agent == 'SAC':
                 callbacks.append(Callbacks.SaveReplayBufferCallback(save_freq=100_000,
                                                                     save_path=chckpt_path,
@@ -660,7 +697,7 @@ class PBDroneSimulator:
                          # callback_on_new_best=callback_on_best,
                          best_model_save_path=chckpt_path if self.args.savemodel else None,
                          log_path=chckpt_path if self.args.savemodel else None,
-                         eval_freq=max(10000 // self.num_envs, 1),
+                         eval_freq=max(1000 // self.num_envs, 1),
                          n_eval_episodes=10,
                          deterministic=False,
                          render=False,
@@ -688,74 +725,75 @@ class PBDroneSimulator:
             if self.args.wandb:
                 wandb.finish()
 
-        # Test the model #########################################
-        # not tested
         if True:
+            self.origin_log(trained_model, chckpt_path, train_env)
 
-            test_env = self.make_env(multi=False)
-            test_env_nogui = self.make_env(multi=False)
+    def origin_log(self, model, chckpt_path, train_env):
 
-            test_env = stable_baselines3.common.monitor.Monitor(test_env)
-            test_env_nogui = stable_baselines3.common.monitor.Monitor(test_env_nogui)
+        test_env = self.make_env(multi=False)
+        test_env_nogui = self.make_env(multi=False)
 
-            rewards = []
+        test_env = Monitor(test_env)
+        test_env_nogui = Monitor(test_env_nogui)
 
-            # if os.path.isfile(filename + '/success_model.zip'):
-            #     path = filename + '/success_model.zip'
-            # elif os.path.isfile(filename + '/best_model.zip'):
-            #     path = filename + '/best_model.zip'
-            # else:
-            #     print("[ERROR]: no model under the specified path", filename)
-            # model = PPO.load(path)
+        rewards = []
 
-            train_env.close()
+        # if os.path.isfile(filename + '/success_model.zip'):
+        #     path = filename + '/success_model.zip'
+        # elif os.path.isfile(filename + '/best_model.zip'):
+        #     path = filename + '/best_model.zip'
+        # else:
+        #     print("[ERROR]: no model under the specified path", filename)
+        # model = PPO.load(path)
 
-            logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
-                            num_drones=1,
-                            output_folder=(chckpt_path + "/logs/logger/") if self.args.savemodel else None,
-                            )
+        train_env.close()
 
-            mean_reward, std_reward = evaluate_policy(model,
-                                                      test_env_nogui,
-                                                      n_eval_episodes=100
-                                                      )
-            print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
+        logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
+                        num_drones=1,
+                        # output_folder=(chckpt_path + "/logs/logger/") if self.args.savemodel else None,
+                        )
 
-            obs, info = test_env.reset()
-            i = 0
-            while True:
-                action, _states = model.predict(obs,
-                                                deterministic=True
-                                                )
+        mean_reward, std_reward = evaluate_policy(model,
+                                                  test_env_nogui,
+                                                  n_eval_episodes=100
+                                                  )
+        print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
-                obs, reward, terminated, truncated, info = test_env.step(action)
-                rewards.append(reward)
-                obs2 = obs.squeeze()
-                act2 = action.squeeze()
-                print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
-                      truncated)
+        obs, info = test_env.reset()
+        i = 0
+        while True:
+            action, _states = model.predict(obs,
+                                            deterministic=True
+                                            )
 
-                logger.log(drone=0,
-                           timestamp=i / test_env.CTRL_FREQ,
-                           state=np.hstack([obs2[0:3],
-                                            np.zeros(4),
-                                            obs2[3:15],
-                                            act2
-                                            ]),
-                           control=np.zeros(12))
+            obs, reward, terminated, truncated, info = test_env.step(action)
+            rewards.append(reward)
+            obs2 = obs.squeeze()
+            act2 = action.squeeze()
+            print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:",
+                  truncated)
 
-                if terminated:
-                    plot_learning_curve(rewards)
-                    break
-                i += 1
+            logger.log(drone=0,
+                       timestamp=i / test_env.CTRL_FREQ,
+                       state=np.hstack([obs2[0:3],
+                                        np.zeros(4),
+                                        obs2[3:15],
+                                        act2
+                                        ]),
+                       control=np.zeros(12))
 
-            test_env.close()
+            if terminated:
+                plot_learning_curve(rewards)
+                break
+            i += 1
 
-            if self.plot:
-                logger.plot()
+        test_env.close()
+
+        if self.plot:
+            logger.plot()
 
     def ray_train(self):
-        """Impossible to make it work."""
+        """"""
 
         ray.init(ignore_reinit_error=True)
 
@@ -842,6 +880,33 @@ class PBDroneSimulator:
         trainer = PPO(config=config)
         trainer.restore(best_checkpoint)
 
+    def run_clrl(self):
+        if self.args.agent == "PPO":
+            clean_args = [
+                "python", "Sol/Model/Algorithms/cleanRLPPO.py",
+                "--env-id", "PBDroneEnv-v0",
+                "--num-minibatches", "1",
+                "--minibatch-size", "512",
+                "--update-epochs", "10",
+                "--learning-rate", "2.5e-4",
+                "--no-anneal-lr",
+                "--gamma", "0.99",
+                "--gae-lambda", "0.95",
+                "--norm-adv",
+                "--vf-coef", "0.5",
+                "--ent-coef", "0.01",
+                "--clip-coef", "0.2",
+                "--max-grad-norm", "0.5",
+                "--target-kl", "0.05",
+                "--num-steps", str(self.args.max_env_steps),
+                "--total-timesteps", str(int(self.args.total_timesteps)),
+                "--no-save-model",
+                # "--no-wandb",
+                "--num-envs", str(self.num_envs),
+            ]
+
+        subprocess.run(clean_args)
+
     def face_target(self):
         target_vector = np.array(self.targets[0]) - np.array(self.initial_xyzs[0])
         target_vector_xy = np.array([target_vector[0], target_vector[1]])  # Projection on the XY plane
@@ -906,97 +971,6 @@ class PBDroneSimulator:
         # return chckpt_path, tensorboard_path, wandb_path
 
 
-def linear_schedule(initial_value: float) -> Callable[[float], float]:
-    """
-    Linear learning rate schedule.
-
-    :param initial_value: initial learning rate
-    :return: schedule that computes the current learning rate depending on remaining progress
-    """
-    if isinstance(initial_value, str):
-        initial_value = float(initial_value)
-
-    def func(progress_remaining: float) -> float:
-        """
-        Progress will decrease from 1 (beginning) to 0.
-
-        :param progress_remaining:
-        :return: current learning rate
-        """
-        return progress_remaining * initial_value
-
-    return func
-
-
-def exponential_schedule(initial_value: float, decay_rate: float = 0.2) -> Callable[[float], float]:
-    """
-    Exponential learning rate schedule.
-
-    :param initial_value: initial learning rate
-    :param decay_rate: decay rate (default: 0.2)
-    :return: schedule that computes the current learning rate depending on remaining progress
-    """
-    if isinstance(initial_value, str):
-        initial_value = float(initial_value)
-
-    def func(progress_remaining: float) -> float:
-        """
-        Progress will decrease from 1 (beginning) to 0.
-
-        :param progress_remaining:
-        :return: current learning rate
-        """
-        return initial_value * (decay_rate ** (1 - progress_remaining))
-
-    return func
-
-
-def lr_increase(initial_value: float, max_value: float, max_progress: float = 0.4) -> Callable[[float], float]:
-    """
-    Linear learning rate schedule.
-
-    :param initial_value: Initial learning rate
-    :param max_value: Maximum learning rate
-    :param max_progress: The progress (as a fraction of total training) at which the learning rate reaches its maximum value
-    :return: Schedule that computes the current learning rate depending on remaining progress
-    """
-    if isinstance(initial_value, str):
-        initial_value = float(initial_value)
-    if isinstance(max_value, str):
-        max_value = float(max_value)
-    if isinstance(max_progress, str):
-        max_progress = float(max_progress)
-
-    def func(progress_remaining: float) -> float:
-        """
-        Computes the current learning rate depending on remaining progress.
-
-        :param progress_remaining: The remaining progress (0.0 to 1.0) of the training process
-        :return: Current learning rate
-        """
-        if progress_remaining > 1.0 - max_progress:
-            progress = (1.0 - progress_remaining) / max_progress
-            return initial_value + (max_value - initial_value) * progress
-        else:
-            return max_value
-
-    return func
-
-
-def lrsched():
-    def reallr(progress):
-        lr = 0.003
-        if progress < 0.85:
-            lr = 0.0005
-        if progress < 0.66:
-            lr = 0.00025
-        if progress < 0.33:
-            lr = 0.0001
-        return lr
-
-    return reallr
-
-
 def load_most_recent_replay_buffer(directory) -> str:
     """
     Load the recentest replay buffer from a given directory.
@@ -1035,8 +1009,8 @@ def pad_and_average_trajectories(trajectories, speeds):
     padded_speeds = []
 
     for traj, speed in zip(trajectories, speeds):
-        padded_traj = traj + [traj[-1]] * (max_length - len(traj))  # Pad with the last position
-        padded_speed = speed + [speed[-1]] * (max_length - len(speed))  # Pad with the last speed
+        padded_traj = traj + [traj[-1]] * (max_length - len(traj))
+        padded_speed = speed + [speed[-1]] * (max_length - len(speed))
         padded_trajectories.append(padded_traj)
         padded_speeds.append(padded_speed)
 
@@ -1046,7 +1020,7 @@ def pad_and_average_trajectories(trajectories, speeds):
     avg_traj = np.mean(padded_trajectories, axis=0)
     avg_speed = np.mean(padded_speeds, axis=0)
 
-    # Ensure no negative speeds due to floating-point precision
+    # Ensure floating-point precision
     avg_speed = np.maximum(0, avg_speed)
 
     return avg_traj, avg_speed

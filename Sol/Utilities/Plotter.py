@@ -90,13 +90,13 @@ def plot_3d_targets(targets):
     # Connect the targets with lines
     ax.plot(x, y, z, c='b', linestyle='-', linewidth=1, label='Path')
 
-    # Set labels
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
 
     ax.legend()
     plt.show()
+
 
 def vis_policy(model, env):
 
@@ -137,8 +137,7 @@ def plot_trajectories(avg_traj, avg_speed):
 
     points = ax.scatter(traj[:, 0], traj[:, 1], c=speed, cmap=cmap, norm=norm)
 
-    # Add direction arrows
-    step = max(1, len(traj) // 5)  # Adjust arrow frequency as needed
+    step = max(1, len(traj) // 5)
     for k in range(1, len(traj), step):
         ax.annotate(
             '',
@@ -147,19 +146,15 @@ def plot_trajectories(avg_traj, avg_speed):
             arrowprops=dict(arrowstyle="->", color='black', lw=1.5)
         )
 
-    # Add colorbar
     cbar = plt.colorbar(points, ax=ax)
     cbar.set_label('Speed (m/s)')
 
-    # Add labels and title
     ax.set_xlabel('x (m)')
     ax.set_ylabel('y (m)')
     ax.set_title('Averaged Drone Trajectory')
 
-    # Add grid and legend
     ax.grid(True)
 
-    # Show the plot
     plt.show()
 
 
@@ -181,12 +176,10 @@ def plot_trajectories2(avg_traj, avg_speed):
     lc.set_linewidth(2)
     line = ax.add_collection(lc)
 
-    # Add colorbar
     cbar = plt.colorbar(line, ax=ax)
     cbar.set_label('Speed (m/s)')
 
-    # Add direction arrows and labels for key points
-    step = max(1, len(traj) // 7)  # Adjust arrow frequency as needed
+    step = max(1, len(traj) // 7)
     for k in range(1, len(traj), step):
         ax.annotate(
             '',
@@ -196,19 +189,14 @@ def plot_trajectories2(avg_traj, avg_speed):
         )
         ax.text(traj[k, 0], traj[k, 1], str(k // step + 1), fontsize=12, color='black')
 
-    # Add labels and title
     ax.set_xlabel('x (m)')
     ax.set_ylabel('y (m)')
     ax.set_title('Averaged Drone Trajectory')
-
-    # Add grid
     ax.grid(True)
 
-    # Set axis limits to better match the reference plot
     ax.set_xlim(-0.75, 0.75)
     ax.set_ylim(-0.75, 0.75)
 
-    # Show the plot
     plt.show()
 
 
@@ -219,11 +207,9 @@ def plot_3d_trajectories(avg_traj, avg_speed, title="Averaged Drone Trajectory")
     traj = np.array(avg_traj)
     speed = np.array(avg_speed)
 
-    # Normalize speed for color mapping
     norm = plt.Normalize(vmin=0, vmax=speed.max())
     cmap = plt.cm.jet
 
-    # Plot the trajectory with color gradient
     for i in range(len(traj) - 1):
         ax.plot(
             traj[i:i+2, 0], traj[i:i+2, 1], traj[i:i+2, 2],
@@ -236,14 +222,12 @@ def plot_3d_trajectories(avg_traj, avg_speed, title="Averaged Drone Trajectory")
     cbar = plt.colorbar(mappable, ax=ax, shrink=0.5)
     cbar.set_label('Speed (m/s)')
 
-    # Add direction arrows for key points
-    step = max(1, len(traj) // 7)  # Adjust arrow frequency as needed
+    step = max(1, len(traj) // 7)
     for k in range(1, len(traj), step):
         ax.quiver(traj[k-1, 0], traj[k-1, 1], traj[k-1, 2],
                   traj[k, 0] - traj[k-1, 0], traj[k, 1] - traj[k-1, 1], traj[k, 2] - traj[k-1, 2],
                   color='black', lw=1.5)
 
-    # Add labels and title
     ax.set_xlabel('x (m)')
     ax.set_ylabel('y (m)')
     ax.set_zlabel('z (m)')
@@ -252,13 +236,12 @@ def plot_3d_trajectories(avg_traj, avg_speed, title="Averaged Drone Trajectory")
     # Add grid
     ax.grid(True)
 
-    # Set axis limits to better match the reference plot
     ax.set_xlim(-0.75, 0.75)
     ax.set_ylim(-0.75, 0.75)
     ax.set_zlim(0, 0.75)
 
-    # Show the plot
     plt.show()
+
 
 def plot_all_trajectories_3d(trajectories, speeds, title="All Traveled Paths (3D)"):
     fig = plt.figure(figsize=(12, 10))
@@ -285,21 +268,53 @@ def plot_all_trajectories_3d(trajectories, speeds, title="All Traveled Paths (3D
     cbar = plt.colorbar(mappable, ax=ax, shrink=0.5)
     cbar.set_label('Speed (m/s)')
 
-    # Add labels and title
     ax.set_xlabel('x (m)')
     ax.set_ylabel('y (m)')
     ax.set_zlabel('z (m)')
     ax.set_title(title)
 
-    # Add grid
     ax.grid(True)
-
-    # Set axis limits to better match the reference plot
     ax.set_xlim(-0.75, 0.75)
     ax.set_ylim(-0.75, 0.75)
     ax.set_zlim(0, 0.75)
 
-    # Show the plot
+    plt.show()
+
+
+def compute_velocity_acceleration(trajectories, speeds, title="Velocity and Acceleration"):
+    velocities = []
+    accelerations = []
+
+    for traj in trajectories:
+        traj = np.array(traj)
+
+        velocity = np.linalg.norm(traj[1:] - traj[:-1], axis=1)
+        velocities.append(velocity)
+
+        acceleration = np.diff(velocity)
+        accelerations.append(acceleration)
+
+    # Plot velocity and acceleration
+    fig, axs = plt.subplots(2, 1, figsize=(12, 10))
+
+    # Plot velocity
+    for velocity in velocities:
+        axs[0].plot(velocity)
+    axs[0].set_title('Velocity (m/s)')
+    axs[0].set_xlabel('Time')
+    axs[0].set_ylabel('Velocity (m/s)')
+    axs[0].grid(True)
+
+    # Plot acceleration
+    for acceleration in accelerations:
+        axs[1].plot(acceleration)
+    axs[1].set_title('Acceleration (m/s^2)')
+    axs[1].set_xlabel('Time')
+    axs[1].set_ylabel('Acceleration (m/s^2)')
+    axs[1].grid(True)
+
+    fig.suptitle(title)
+    plt.tight_layout()
     plt.show()
 
 

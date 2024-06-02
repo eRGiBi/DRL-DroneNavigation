@@ -1,6 +1,6 @@
 
+
 base_ppo:
-  targets:  Waypoints.up_sharp_back_turn()
   n_envs: 12
   n_steps: 4096
   batch_size: 256
@@ -26,18 +26,21 @@ best_ppo:
   n_epochs: 10
   gamma: 0.99
   vf_coef: 0.5
+  clip_range_vf: 0.3
   gae_lambda: 0.9
   normalize_advantage: True
   clip_range: 0.2
+  target_kl: 0.05
   learning_rate: 2.5e-4
   policy_kwargs:
     activation_fn: Tanh
-    share_features_extractor: True
+    share_features_extractor: False
     net_arch:
       vf: [ 512, 512, 256 ]
       pi: [ 512, 512, 256 ]
 
 
+# Outdated
 circle_agent:
   type: PPO
   model:
@@ -59,3 +62,23 @@ circle_agent:
     net_arch:
       vf: [256, 256]
       pi: [256, 256]
+
+
+base_sac:
+    n_envs: 12
+    n_steps: 4096
+    batch_size: 256
+    gamma: 0.99
+    tau: 0.005
+    learning_rate: 2.5e-4
+    buffer_size: 1_048_576
+    learning_starts: 8192
+    train_freq: 3
+    gradient_steps: 5
+    ent_coef: 'auto'
+    target_update_interval: 1
+    target_entropy: 'auto'
+    action_noise: 'auto'
+    policy_kwargs:
+        net_arch: [256, 256]
+        activation_fn: ReLU

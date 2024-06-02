@@ -89,13 +89,13 @@ Value function regression with other methods (requires collecting rollouts):
 
 ### 5. Results
 
-I optimized the learning environment and fine-tuned the PPO algorithm's hyperparameters so that 
-PPO has shown to be an effective solution for the drone navigation problem.
+I optimized the learning environment and fine-tuned the PPO algorithm's hyperparameters,
+and it turned out to be an effective solution for the drone navigation problem.
 The PPO agent learns to navigate through the waypoints in about 4 hours of training on a low-spec machine.
 
 ![](assets/gifs/example.gif)
 
-Without fine tuned hyperparameters SAC only manages to learn to track in 15 hours of training. 
+Without fine-tuned hyperparameters, SAC only manages to learn to track in 15 hours of training. 
 
 ### 6. Notes
 

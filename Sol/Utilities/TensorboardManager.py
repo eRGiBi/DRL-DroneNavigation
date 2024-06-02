@@ -9,7 +9,9 @@ import seaborn as sns
 import tensorflow as tf
 from matplotlib import pyplot as plt
 from tbparse import SummaryReader
+
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+
 
 
 class TBM:
@@ -125,6 +127,7 @@ class TBM:
         step_increment = 0
 
         for f_name in filenames:
+            print(f"Processing file: {f_name}")
             reader = SummaryReader(f_name)
             df = reader.scalars
             if not df.empty:
@@ -202,13 +205,13 @@ class TBM:
             plt.plot(steps, smoothed_vals, label=names[i])
 
         # plt.title('Effects of different learning rates on ' + tag +
-        plt.title('Base SAC model\'s ' + tag +
+        plt.title('Comparison between SAC and PPO sample efficieny on ' + tag +
                   (" (with smoothing)") if smoothing_factor > 0 else "")
         plt.xlabel('Step')
         plt.ylabel('Value')
 
         if plt.gca().has_data():
-            # plt.legend(title="Learning rates", fontsize=20, loc='best')
+            plt.legend(title="Algorithm", fontsize=20, loc='best')
             plt.show()
 
     def smooth(self, values, factor):
@@ -230,7 +233,6 @@ class TBM:
 
         return data_dict
 
-
     def normalize_rewards(self, data_dict, max_reward):
         for tag, values in data_dict.items():
             data_dict[tag] = [(step, val / max_reward) for step, val in values]
@@ -239,6 +241,25 @@ class TBM:
     def percentage_rewards(self, data_dict, max_reward):
         for tag, values in data_dict.items():
             data_dict[tag] = [(step, (val / max_reward) * 100) for step, val in values]
+        return data_dict
+
+    def limit_data_num(self, data_dict, max_items=1000):
+        """
+        Limit the number of items in each list within the data dictionary.
+
+        Args:
+            data_dict (dict): A dictionary where each key is associated with a list of values.
+            max_items (int): The maximum number of items allowed in each list. Default is 1000.
+
+        Returns:
+            dict: The modified dictionary with each list limited to max_items elements.
+        """
+        for tag, values in data_dict.items():
+            n_values = len(values)
+            print(n_values)
+            if n_values > max_items:
+                data_dict[tag] = values[:max_items]
+
         return data_dict
 
 
@@ -484,20 +505,40 @@ if __name__ == '__main__':
     #                          "with vf_clip=0.3, entropy=0.1"],
     #                   smoothing_factor=0.7)
 
-
     # sac
-    f_names = ["Sol/logs/SAC_save_05.26.2024_00.12.30"
+    # f_names = ["Sol/logs/SAC_save_05.26.2024_00.12.30"
+    #            ]
+    # tags = [
+    #     # "eval/mean_ep_length",
+    #     "eval/mean_reward",
+    #     "train/critic_loss",
+    #     "train/ent_coef",
+    # ]
+    #
+    # for tag in tags:
+    #     tbm.plot_runs(tag,
+    #                   [tbm.limit_data(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))))
+    #                    for f_name in f_names],
+    #                   names=[""],
+    #                   smoothing_factor=0.8)
+
+    # sac2
+
+    f_names = ["Sol/logs/SAC_save_05.21.2024_23.28.56",
+               os.path.join(
+                   "Sol/logs/PPO 05.11.2024_11.37.31\ppo_tensorboard\PPO_05.11.2024_11.37.54_1"),
                ]
     tags = [
         # "eval/mean_ep_length",
         "eval/mean_reward",
-        "train/critic_loss",
-        "train/ent_coef",
+        # "train/critic_loss",
+        # "train/ent_coef",
     ]
 
     for tag in tags:
         tbm.plot_runs(tag,
-                      [tbm.limit_data(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))))
+                      [tbm.limit_data_num(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))),
+                                          203)
                        for f_name in f_names],
-                      names=[""],
+                      names=["SAC", "PPO"],
                       smoothing_factor=0.8)

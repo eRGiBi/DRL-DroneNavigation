@@ -107,7 +107,7 @@ def up_sharp_back_turn():
         np.array([0.3, 0.5, 0.7]),
         np.array([1, 0.5, 1]),
         np.array([1.5, 1., 1.2])
-    ], np.array([0.0, 0.0, 0.1]), np.array([-2, -2, 0, 2, 2, 2])
+    ], np.array([[0.0, 0.0, 0.1]]), np.array([-2, -2, 0, 2, 2, 2])
 
 
 def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):

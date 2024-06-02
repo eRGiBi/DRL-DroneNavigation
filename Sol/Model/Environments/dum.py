@@ -32,6 +32,9 @@ class PBDroneEnv(
     # FlyThruGateAviary,
     BaseSingleAgentAviary,
 ):
+    """
+        The PyBullet drone environment, extended with different improvements.
+    """
 
     def __init__(self,
                  target_points, threshold, discount, max_steps, aviary_dim,
@@ -259,10 +262,8 @@ class PBDroneEnv(
         #                   dtype=np.float32
         #                     )
 
-        return spaces.Box(low=np.array([1, 1, 0,
-                                        -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
-                          high=np.array([1, 1, 1,
-                                         1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
+        return spaces.Box(low=np.array([1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32),
+                          high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
                           dtype=np.float32
                           )
 

@@ -6,7 +6,7 @@ import time
 import cProfile
 import pstats
 
-# # TODO
+# TODO
 sys.path.append("../")
 sys.path.append("./")
 sys.path.append("Sol/Model")
@@ -56,9 +56,9 @@ def init_wandb(args):
         config=args,
         name=run_name,
         tensorboard=True,
-        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-        monitor_gym=True,  # auto-upload the videos of agents playing the game
-        save_code=True,  # optional
+        sync_tensorboard=True,
+        monitor_gym=True,
+        save_code=True,
 
     )
     writer = SummaryWriter(f"runs/{run_name}")
@@ -94,8 +94,9 @@ if __name__ == "__main__":
     # targets = Waypoints.half_up_forward()
 
     # targets = Waypoints.circle(radius=1, num_points=6, height=1, )
-    track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
-    # track = Waypoints.Track(Waypoints.reaching())
+    # track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
+    track = Waypoints.Track(Waypoints.reaching())
+    # track = Waypoints.Track(Waypoints.up_sharp_back_turn())
 
     sim = PBDroneSimulator(args, track, target_factor=0)
 
@@ -123,14 +124,14 @@ if __name__ == "__main__":
     elif args.run_type == "learning":
         sim.test_learning()
 
+    wandb.finish()
 
 
 # def manual_pb_env():
-    # Connect to the PyBullet physics server
+
     # physicsClient = p.connect(p.GUI)
     # p.setGravity(0, 0, -9.81)
     # p.setRealTimeSimulation(0)
-    # Load the drone model
     # drone = p.loadURDF("cf2x.urdf", [0, 0, 0])
 
     print("----------------------------")
