@@ -18,7 +18,8 @@ such as search and rescue, surveillance and package delivery.
 
 The simulator is based on the PyBullet-drones environment, 
 and the algorithms are from the Stable-Baselines3 library. 
-I also have used Tensorflow's TF-Agents, CleanRL, RLLib library, the OpenAI Gym library, and run tests using AirSim.
+I also have used Tensorflow's TF-Agents, the OpenAI Gym library,
+and run tests using AirSim, CleanRL, and the RLLib library.
 I focus on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, 
 which are optimized for continuous control tasks. 
 I evaluate the performance of the algorithms with a variety of differing hyperparameters.
