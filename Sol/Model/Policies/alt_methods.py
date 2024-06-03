@@ -521,7 +521,7 @@ def optim_neural_net(x_train, x_test, y_train, y_test):
             x = self.fc5(x)
             return x
 
-    def train_model(model, criterion, optimizer, train_loader, val_loader, epochs=20):
+    def train_model(model, criterion, optimizer, train_loader, val_loader, epochs=10):
         scaler = GradScaler()
         for epoch in range(epochs):
             model.train()
@@ -563,6 +563,8 @@ def optim_neural_net(x_train, x_test, y_train, y_test):
     study = optuna.create_study(direction='minimize')
 
     study.optimize(objective, n_trials=200, show_progress_bar=True)
+
+
 
     print("Best trial:")
     trial = study.best_trial
@@ -769,16 +771,16 @@ if __name__ == "__main__":
     # poly_reg(x_train, x_test, y_train, y_test)
     #
     # random_forest_regressor(x_train, x_test, y_train, y_test)
-
-    # decision_tree_regressor(x_train, x_test, y_train, y_test)
     #
+    # decision_tree_regressor(x_train, x_test, y_train, y_test)
+
     # Hierach(x_train, x_test, y_train, y_test)
     #
     # kmeans_clustering(x_train, x_test)
 
-    used_neural_network(x_train, x_test, y_train, y_test)
+    # used_neural_network(x_train, x_test, y_train, y_test)
     #
-    # optim_neural_net(x_train, x_test, y_train, y_test)
+    optim_neural_net(x_train, x_test, y_train, y_test)
 
     # aas = KNeighbors(x_train, x_test, y_train, y_test)
     # print(aas)
