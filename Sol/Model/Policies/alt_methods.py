@@ -625,27 +625,40 @@ def used_neural_network(x_train, x_test, y_train, y_test):
     class Net(nn.Module):
         def __init__(self, ):
             super(Net, self).__init__()
-            self.extractor = nn.Flatten()
+            # self.extractor = nn.Flatten()
             self.fc1 = nn.Linear(12, 512)
             self.fc2 = nn.Linear(512, 512)
-            self.fc3 = nn.Linear(512, 256)
-            self.fc4 = nn.Linear(256, 1)
+            self.fc3 = nn.Linear(512, 512)
+            self.fc4 = nn.Linear(512, 512)
+            self.fc5 = nn.Linear(512, 256)
+            self.fc6 = nn.Linear(256, 128)
+            self.fc7 = nn.Linear(128, 64)
+            self.fc8 = nn.Linear(64, 1)
+            # self.fc6 = nn.Linear(256, 1)
 
         def forward(self, x):
-            x = self.extractor(x)
+            # x = self.extractor(x)
             x = torch.tanh(self.fc1(x))
             x = torch.tanh(self.fc2(x))
             x = torch.tanh(self.fc3(x))
-            x = self.fc4(x)
+            x = torch.tanh(self.fc4(x))
+            x = torch.tanh(self.fc5(x))
+            x = torch.tanh(self.fc6(x))
+            x = torch.tanh(self.fc7(x))
+            x = self.fc8(x)
+
+            # x = self.fc6(x)
+            # x = self.fc4(x)
             return x
 
     model = Net()
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=2.5e-3, eps=1e-5)
+    # criterion = nn.L1Loss()
+    optimizer = optim.Adam(model.parameters(), lr=2.5e-4, eps=1e-5)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    num_epochs = 30
+    num_epochs = 50
     train_losses = []
     val_losses = []
     val_accuracies = []
@@ -725,26 +738,29 @@ def used_neural_network(x_train, x_test, y_train, y_test):
 
     sample_input = torch.randn(1, 12).to(device)
 
-    # Check if Graphviz is installed
-    if not os.system("dot -V"):
-        # Visualize model using torchviz
-        sample_input = torch.randn(1, 12).to(device)
-        output = model(sample_input)
-        dot = make_dot(output, params=dict(model.named_parameters()))
-        dot.format = 'png'
-        dot.render('model_architecture')
-    else:
-        print("Graphviz not found. Skipping torchviz visualization.")
+    # # Check if Graphviz is installed
+    # if not os.system("dot -V"):
+    #     # Visualize model using torchviz
+    #     sample_input = torch.randn(1, 12).to(device)
+    #     output = model(sample_input)
+    #     dot = make_dot(output, params=dict(model.named_parameters()))
+    #     dot.format = 'png'
+    #     dot.render('model_architecture')
+    # else:
+    #     print("Graphviz not found. Skipping torchviz visualization.")
+    #
+    # # torch.onnx.export(model, sample_input, "model.onnx")
+    #
+    # # Visualize using hiddenlayer
+    # # transforms = [hl.transforms.Prune('Constant')]
+    # graph = hl.build_graph(model, sample_input)
+    # graph.theme = hl.graph.THEMES['blue'].copy()
+    # graph.save('model_hl.png')
 
-    # torch.onnx.export(model, sample_input, "model.onnx")
 
-    # Visualize using hiddenlayer
-    # transforms = [hl.transforms.Prune('Constant')]
-    graph = hl.build_graph(model, sample_input)
-    graph.theme = hl.graph.THEMES['blue'].copy()
-    graph.save('model_hl.png')
 
 if __name__ == "__main__":
+
     x_train, x_test, y_train, y_test = read_data()
 
     # linear_regression(x_train, y_train, x_test, y_test)
