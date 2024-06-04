@@ -236,6 +236,7 @@ class PBDroneSimulator:
 
                 net_arch = dict(vf=[256, 256], pi=[256, 256]),
                 # net_arch = dict(vf=[512, 512, 256, 256], pi=[256, 256])
+                # net_arch = dict(vf=[512, 512, 256], pi=[512, 512, 512,512, 256, 128, 64])
                 net_arch = dict(vf=[512, 512, 256], pi=[512, 512, 256])
 
                 onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
@@ -427,7 +428,7 @@ class PBDroneSimulator:
         #                                   normalize_actions=True
         #                                   )
         from Sol.Model.Environments.dum import PBDroneEnv
-        drone_environment = PBDroneEnv(gui=False,
+        drone_environment = PBDroneEnv(gui=True,
                                        target_points=self.targets,
                                        threshold=self.threshold,
                                        discount=self.discount,
@@ -442,17 +443,15 @@ class PBDroneSimulator:
         # saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_00.03.17/best_model.zip"
         # saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
+        saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
         # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"  # decent
-        # saved_filename = "Sol/model_chkpts/SAC_save_05.26.2024_00.12.30/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/SAC_save_05.21.2024_23.28.56/best_model.zip"
-        # wrong observation spaces,
 
         # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
-        saved_filename = "Sol/model_chkpts/exp/ver.zip"
+
 
         # The learning processes of these models are good,
         # yet something is wrong with checkpointing them or loading them.
+        # saved_filename = "Sol/model_chkpts/exp/ver.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.30.2024_23.25.58/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_04.57.44/rl_model_2652000_steps.zip"
@@ -467,7 +466,7 @@ class PBDroneSimulator:
 
         elif self.args.agent == "PPO":
             model = PPO.load(saved_filename, env=drone_environment, tb_log_name="test")
-            model.learn(100_000)
+            # model.learn(100_000)
             # print(model.get_parameters())
             print_ppo_conf(model)
             # vis_policy(model, drone_environment)
