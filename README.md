@@ -1,7 +1,7 @@
 
-# Deep reinforcement learning Simulator and Algorithm environment for optimal path finding
+# Deep Reinforcement Learning Simulator and Algorithm environment for optimal path finding
 
-### Working model based on Stable-Baseline3 and pybullet-drones with PPO and SAC.
+### Working model based on Stable-Baseline3 and pybullet-drones with PPO and SAC
 
 
 ### 1. Introduction
@@ -109,9 +109,17 @@ tf.events manipulation:
    
     python Sol/Utilities/TensorBoardManager.py   
 
+Trajectory visualizations from collected data during a full training process.
+(requires collecting a vast number of episodes).
+
+    python Sol/Utilities/TrajectoryVisualizer.py  
+
 Value function regression with other methods (requires collecting rollouts):
 
     python Sol/Model/Policies/alt_methods.py
+
+
+
 
 ### 5. Results
 

@@ -1,6 +1,9 @@
 
 """
-Rollout visualization.
+Trajectory visualization.
+
+Dependent on the reward function.
+
 Requires collected data from the environment, stored in a text file.
 I used a 2.6 GB file from the PBDroneEnv environment.
 """
