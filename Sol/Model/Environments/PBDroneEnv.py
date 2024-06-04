@@ -732,10 +732,7 @@ class PBDroneEnv(
             drone_vec = np.array(drone_position)
             center_vec = np.array(circle_center)
 
-            # Vector from center to drone
             center_to_drone_vec = drone_vec - center_vec
-
-            # Ignore z-coordinate for XY plane circle
             center_to_drone_vec[2] = 0
 
             # Normalize and scale to circle radius
@@ -759,7 +756,6 @@ class PBDroneEnv(
                 base1 = np.array(self._target_points[self._current_target_index - 1])
                 base2 = np.array(self.current_target())
 
-            # Vector from point1 to point2
             line_vec = base2 - base1
             line_length = np.linalg.norm(line_vec)
 
@@ -768,40 +764,29 @@ class PBDroneEnv(
 
             line_unit_vec = line_vec / line_length
 
-            # # Vector from point1 to drone
             # point1_to_drone_vec = drone_position - base1
             #
-            # # Projection of drone vector onto the line segment
             # projection_length = np.dot(point1_to_drone_vec, line_unit_vec)
             #
-            # # Clamp the projection length to the bounds of the line segment
             # projection_length = np.clip(projection_length, 0, line_length)
             #
-            # # Closest point on the line segment
             # closest_point_on_line = base1 + projection_length * line_unit_vec
             #
-            # # Distance from the drone to the closest point on the line
             # distance_from_line = np.linalg.norm(drone_position - closest_point_on_line)
             #
             # return distance_from_line > self._threshold
 
-            # Extend the line segment by extension_length on both ends
             extended_point1 = base1 - extension_length * line_unit_vec
             extended_point2 = base2 + extension_length * line_unit_vec
 
-            # Vector from extended_point1 to drone
             point1_to_drone_vec = drone_position - extended_point1
 
-            # Projection of drone vector onto the extended line segment
             projection_length = np.dot(point1_to_drone_vec, line_unit_vec)
 
-            # Clamp the projection length to the bounds of the extended line segment
             projection_length = np.clip(projection_length, 0, np.linalg.norm(extended_point2 - extended_point1))
 
-            # Closest point on the extended line segment
             closest_point_on_line = extended_point1 + projection_length * line_unit_vec
 
-            # Distance from the drone to the closest point on the line
             distance_from_line = np.linalg.norm(drone_position - closest_point_on_line)
 
             return distance_from_line > self._threshold + extension_length  # - 0.3
@@ -830,7 +815,7 @@ class PBDroneEnv(
         return distance
 
     def collect_rollout(self, obs, reward, freq=10000):
-        """Collects the rollout data."""
+        """Observation with reward collection."""
         # if self._steps % freq == 0:
         if len(obs) > 0:
             with open(self.rollout_path, mode='a+') as f:
