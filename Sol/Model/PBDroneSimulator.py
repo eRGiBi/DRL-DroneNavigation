@@ -427,6 +427,7 @@ class PBDroneSimulator:
         #                                   include_distance=True,
         #                                   normalize_actions=True
         #                                   )
+        # Older environment for earlier trials
         from Sol.Model.Environments.dum import PBDroneEnv
         drone_environment = PBDroneEnv(gui=True,
                                        target_points=self.targets,
@@ -438,15 +439,12 @@ class PBDroneSimulator:
         print(drone_environment.observation_space)
         print(drone_environment.action_space)
 
-        saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"
-        saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_17.34.06/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.15.2024_00.03.17/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/save-05.11.2024_11.37.31/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"   # quite good already
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"  #
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.17.2024_20.23.13/best_model.zip"  # normalized
         saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_15.36.44/best_model.zip"  #very good
         # saved_filename = "Sol/model_chkpts/PPO_save_05.19.2024_23.11.04/best_model.zip"  # decent
-
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.25.2024_18.40.52/best_model.zip"  # decent
 
 
         # The learning processes of these models are good,
@@ -455,6 +453,10 @@ class PBDroneSimulator:
         # saved_filename = "Sol/model_chkpts/PPO_save_05.30.2024_23.25.58/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
         # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_04.57.44/rl_model_2652000_steps.zip"
+
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.29.2024_18.36.18/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
+        # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_14.39.42/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -599,7 +601,7 @@ class PBDroneSimulator:
     def run_full_training(self):
         """ Run the full training process."""
 
-        # # tensorboard --logdir ./Sol/logs/
+        # #
 
         if self.args.lib == "clrl" or self.args.lib == "ray":
             print("Running with", self.args.lib)

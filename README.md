@@ -52,9 +52,23 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 
 The CleanRL and RLLib implementations also need to be installed separately.
 
+### 3. Basic operation
 
-### 3. Example
-Example args for Windows:
+First, the simulation_controller parses the args, initializes the targets (Waypoints), 
+then starts the chosen function of the PBDroneSimulator class that directs
+the whole learning or testing process.
+
+
+
+### 4. Example
+
+
+Accessing tensorboard logs:
+```
+tensorboard --logdir ./Sol/logs/
+```
+
+Example args for a full training process on Windows (using gui significantly slows learning):
 
 ```
 $ python Sol/Model/simulation_controller.py --agent PPO --run_type full  --wandb f --savemodel t --gui f --norm_rew f --lib sb3 --num_envs 12 
@@ -73,10 +87,22 @@ On root installation for activating the example conda environment:
  source activate  /root/miniconda3/envs/RL-WSL
 ```
 
-### 4. Basic operation
 
-First, the simulation_controller parses the args, initializes the targets (Waypoints), 
-then starts the chosen function of the PBDroneSimulator class that direct the whole learning process.
+### Success models
+
+Loads and tests a preselected model. 
+All models are saved in the model_chkpts folder. 
+I sampled a few good policies in the function.
+
+Might need to tweak the observation (and action) spaces prior to launching.
+
+
+```
+$  python Sol/Model/simulation_controller.py --agent PPO --run_type saved  --wandb f  
+``` 
+
+
+
 
 ### Utilities
 tf.events manipulation:
@@ -89,8 +115,8 @@ Value function regression with other methods (requires collecting rollouts):
 
 ### 5. Results
 
-I optimized the learning environment and fine-tuned the PPO algorithm's hyperparameters,
-and it turned out to be an effective solution for the drone navigation problem.
+I optimized the learning environment and fine-tuned the PPO's hyperparameters.
+It turned out to be an effective solution for the drone navigation problem.
 The PPO agent learns to navigate through the waypoints in about 4 hours of training on a low-spec machine.
 
 ![](assets/gifs/example.gif)
