@@ -37,6 +37,8 @@ Sol/__pycache__/
 Sol/results
 /Sol/results/
 logs.txt
+runs/
+/runs/
 
 
 AirSimSol/Blocks/
