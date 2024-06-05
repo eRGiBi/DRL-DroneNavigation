@@ -20,6 +20,8 @@ class PBDroneEnv(
     BaseSingleAgentAviary,
 ):
 
+    """HER env, conforming to the old gym interface for compatibility, further improvements needed."""
+
     def __init__(self,
                  target_points, threshold, discount, max_steps, aviary_dim,
                  save_model=False, save_folder=None,
