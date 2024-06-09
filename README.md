@@ -128,6 +128,7 @@ It turned out to be an effective solution for the drone navigation problem.
 The PPO agent learns to navigate through the waypoints in about 4 hours of training on a low-spec machine.
 
 ![](assets/gifs/example.gif)
+![](assets/all_path.png) | ![](assets/upturn_seq.png)
 
 Without fine-tuned hyperparameters, SAC only manages to learn to track in 15 hours of training. 
 
