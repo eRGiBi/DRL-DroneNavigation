@@ -97,7 +97,7 @@ def up_circle():
         np.array([1, 0.5, 0.5]),
         np.array([0.5, 0.2, 0.2]),
         np.array([0.0, 0.0, 0.2]),
-    ], np.array([0.0, 0.0, 0.1]),
+    ], np.array([[0.0, 0.0, 0.1]]), np.array([-2, -2, 0, 2, 2, 2])
 
 
 def up_sharp_back_turn():
@@ -239,3 +239,4 @@ if __name__ == '__main__':
     Plotter.plot_3d_targets(targets[0])
     targets = reaching()
     Plotter.plot_3d_targets(targets[0])
+
