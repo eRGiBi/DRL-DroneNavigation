@@ -102,8 +102,6 @@ $  python Sol/Model/simulation_controller.py --agent PPO --run_type saved  --wan
 ``` 
 
 
-
-
 ### Utilities
 tf.events manipulation:
    

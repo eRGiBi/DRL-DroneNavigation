@@ -1,6 +1,18 @@
 from typing import Callable
 
 
+def collect_rollout_pair(self, obs, a_return):
+    """Collects the rollout data, observation with the corresponding return."""
+    # if self._steps % freq == 0:
+    if len(obs) > 0:
+        with open(self.rollout_path, mode='a+') as f:
+            for x in obs.tolist():
+                f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
+            f.write(str(a_return.cpu().numpy()))
+            f.write("\n")
+        f.close()
+
+
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     """
     Linear learning rate schedule.

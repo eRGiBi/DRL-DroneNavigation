@@ -13,6 +13,8 @@ from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticP
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import explained_variance, get_schedule_fn
 
+from Sol.Model.Algorithms.utils import collect_rollout_pair
+
 SelfPPO = TypeVar("SelfPPO", bound="PPO")
 
 
@@ -211,8 +213,8 @@ class PPO(OnPolicyAlgorithm):
 
             for rollout_data in self.rollout_buffer.get(self.batch_size):
 
-            #     for ob, re in zip(rollout_data.observations, rollout_data.returns,):
-            #         self.collect_rollout_pair(ob, re)
+                # for ob, re in zip(rollout_data.observations, rollout_data.returns,):
+                #     collect_rollout_pair(ob, re)
 
                 actions = rollout_data.actions
                 if isinstance(self.action_space, spaces.Discrete):
@@ -331,13 +333,4 @@ class PPO(OnPolicyAlgorithm):
             progress_bar=progress_bar,
         )
 
-    def collect_rollout_pair(self, obs, a_return):
-        """Collects the rollout data."""
-        # if self._steps % freq == 0:
-        if len(obs) > 0:
-            with open(self.rollout_path, mode='a+') as f:
-                for x in obs.tolist():
-                    f.write(str(np.format_float_positional(np.float32(x), unique=False, precision=32)) + ",")
-                f.write(str(a_return.cpu().numpy()))
-                f.write("\n")
-            f.close()
+
