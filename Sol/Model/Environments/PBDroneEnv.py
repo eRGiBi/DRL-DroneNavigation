@@ -158,6 +158,7 @@ class PBDroneEnv(
         self.target_visual = []
         if gui:
             self.show_targets()
+            # self.create_cylinder()
 
         # self._addObstacles()
 
@@ -740,9 +741,10 @@ class PBDroneEnv(
                 norm_vec = center_to_drone_vec / np.linalg.norm(center_to_drone_vec) * self.circle_radius
             except FloatingPointError:
                 norm_vec = np.zeros_like(center_to_drone_vec)
+
             closest_point = center_vec + norm_vec
 
-            distance_from_closest_point = np.linalg.norm(np.array(drone_position) - closest_point)
+            distance_from_closest_point = np.linalg.norm(drone_position - closest_point)
 
             return distance_from_closest_point > self._threshold
 
@@ -850,6 +852,20 @@ class PBDroneEnv(
                 rgbaColor=(0, 1 - (i / len(self.target_visual)), 0, 1),
                 physicsClientId=self.CLIENT
             )
+
+    # def create_cylinder(self, position, radius=1, height=1):
+    #     circle_radius = 1.0
+    #     threshold = 0.2
+    #     num_cylinders = 10  # Number of cylinders to generate
+    #     area_size = 10
+    #
+    #     visual_shape_id = p.createVisualShape(p.GEOM_CYLINDER, radius=radius, length=height,
+    #                                           rgbaColor=[1, 0, 0, 1], physicsClientId=self.CLIENT)
+    #     collision_shape_id = p.createCollisionShape(p.GEOM_CYLINDER, radius=radius, height=height,
+    #                                                 physicsClientId=self.CLIENT)
+    #     p.createMultiBody(baseMass=0, baseCollisionShapeIndex=collision_shape_id, baseVisualShapeIndex=visual_shape_id,
+    #                       basePosition=position, physicsClientId=self.CLIENT)
+
 
     def remove_target(self, index=None):
         """Removes the target from the PyBullet visualization."""
