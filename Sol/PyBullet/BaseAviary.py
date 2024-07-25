@@ -655,7 +655,7 @@ class BaseAviary(gym.Env):
         nth_drone : int
             The ordinal number/position of the desired drone in list self.DRONE_IDS.
         segmentation : bool, optional
-            Whehter to compute the compute the segmentation mask.
+             whether to compute the segmentation mask.
             It affects performance.
 
         Returns
