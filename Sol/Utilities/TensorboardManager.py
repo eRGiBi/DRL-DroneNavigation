@@ -13,7 +13,6 @@ from tbparse import SummaryReader
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 
-
 class TBM:
     """Half of this doesn't even work."""
 
@@ -205,7 +204,8 @@ class TBM:
             plt.plot(steps, smoothed_vals, label=names[i])
 
         # plt.title('Effects of different learning rates on ' + tag +
-        plt.title('Comparison between SAC and PPO sample efficieny on ' + tag +
+        # plt.title('Comparison between SAC and PPO sample efficieny on ' + tag +
+        plt.title('Comparison of base and best PPO on ' + tag +
                   (" (with smoothing)") if smoothing_factor > 0 else "")
         plt.xlabel('Step')
         plt.ylabel('Value')
@@ -524,9 +524,28 @@ if __name__ == '__main__':
 
     # sac2
 
-    f_names = ["Sol/logs/SAC_save_05.21.2024_23.28.56",
-               os.path.join(
-                   "Sol/logs/PPO 05.11.2024_11.37.31\ppo_tensorboard\PPO_05.11.2024_11.37.54_1"),
+    # f_names = ["Sol/logs/SAC_save_05.21.2024_23.28.56",
+    #            os.path.join(
+    #                "Sol/logs/PPO 05.11.2024_11.37.31\ppo_tensorboard\PPO_05.11.2024_11.37.54_1"),
+    #            ]
+    # tags = [
+    #     # "eval/mean_ep_length",
+    #     "eval/mean_reward",
+    #     # "train/critic_loss",
+    #     # "train/ent_coef",
+    # ]
+    #
+    # for tag in tags:
+    #     tbm.plot_runs(tag,
+    #                   [tbm.limit_data_num(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))),
+    #                                       203)
+    #                    for f_name in f_names],
+    #                   names=["SAC", "PPO"],
+    #                   smoothing_factor=0.8)
+
+    f_names = ["Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard/",
+               # "Sol/logs/PPO_save_05.25.2024_02.21.23",
+               "Sol/logs/PPO_save_05.25.2024_18.40.52",
                ]
     tags = [
         # "eval/mean_ep_length",
@@ -537,8 +556,7 @@ if __name__ == '__main__':
 
     for tag in tags:
         tbm.plot_runs(tag,
-                      [tbm.limit_data_num(tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name))),
-                                          203)
+                      [tbm.create_data_dict(tbm.sort_em_up(tbm.find_tensorflow_files(f_name)))
                        for f_name in f_names],
-                      names=["SAC", "PPO"],
-                      smoothing_factor=0.8)
+                      names=["Base", "Best", ""],
+                      smoothing_factor=0.5)
