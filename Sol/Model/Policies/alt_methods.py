@@ -46,7 +46,6 @@ import optuna.visualization as vis
 
 import numpy as np
 
-
 from torchviz import make_dot
 import hiddenlayer as hl
 
@@ -493,7 +492,6 @@ def kmeans_clustering(x_train, x_test):
 
 
 def optim_neural_net(x_train, x_test, y_train, y_test):
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     train_dataset = TensorDataset(torch.tensor(x_train, dtype=torch.float32),
@@ -564,8 +562,6 @@ def optim_neural_net(x_train, x_test, y_train, y_test):
 
     study.optimize(objective, n_trials=200, show_progress_bar=True)
 
-
-
     print("Best trial:")
     trial = study.best_trial
 
@@ -618,7 +614,8 @@ def used_neural_network(x_train, x_test, y_train, y_test):
     # y_test = np.array(y_test, dtype=np.float32)
     # y_test = np.clip(y_test, -10, 10, out=y_test)
 
-    train_dataset = TensorDataset(torch.tensor(x_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
+    train_dataset = TensorDataset(torch.tensor(x_train, dtype=torch.float32),
+                                  torch.tensor(y_train, dtype=torch.float32))
     val_dataset = TensorDataset(torch.tensor(x_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
 
     train_loader = DataLoader(train_dataset, batch_size=512, shuffle=True)
@@ -760,9 +757,7 @@ def used_neural_network(x_train, x_test, y_train, y_test):
     # graph.save('model_hl.png')
 
 
-
 if __name__ == "__main__":
-
     x_train, x_test, y_train, y_test = read_data()
 
     # linear_regression(x_train, y_train, x_test, y_test)
@@ -776,14 +771,14 @@ if __name__ == "__main__":
 
     # Hierach(x_train, x_test, y_train, y_test)
     #
-    # kmeans_clustering(x_train, x_test)
+    kmeans_clustering(x_train, x_test)
 
     # used_neural_network(x_train, x_test, y_train, y_test)
     #
-    optim_neural_net(x_train, x_test, y_train, y_test)
+    # optim_neural_net(x_train, x_test, y_train, y_test)
 
-    # aas = KNeighbors(x_train, x_test, y_train, y_test)
-    # print(aas)
+    aas = KNeighbors(x_train, x_test, y_train, y_test)
+    print(aas)
     #
     # svm_acc = svm(x_train, y_train, x_test, y_test)
     #
