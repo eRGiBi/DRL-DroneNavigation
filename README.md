@@ -1,28 +1,36 @@
 
-# Deep Reinforcement Learning Simulator and Algorithm environment for optimal path finding
+# Deep Reinforcement Learning Simulator and Algorithms for optimal pathfinding
 
-### Working model based on Stable-Baseline3 and pybullet-drones with PPO and SAC
+### Working model based on SB3 and pybullet-drones with strictly positional observations
 
 
 ### 1. Introduction
 
 The autonomous navigation of drones is a challenging problem that is yet to be solved.
-It requires the development of efficient algorithms for path planning,
-control and intelligent decision-making when unexpected events occur. 
+It requires the development of efficient algorithms for planning,
+control and intelligent decision-making amidst unexpected observations. 
 Deep reinforcement learning (DRL) has shown promise in solving these problems,
 but it is still an open question how to best apply it.
 
-My original goal with was to develop a DRL-based framework for autonomous drone racing, 
-but this same model could be utilized for other, perhaps more relevant real-world scenarios, 
+My original goal was to develop a DRL-based framework for autonomous drone racing, 
+but this same model could be utilized for other, more relevant real-world scenarios, 
 such as search and rescue, surveillance and package delivery.
 
-The simulator is based on the PyBullet-drones environment, 
-and the algorithms are from the Stable-Baselines3 library. 
+The simulator is designed to be lightweight, flexible and modular,
+based on the PyBullet-drones environment, 
+with the algorithms mainly borrowed from the Stable-Baselines3 library.
 I also have used Tensorflow's TF-Agents, the OpenAI Gym library,
 and run tests using AirSim, CleanRL, and the RLLib library.
-I focus on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, 
-which are optimized for continuous control tasks. 
-I evaluate the performance of the algorithms with a variety of differing hyperparameters.
+
+The focus is on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, 
+which are optimized for continuous control tasks.
+
+I evaluated the performance of the algorithms with a variety of differing hyperparameters 
+and visualized the results in different ways. 
+
+I also implemented and tested a variety of novel and research-based reward functions in a broad scope.
+
+
 
 ### 2. Requirements
 To install dependencies in a Conda, miniconda or Poetry environment:
@@ -54,8 +62,8 @@ The CleanRL and RLLib implementations also need to be installed separately.
 
 ### 3. Basic operation
 
-First, the simulation_controller parses the args, initializes the targets (Waypoints), 
-then starts the chosen function of the PBDroneSimulator class that directs
+First, the simulation_controller reads in the args, initializes the targets (the Waypoints class), 
+then starts the chosen function of the PBDroneSimulator class that controls
 the whole learning or testing process.
 
 
@@ -103,7 +111,8 @@ $  python Sol/Model/simulation_controller.py --agent PPO --run_type saved  --wan
 
 
 ### Utilities
-tf.events manipulation:
+I implemented a few functions for tf.events manipulation which visualizes the training process according 
+to selected metrics.
    
     python Sol/Utilities/TensorBoardManager.py   
 
@@ -118,18 +127,17 @@ Value function regression with other methods (requires collecting rollouts):
 
 
 
-
 ### 5. Results
 
-I optimized the learning environment and fine-tuned the PPO's hyperparameters.
-It turned out to be an effective solution for the drone navigation problem.
+I optimized the learning environment and fine-tuned the PPO hyperparameters.
+It turned out to be an effective solution for the drone navigation problem, but with a few assumptions.
 The PPO agent learns to navigate through the waypoints in about 4 hours of training on a low-spec machine.
 
 ![](assets/gifs/example.gif)
 
 ![](assets/comb.png)
 
-Without fine-tuned hyperparameters, SAC only manages to learn to track in 15 hours of training. 
+With not perfectly fine-tuned hyperparameters, SAC manages to learn a circle track in 15 hours of training. 
 
 ### 6. Notes
 
@@ -157,7 +165,5 @@ Further algorithmic speed and data efficiency improvements.
 Specific dir for the conda environment.
 
 1. Frame skipping
-2. Testing for added noise
-
-
+2. Testing for added noise to ease the sim-to-real transfer
 
