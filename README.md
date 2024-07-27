@@ -3,6 +3,10 @@
 
 ### Working model based on SB3 and pybullet-drones with strictly positional observations
 
+<p align="center">
+  <img src="assets/gifs/example-speed.gif" alt=""/>
+</p>
+
 
 ### 1. Introduction
 
@@ -29,6 +33,7 @@ I evaluated the performance of the algorithms with a variety of differing hyperp
 and visualized the results in different ways. 
 
 I also implemented and tested a variety of novel and research-based reward functions in a broad scope.
+
 
 
 
@@ -133,7 +138,6 @@ I optimized the learning environment and fine-tuned the PPO hyperparameters.
 It turned out to be an effective solution for the drone navigation problem, but with a few assumptions.
 The PPO agent learns to navigate through the waypoints in about 4 hours of training on a low-spec machine.
 
-![](assets/gifs/example.gif)
 
 ![](assets/comb.png)
 
