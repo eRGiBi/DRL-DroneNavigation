@@ -46,9 +46,6 @@ import optuna.visualization as vis
 
 import numpy as np
 
-from torchviz import make_dot
-import hiddenlayer as hl
-
 
 def filter_lines_by_length(file_path, length):
     filtered_lines = []
@@ -166,7 +163,6 @@ def svm(x_train, y_train, x_test, y_test):
 def svm_param_search(X_train, y_train, X_test, y_test):
     clf = SVC()
 
-    # Feature scaling
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
@@ -178,11 +174,9 @@ def svm_param_search(X_train, y_train, X_test, y_test):
         'degree': [2, 3, 4]  # Degree of the polynomial kernel
     }
 
-    # Perform grid search with cross-validation
     grid_search = GridSearchCV(clf, param_grid, cv=5, n_jobs=-1)
     grid_search.fit(X_train_scaled, y_train)
 
-    # Best parameters found
     print("Best parameters:", grid_search.best_params_)
     print(grid_search.best_score_)
 
@@ -280,31 +274,25 @@ def lasso_reg(x_train, x_test, y_train, y_test):
     x_train_scaled = scaler.fit_transform(x_train)
     x_test_scaled = scaler.transform(x_test)
 
-    # Define different alpha values to try
     alphas = [0.1, 1.0, 10.0, ]
 
     for alpha in alphas:
         print(f"Lasso Regression Results for {alpha}: -------------------")
 
-        # Initialize Lasso regression model
         lasso = Lasso(alpha=alpha)
 
-        # Fit the model
         lasso.fit(x_train_scaled, y_train)
 
-        # Make predictions on the test set
         y_pred = lasso.predict(x_test_scaled)
         print(f'Predicted values: {y_pred[:5]}')
         print(f'Actual values: {y_test[:5]}')
 
-        # Calculate evaluation metrics
         R_squared = r2_score(y_test, y_pred)
         MSE = mean_squared_error(y_test, y_pred)
         RMSE = mean_squared_error(y_test, y_pred, squared=False)
         MAE = mean_absolute_error(y_test, y_pred)
         MAPE = np.mean(np.abs((y_test - y_pred) / y_test)) * 100  # Mean Absolute Percentage Error
 
-        # Print evaluation metrics with their full names
         print(f"For Alpha: {alpha}")
         print(f'R-squared: {round(R_squared * 100, 2)}%')
         print(f'Mean Absolute Error (MAE): {round(MAE, 2)}')
@@ -387,7 +375,6 @@ def decision_tree_regressor(x_train, x_test, y_train, y_test, viz=False):
         #                 feature_names=[f'Feature {i}' for i in range(x_train.shape[1])],
         #                 filled=True, rounded=True, special_characters=True)
         #
-        # # Read and visualize the dot file using graphviz
         # with open(dot_file_path) as f:
         #     dot_graph = f.read()
         # graphviz.Source(dot_graph).render("decision_tree", format="png", cleanup=True)
@@ -409,7 +396,6 @@ def Hierach(x_train, x_test, y_train, y_test, truncate_mode=None, p=None, show_c
 
     cluster_labels = fcluster(linked, t=t, criterion=criterion)
 
-    # Evaluate clustering performance
     ari = adjusted_rand_score(y_train, cluster_labels)
     nmi = normalized_mutual_info_score(y_train, cluster_labels)
     fmi = fowlkes_mallows_score(y_train, cluster_labels)
@@ -715,7 +701,6 @@ def used_neural_network(x_train, x_test, y_train, y_test):
     print(f'Test Root Mean Squared Error (RMSE): {test_rmse:.2f}')
     print(f'Test Mean Absolute Error (MAE): {test_mae:.2f}')
 
-    # Plotting actual vs predicted values
     plt.figure(figsize=(10, 5))
     plt.plot(y_test, label='Actual', marker='o', linestyle='None')
     plt.plot(y_pred, label='Predicted', marker='x', linestyle='None')
@@ -725,7 +710,6 @@ def used_neural_network(x_train, x_test, y_train, y_test):
     plt.title('Actual vs Predicted Values')
     plt.show()
 
-    # Plotting training and validation loss
     plt.figure(figsize=(10, 5))
     plt.plot(train_losses, label='Training Loss')
     plt.plot(val_losses, label='Validation Loss')
@@ -750,7 +734,6 @@ def used_neural_network(x_train, x_test, y_train, y_test):
     #
     # # torch.onnx.export(model, sample_input, "model.onnx")
     #
-    # # Visualize using hiddenlayer
     # # transforms = [hl.transforms.Prune('Constant')]
     # graph = hl.build_graph(model, sample_input)
     # graph.theme = hl.graph.THEMES['blue'].copy()
