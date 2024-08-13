@@ -13,16 +13,17 @@ def parse_args():
                         help="the name of this experiment")
     parser.add_argument('--gym_id', type=str, default='PBDroneEnv',
                         help="the id of the gym environment")
-    parser.add_argument('--lib', type=str, default='sb3', choices=["sb3", "ray", "jax", "tfa", "clrl"])
+    parser.add_argument('--lib', type=str, default='sb3', choices=["sb3", "ray", "tfa", "clrl"])
     parser.add_argument('--run_type', type=str, default='full', choices=["full", "cont", "test", "saved", "learning"])
 
     parser.add_argument('--seed', '-s', type=int, default=gen_params['seed'], help="seed of the experiment")
     parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env',
                         type=lambda x: bool(strtobool(x)))
 
+    parser.add_argument('--obs', default="thrust", choices=["thrust", "rgb"])
+
     # Saving
-    parser.add_argument('--savemodel', default=True
-                        , type=lambda x: bool(strtobool(x)))
+    parser.add_argument('--savemodel', default=True, type=lambda x: bool(strtobool(x)))
 
     # Wrapper specific arguments
     parser.add_argument('--vec_check_nan', default=False, type=lambda x: bool(strtobool(x)))
