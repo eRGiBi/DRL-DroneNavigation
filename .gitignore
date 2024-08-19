@@ -38,7 +38,8 @@ Sol/results
 /Sol/results/
 logs.txt
 runs/
-/runs/
+/runs
+/wandb
 
 
 AirSimSol/Blocks/
@@ -68,4 +69,4 @@ flightmare/
 safe-control-gym/
 Sol/logs/concats/PPO 05.11.2024_11.37.31.csv
 Sol/rollouts/
-/wandb
+
