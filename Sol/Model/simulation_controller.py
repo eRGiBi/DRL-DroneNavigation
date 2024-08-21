@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import sys
@@ -28,6 +29,7 @@ import wandb
 from Sol.Model.PBDroneSimulator import PBDroneSimulator
 import Sol.Utilities.Waypoints as Waypoints
 from Sol.Utilities.ArgParser import parse_args
+from Sol.Utilities.Profiler import Profiler
 
 from gymnasium.envs.registration import register
 
@@ -85,17 +87,14 @@ if __name__ == "__main__":
     random.seed(seed)
     np.random.seed(seed)
     th.manual_seed(seed)
-    # th.backends.cudnn.deterministic = False
+    # th.backends.cudnn.deterministic = True
 
     # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
-
-    # targets = Waypoints.up_circle()
-    # targets = Waypoints.up_sharp_back_turn()
-    # targets = Waypoints.half_up_forward()
 
     track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
     # track = Waypoints.Track(Waypoints.reaching())
     # track = Waypoints.Track(Waypoints.up_sharp_back_turn())
+    # track = Waypoints.Track(Waypoints.up_circle(), circle=False)
 
     sim = PBDroneSimulator(args, track, target_factor=0)
 
@@ -103,18 +102,27 @@ if __name__ == "__main__":
         init_wandb(args)
 
     if args.run_type == "full" or args.run_type == "cont":
-        profiler = cProfile.Profile()
-        # profiler.enable()
-        try:
-            sim.run_full_training()
-            profiler.disable()
-        except KeyboardInterrupt:
-            profiler.disable()
-            stats = pstats.Stats(profiler).sort_stats('cumtime')
-            stats.print_stats()
 
-        stats = pstats.Stats(profiler).sort_stats('cumtime')
-        stats.print_stats()
+        try:
+            # Setup logging
+            if args.profile:
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
+                profiler = Profiler()
+
+                with profiler:
+                    sim.run_full_training()
+
+            else:
+                sim.run_full_training()
+
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt")
+        except Exception as e:
+            print("Exception Occurred")
+            print(e)
+        finally:
+            wandb.finish()
 
     elif args.run_type == "test":
         sim.run_test()
@@ -123,7 +131,7 @@ if __name__ == "__main__":
     elif args.run_type == "learning":
         sim.test_learning()
 
-    wandb.finish()
+    # Manual PyBullet Environment for debugging #################################
 
     # def manual_pb_env():
 
