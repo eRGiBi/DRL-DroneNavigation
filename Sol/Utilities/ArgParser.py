@@ -21,6 +21,7 @@ def parse_args():
                         type=lambda x: bool(strtobool(x)))
 
     parser.add_argument('--obs', default="thrust", choices=["thrust", "rgb"])
+    parser.add_argument('--profile', default=False, type=lambda x: bool(strtobool(x)))
 
     # Saving
     parser.add_argument('--savemodel', default=True, type=lambda x: bool(strtobool(x)))
