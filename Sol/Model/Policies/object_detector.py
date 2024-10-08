@@ -8,19 +8,14 @@ import pandas as pd
 import numpy as np
 import os
 
+import tensorflow as tf
+
 from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D
-    from tensorflow.keras.layers import Dense, Flatten
-    from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.models import Model
 
 
 from keras.src.applications import VGG16
-
-img1 = "../input/flowers-recognition/flowers/tulip/10094729603_eeca3f2cb6.jpg"
-img2 = "../input/flowers-recognition/flowers/dandelion/10477378514_9ffbcec4cf_m.jpg"
-img3 = "../input/flowers-recognition/flowers/sunflower/10386540696_0a95ee53a8_n.jpg"
-img4 = "../input/flowers-recognition/flowers/rose/10090824183_d02c613f10_m.jpg"
-imgs = [img1, img2, img3, img4]
-
 
 def scratch():
 
@@ -56,32 +51,18 @@ def scratch():
 
     vgg16_model = Model(inputs=_input, outputs=output)
 
-def Net():
+class ImageFeatureExtractor(tf.keras.Model):
+    """WIP"""
 
-    model = VGG16(weights='imagenet')
-    _get_predictions(model)
+    def __init__(self, dim=(64, 64, 3)):
+        self._model = VGG16(weights='imagenet')
+
+    def forward(self, x):
+        # x = preprocess_input(x)
+        return self._model(x)
+
+    def preprocess_input(self, x):
+        pass
 
 
-def _load_image(img_path):
-    img = image.load_img(img_path, target_size=(224, 224))
-    img = image.img_to_array(img)
-    img = np.expand_dims(img, axis=0)
-    img = preprocess_input(img)
-    return img
 
-
-def _get_predictions(_model):
-    f, ax = plt.subplots(1, 4)
-    f.set_size_inches(80, 40)
-    for i in range(4):
-        ax[i].imshow(Image.open(imgs[i]).resize((200, 200), Image.ANTIALIAS))
-    plt.show()
-
-    f, axes = plt.subplots(1, 4)
-    f.set_size_inches(80, 20)
-    for i, img_path in enumerate(imgs):
-        img = _load_image(img_path)
-        preds = decode_predictions(_model.predict(img), top=3)[0]
-        b = sns.barplot(y=[c[1] for c in preds], x=[c[2] for c in preds], color="gray", ax=axes[i])
-        b.tick_params(labelsize=55)
-        f.tight_layout()
