@@ -1,4 +1,3 @@
-
 # Deep Reinforcement Learning Simulator and Algorithms for optimal pathfinding
 
 ### Working model based on SB3 and pybullet-drones with strictly positional observations
@@ -7,6 +6,7 @@
   <img src="assets/gifs/example-speed.gif" alt=""/>
 </p>
 
+---
 
 ### 1. Introduction
 
@@ -32,10 +32,9 @@ which are optimized for continuous control tasks.
 I evaluated the performance of the algorithms with a variety of differing hyperparameters 
 and visualized the results in different ways. 
 
-I also implemented and tested a variety of novel and research-based reward functions in a broad scope.
+I also implemented and tested a variety of novel and research-based reward functions.
 
-
-
+---
 
 ### 2. Requirements
 To install dependencies in a Conda, miniconda or Poetry environment:
@@ -65,13 +64,15 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 
 The CleanRL and RLLib implementations also need to be installed separately.
 
+---
+
 ### 3. Basic operation
 
 First, the simulation_controller reads in the args, initializes the targets (the Waypoints class), 
 then starts the chosen function of the PBDroneSimulator class that controls
 the whole learning or testing process.
 
-
+---
 
 ### 4. Example
 
@@ -130,7 +131,7 @@ Value function regression with other methods (requires collecting rollouts):
 
     python Sol/Model/Policies/alt_methods.py
 
-
+---
 
 ### 5. Results
 
@@ -143,31 +144,27 @@ The PPO agent learns to navigate through the waypoints in about 4 hours of train
 
 With not perfectly fine-tuned hyperparameters, SAC manages to learn a circle track in 15 hours of training. 
 
+---
+
 ### 6. Notes
 
-The OpenGl 3 engine doesn't work in virtual machines, so in order to have a visual representation of the simulation,
+The OpenGl 3 engine does not work in virtual machines, so in order to have a visual representation of the simulation,
 it is necessary to run the simulation with OpenGL 2, set in the modified BaseAviary class, as such: 
 ```
 p.connect(p.GUI, options="--opengl2")
 ```
-Further: only OpenGL3 works in turn in Windows.
-Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
+Further: only OpenGL3 works in Windows. Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
 https://askubuntu.com/questions/1352158/libgl-error-failed-to-load-drivers-iris-and-swrast-in-ubuntu-20-04
 
-On Ubuntu, with an NVIDIA card, if you receive a "Failed to create and OpenGL context" message, launch nvidia-settings 
-and under "PRIME Profiles" select "NVIDIA (Performance Mode)", reboot and try again.
-
-
+On Ubuntu, with an NVIDIA card, if encountered a "Failed to create and OpenGL context" message, launch nvidia-settings 
+with "Performance Mode PRIME Profile," reboot and try again.
 
 StableBaselines3 and other packages that have '_' in them might not be installed or recognized correctly.
 
+---
 
 ### 7. To Do
 
-Further algorithmic speed and data efficiency improvements.
-
-Specific dir for the conda environment.
-
-1. Frame skipping
-2. Testing for added noise to ease the sim-to-real transfer
+1. Frame skipping.
+2. Added noise test to ease the sim-to-real transfer.
 
