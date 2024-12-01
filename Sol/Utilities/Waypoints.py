@@ -9,7 +9,6 @@ import Sol.Utilities.Plotter as Plotter
 class Track:
     """
     Initialized with a track function.
-
     Attributes are the waypoints, init pos and dim.
     """
     def __init__(self, track, circle=False):
@@ -18,12 +17,11 @@ class Track:
 
     def __str__(self):
         return (f"Track with {len(self.waypoints)} waypoints, "
-                f"initial position {self.initial_xyzs}, and aviary dimensions {self.aviary_dim}")
-
+                f"initial position of: {self.initial_xyzs}, and aviary dimensions of: {self.aviary_dim}.")
 
 def normalize_coordinates(coordinates, new_size):
     """
-    Normalize the coordinates to fit within a new size range.
+    Normalize the coordinates to fit within a new range.
 
     Args:
         coordinates (np.array): Original coordinates as a numpy array of shape (n, 3).
@@ -36,26 +34,23 @@ def normalize_coordinates(coordinates, new_size):
     min_coords = coordinates.min(axis=0)
     max_coords = coordinates.max(axis=0)
 
-    # Calculate the current range
     current_range = max_coords - min_coords
 
-    # Calculate the scaling factor
     scaling_factor = new_size / current_range
 
-    # Normalize the coordinates
     normalized_coords = (coordinates - min_coords) * scaling_factor
 
     return normalized_coords
 
 
 def parametric_eq(num_points=5):
-    """Parametric equations for a racetrack."""
-
-    # Define the number of track points
-    # Create a smooth racetrack using sine and cosine functions
+    """
+    Create a smooth racetrack using sine and cosine parametric equations with the "num_points" waypoints.
+    """
     theta = np.linspace(0, 2 * np.pi, num_points)
-    radius = 5.0  # Can be adjusted for a larger/smaller track
-    # Parametric equations for x, y, and z coordinates
+    radius = 5.0  # Adjust for track size
+
+    # Parametric equations
     x = radius * np.cos(theta)
     y = radius * np.cos(theta)
     z = 0.1 * np.sin(1 * theta)  # Adjust the amplitude and frequency for a smoother track
@@ -123,7 +118,6 @@ def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
         Returns:
         - np.array: Array of shape (num_points, 3) containing 3D coordinates.
         """
-
     angles = np.linspace(0, 2 * np.pi, num_points + 1, endpoint=True)
     circle_points = np.zeros((num_points + 1, 3))
 
@@ -140,17 +134,16 @@ def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
         circle_points[:, 2] = center[2] + radius * np.sin(angles) + height  # Z coordinate
         circle_points[:, 0] = center[0]  # X coordinate is constant
     else:
-        raise ValueError("Invalid plane specified. Choose 'XY', 'XZ', or 'YZ'.")
+        raise ValueError("Invalid plane specified.")
 
     return circle_points, np.array([[radius, 0, center[2] + radius]]), np.array([-2, -2, 0, 2, 2, 2])
 
 
 def generate_random_targets(num_targets: int) -> np.ndarray:
-    """Generates random targets for the drone to navigate to.
+    """Generates random targets.
 
-    The targets are generated in a random order and are evenly distributed
-    around the origin. The z-coordinate of the targets is randomly chosen
-    between 0.1 and 1.0, but is capped at 0.1 if it is below that value.
+    The targets are generated in a random order and are evenly distributed around the origin.
+    The z-coordinate of the targets is randomly chosen between 0.1 and 1.0, but is capped at 0.1 if it is below that value.
 
     Args:
         num_targets: The number of targets to generate.
@@ -177,6 +170,7 @@ def generate_random_targets(num_targets: int) -> np.ndarray:
 
 
 def reaching():
+    """Based on the track in: https://arxiv.org/pdf/2310.10943 ."""
     arr = np.array([
         [-2.5, 4.5, 3],  # G1
         [10, 3.5, 1],  # G2
