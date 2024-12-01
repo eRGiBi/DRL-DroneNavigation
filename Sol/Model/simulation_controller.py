@@ -28,6 +28,7 @@ import wandb
 
 from Sol.Model.PBDroneSimulator import PBDroneSimulator
 import Sol.Utilities.Waypoints as Waypoints
+from Sol.Utilities.Waypoints import Track
 from Sol.Utilities.ArgParser import parse_args
 from Sol.Utilities.Profiler import Profiler
 
@@ -80,6 +81,7 @@ if __name__ == "__main__":
     #     with open('parameters.yml', 'r') as file:
     #         params = yaml.safe_load(file)
 
+    print('Initial parsed arguments:')
     print(args)
 
     # Seeding
@@ -89,12 +91,12 @@ if __name__ == "__main__":
     th.manual_seed(seed)
     # th.backends.cudnn.deterministic = True
 
-    # device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
+    device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
 
-    track = Waypoints.Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
-    # track = Waypoints.Track(Waypoints.reaching())
-    # track = Waypoints.Track(Waypoints.up_sharp_back_turn())
-    # track = Waypoints.Track(Waypoints.up_circle(), circle=False)
+    track = Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
+    # track = Track(Waypoints.reaching())
+    # track = Track(Waypoints.up_sharp_back_turn())
+    # track = Track(Waypoints.up_circle(), circle=False)
 
     sim = PBDroneSimulator(args, track, target_factor=0)
 
@@ -102,7 +104,6 @@ if __name__ == "__main__":
         init_wandb(args)
 
     if args.run_type == "full" or args.run_type == "cont":
-
         try:
             # Setup logging
             if args.profile:
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     # p.setRealTimeSimulation(0)
     # drone = p.loadURDF("cf2x.urdf", [0, 0, 0])
 
-    print("----------------------------")
+    # print("----------------------------")
     # print(drone_environment.action_space)
     # print(drone_environment.action_spec())
     # print(drone_environment.getDroneIds())

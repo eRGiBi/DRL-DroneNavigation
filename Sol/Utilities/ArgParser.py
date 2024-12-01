@@ -1,7 +1,7 @@
 import argparse
 import os
 from distutils.util import strtobool
-from Sol.Model.parameters import *
+from Sol.Model.parameter_directory.parameters import *
 
 
 def parse_args():
@@ -12,12 +12,12 @@ def parse_args():
     parser.add_argument("--exp-name", type=str, default=os.path.basename(__file__).rstrip(".py"),
                         help="the name of this experiment")
     parser.add_argument('--gym_id', type=str, default='PBDroneEnv',
-                        help="the id of the gym environment")
+                        help="The id of the gym environment.")
     parser.add_argument('--lib', type=str, default='sb3', choices=["sb3", "ray", "tfa", "clrl"])
     parser.add_argument('--run_type', type=str, default='full', choices=["full", "cont", "test", "saved", "learning"])
 
-    parser.add_argument('--seed', '-s', type=int, default=gen_params['seed'], help="seed of the experiment")
-    parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env',
+    parser.add_argument('--seed', '-s', type=int, default=gen_params['seed'], help="Seed of the experiment.")
+    parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env.',
                         type=lambda x: bool(strtobool(x)))
 
     parser.add_argument('--obs', default="thrust", choices=["thrust", "rgb"])
@@ -55,12 +55,12 @@ def parse_args():
 
     # Wandb
     parser.add_argument("--wandb", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-                        help="if toggled, this experiment will be tracked with Weights and Biases")
+                        help="If toggled, the experiment will be tracked with Weights and Biases")
     parser.add_argument("--wandb-entity", type=str, default=None,
-                        help="the entity (team) of wandb's project")
+                        help="The entity (team) of wandb's project")
     parser.add_argument('--wandb_rootlog', type=str, default="/wandb")
 
     parser.add_argument("--capture-video", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
-                        help="weather to capture videos of the agent performances (check out `videos` folder)")
+                        help="weather to capture videos of the agent performances")
 
     return parser.parse_args()

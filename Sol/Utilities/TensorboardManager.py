@@ -14,7 +14,10 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 
 
 class TBM:
-    """Half of this doesn't even work."""
+    """
+    Various functions for manipulating TensorFlow event files,
+    with the goal of visualizing and comparing multiple trials.
+    """
 
     def extract_datetime_from_filename(self, filename):
         match = (re.search(r'PPO_(\d{2}\.\d{2}\.\d{4}_\d{2}\.\d{2}\.\d{2})_', filename) or
@@ -73,16 +76,13 @@ class TBM:
         # Assuming 'step' column exists and is used for indexing summaries in TensorBoard
         assert 'step' in dataframe.columns, "'step' column must be present in the DataFrame"
 
-        # Create a TensorFlow writer
         writer = tf.summary.create_file_writer(output_path)
 
-        # Other columns are assumed to be metrics
         metric_columns = [col for col in dataframe.columns if col != 'step']
 
         with writer.as_default():
             for index, row in dataframe.iterrows():
                 for metric in metric_columns:
-                    # Writing each metric as a scalar summary
                     tf.summary.scalar(name=metric, value=row[metric], step=int(row['step']))
                 writer.flush()
 
@@ -90,12 +90,6 @@ class TBM:
         """
         Traverses the given directory and its subdirectories to find TensorFlow files.
         TensorFlow event files are identified by the prefix 'events.out.tfevents.'.
-
-        Parameters:
-            root_directory (str): The path to the directory to search.
-
-        Returns:
-            list: A list containing the paths to TensorFlow files found.
         """
         tf_files = []
         for dirpath, dirnames, filenames in os.walk(root_directory):
@@ -140,7 +134,6 @@ class TBM:
         return merged_df
 
     def visualize_dict(self, data_dict, tags_to_plot=None):
-        # Plot settings
         plt.figure(figsize=(12, 8))
         sns.set(style="whitegrid")
 
@@ -148,7 +141,6 @@ class TBM:
         if tags_to_plot is None:
             tags_to_plot = data_dict.keys()
 
-        # Plot each tag
         for tag in tags_to_plot:
             if tag in data_dict and data_dict[tag]:
                 values = data_dict[tag]
@@ -158,7 +150,6 @@ class TBM:
                 print(f"Tag {tag} not found in data or has no values.")
 
         if plt.gca().has_data():
-            # Adding titles and labels
             plt.title('Trends of Different Tags Over Steps')
             plt.xlabel('Step')
             plt.ylabel('Value')
@@ -172,7 +163,7 @@ class TBM:
             os.makedirs(output_dir)
 
         for tag, values in data_dict.items():
-            if values:  # Check if values is not empty
+            if values:
                 steps, vals = zip(*values)
                 plt.figure(figsize=(12, 8))
                 sns.set(style="whitegrid")
@@ -181,6 +172,7 @@ class TBM:
                 plt.xlabel('Step')
                 plt.ylabel('Value')
                 plt.legend()
+
                 plot_filename = os.path.join(output_dir, f"{tag.replace('/', '_')}.png")
                 plt.savefig(plot_filename)
                 plt.close()
@@ -286,57 +278,7 @@ def tabulate_events(dpath):
     return out, steps
 
 
-# with np.load(os.path.join(experiment_id + "evaluations.npz")) as data:
-#     for key in data.keys():
-#         print(key)
-
-# df = tf.data.TFRecordDataset(os.path.join( experiment_id + "evaluations.npz"), compression_type='npz')
-# print(df)
-#
-# raw_example = next(iter(df))
-# parsed = tf.train.Example.FromString(raw_example.numpy())
-# print(raw_example)
-# print(parsed)
-#
-#
-# for e in summary_iterator(experiment_id + "evaluations.npz"):
-#   for v in e.summary.value:
-#     if v.tag == 'y=2x':
-#       print(e.step, v.simple_value)
-
-
-# def tabulate_events(dpath):
-#     summary_iterators = [EventAccumulator(os.path.join(dpath, dname)).Reload() for dname in os.listdir(dpath)]
-#
-#     tags = summary_iterators[0].Tags()['scalars']
-#
-#     for it in summary_iterators:
-#         assert it.Tags()['scalars'] == tags
-#
-#     out = {tag: [] for tag in tags}
-#     steps = []
-#
-#     for tag in tags:
-#         steps = [e.step for e in summary_iterators[0].Scalars(tag)]
-#
-#         for events in zip(*[acc.Scalars(tag) for acc in summary_iterators]):
-#             assert len(set(e.step for e in events)) == 1
-#
-#             out[tag].append([e.value for e in events])
-#
-#     return out, steps
-#
-# sdict, steps = tabulate_events(experiment_id)
-#
-# print(sdict, steps)
-
-# dfw = experiment.get_scalars(pivot=True)
-# print(dfw)
-
-
 if __name__ == '__main__':
-
-    # experiment_id = "Sol/logs/PPO 05.11.2024_11.37.31/ppo_tensorboard"
 
     tbm = TBM()
 
@@ -373,7 +315,7 @@ if __name__ == '__main__':
     # print(l)
     #
     # merged_df = tbm.sort_em_up(f_names)
-    # # merged_df.to_csv("Sol/visual/based.csv", index=False)
+    # # merged_df.to_csv("Sol/visualizations/based.csv", index=False)
     # data_dict = tbm.create_data_dict(merged_df)
 
     tags = [

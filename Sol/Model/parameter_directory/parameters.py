@@ -1,10 +1,9 @@
 """
 
-Default parameters for different models in dictionaries.
+    Default parameters for different models in dictionaries.
+    PPO, SAC
 
-PPO
-
-SAC
+     # TODO
 
 """
 
@@ -19,11 +18,6 @@ gen_params = {
     'threshold': 0.3,
     'batch_size': 128,
     'num_steps': 2048
-}
-
-rl_algorithms = {
-
-
 }
 
 def_ppo_params = {
