@@ -70,16 +70,11 @@ def init_wandb(args):
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
     )
 
-
-if __name__ == "__main__":
+def main():
 
     init_env()
 
     args = parse_args()
-
-    # if args.yaml:
-    #     with open('parameters.yml', 'r') as file:
-    #         params = yaml.safe_load(file)
 
     print('Initial parsed arguments:')
     print(args)
@@ -91,7 +86,7 @@ if __name__ == "__main__":
     th.manual_seed(seed)
     # th.backends.cudnn.deterministic = True
 
-    device = th.device("cuda" if th.cuda.is_available() and args.cuda else "cpu")
+    args.device = th.device("cuda" if th.cuda.is_available() and args.device == "cuda" else "cpu")
 
     track = Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
     # track = Track(Waypoints.reaching())
@@ -100,10 +95,11 @@ if __name__ == "__main__":
 
     sim = PBDroneSimulator(args, track, target_factor=0)
 
-    if args.wandb:
-        init_wandb(args)
-
     if args.run_type == "full" or args.run_type == "cont":
+
+        if args.wandb:
+            init_wandb(args)
+
         try:
             # Setup logging
             if args.profile:
@@ -113,6 +109,7 @@ if __name__ == "__main__":
 
                 with profiler:
                     sim.run_full_training()
+                    profiler.print_stats()
 
             else:
                 sim.run_full_training()
@@ -131,6 +128,12 @@ if __name__ == "__main__":
         sim.test_saved()
     elif args.run_type == "learning":
         sim.test_learning()
+
+
+
+if __name__ == "__main__":
+
+    main()
 
     # Manual PyBullet Environment for debugging #################################
 
