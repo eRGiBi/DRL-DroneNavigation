@@ -110,7 +110,7 @@ def vis_policy(model, env):
     if isinstance(action, np.ndarray):
         action = torch.tensor(action)
     dot = make_dot(action, params=dict(list(model.policy.named_parameters())))
-    dot.render('policy_graph', format='png', outfile="Sol/visual/graphviz_policy_graph.png")
+    dot.render('policy_graph', format='png', outfile="Sol/visualizations/graphviz_policy_graph.png")
 
     # onnx
     torch.onnx.export(model.policy, dummy_input.numpy(), "policy_model.onnx")
@@ -119,7 +119,7 @@ def vis_policy(model, env):
     trans = hl.transforms.Compose([hl.transforms.Prune('Constant')])
     graph = hl.build_graph(model.policy, list(dummy_input.numpy()), transforms=trans)
     graph.theme = hl.graph.THEMES['blue'].copy()
-    graph.save('sb3_policy_graph.png', format='png', path="Sol/visual/")
+    graph.save('sb3_policy_graph.png', format='png', path="Sol/visualizations/")
 
 
 def plot_trajectories(avg_traj, avg_speed):

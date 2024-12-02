@@ -1,8 +1,12 @@
-# import numpy as np
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
-#
-#
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+"""
+    This script visualizes the boundaries of a drone's path in 3D space.
+"""
+
+
 # class DroneBoundaryVisualizer:
 #     def __init__(self, circle_radius=1, threshold=0.2, target_points=None):
 #         self.circle_radius = circle_radius
@@ -99,9 +103,6 @@
 #
 # plt.show()
 
-
-import matplotlib.pyplot as plt
-
 def generate_torus(R, r, center_z, num_points=100):
 
     u = np.linspace(0, 2 * np.pi, num_points)
@@ -191,8 +192,6 @@ plt.show()
 
 # plt.show()
 
-import numpy as np
-import matplotlib.pyplot as plt
 
 def interpolate_path_points(p0, p1, num_points=100):
     """
@@ -220,7 +219,6 @@ R = 0.5
 r = 0.1
 center_z = 1
 
-# Define arbitrary points
 path_points = [
     np.array([0.0, 0.0, 0.5]),
     np.array([-0.5, 0.2, 0.7]),

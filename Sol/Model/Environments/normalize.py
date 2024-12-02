@@ -1,10 +1,12 @@
-"""Set of wrappers for normalizing actions and observations."""
-import numpy as np
 
+"""
+    Set of wrappers for normalizing actions and observations.
+    Taken from: https://github.com/openai/baselines/blob/master/baselines/common/vec_env/vec_normalize.py
+"""
+
+import numpy as np
 import gym
 
-
-# taken from https://github.com/openai/baselines/blob/master/baselines/common/vec_env/vec_normalize.py
 class RunningMeanStd:
     """Tracks the mean, variance and count of values."""
 
@@ -30,8 +32,7 @@ class RunningMeanStd:
 
 
 def update_mean_var_count_from_moments(
-    mean, var, count, batch_mean, batch_var, batch_count
-):
+    mean, var, count, batch_mean, batch_var, batch_count):
     """Updates the mean, var and count using the previous mean, var, count and batch values."""
     delta = batch_mean - mean
     tot_count = count + batch_count
