@@ -1,8 +1,7 @@
 import argparse
 import os
 from distutils.util import strtobool
-from Sol.Model.parameter_directory.parameters import *
-
+from Sol.Model.parameter_directory.parameter_manager import *
 
 def parse_args():
     """Parse arguments from the command line."""
@@ -14,13 +13,15 @@ def parse_args():
     parser.add_argument('--gym_id', type=str, default='PBDroneEnv',
                         help="The id of the gym environment.")
     parser.add_argument('--lib', type=str, default='sb3', choices=["sb3", "ray", "tfa", "clrl"])
-    parser.add_argument('--run_type', type=str, default='full', choices=["full", "cont", "test", "saved", "learning"])
+    parser.add_argument('--run_type', type=str, default='full',
+                        choices=["full", "cont", "test", "saved", "learning"])
+    parser.add_argument('--device', type=str, default="cuda", choices=["cuda", "cpu"])
 
     parser.add_argument('--seed', '-s', type=int, default=gen_params['seed'], help="Seed of the experiment.")
     parser.add_argument('--gui', default=False, help='Whether to use PyBullet GUI for the eval env.',
                         type=lambda x: bool(strtobool(x)))
 
-    parser.add_argument('--obs', default="thrust", choices=["thrust", "rgb"])
+    parser.add_argument('--obs', type=str, default="pos", choices=["pos", "pos_ext", "rgb"])
     parser.add_argument('--profile', default=False, type=lambda x: bool(strtobool(x)))
 
     # Saving
@@ -36,10 +37,14 @@ def parse_args():
     parser.add_argument('--agent', type=str, default='PPO', choices=["PPO", "SAC", "DDPG", "RECPPO"])
     parser.add_argument('--agent-config', type=str, default='default')
 
-    parser.add_argument("--num_envs", type=int, default=12, help="the number of parallel game environments")
-    parser.add_argument('--total_timesteps', type=str, default=gen_params['total_timesteps'], help="total number of the experiments")
-    parser.add_argument('--max_env_steps', type=int, default=gen_params['max_env_steps'], help="total timesteps of one episode")
-    parser.add_argument("--learning_rate", type=str, default=gen_params['learning_rate'], help="the learning rate of the optimizer")
+    parser.add_argument("--num_envs", type=int, default=12,
+                        help="The number of parallel environments.")
+    parser.add_argument('--total_timesteps', type=str, default=gen_params['total_timesteps'],
+                        help="Total number of the experiments.")
+    parser.add_argument('--max_env_steps', type=int, default=gen_params['max_env_steps'],
+                        help="Total timesteps of one episode.")
+    parser.add_argument("--learning_rate", type=str, default=gen_params['learning_rate'],
+                        help="The learning rate of the optimizer.")
 
     parser.add_argument('--discount', type=int, default=gen_params['discount'])
     parser.add_argument('--threshold', type=int, default=gen_params['threshold'])

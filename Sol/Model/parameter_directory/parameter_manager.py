@@ -7,6 +7,16 @@
 
 """
 
+import yaml
+
+def load_default_params():
+    """Load default parameters for different models in dictionaries."""
+
+    with open('parameters.yml', 'r') as file:
+        params = yaml.safe_load(file)
+
+    return params
+
 gen_params = {
     'seed': 1,
     'num_envs': 12,
