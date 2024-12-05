@@ -62,8 +62,6 @@ cuda-keyring_1.1-1_all.deb
 Replay Buffer
 *.pkl
 Sol/Utilities/csv_r.py
-Sol/visual/based.csv
-Sol/visual/graphviz_policy_graph.png
 
 flightmare/
 safe-control-gym/
