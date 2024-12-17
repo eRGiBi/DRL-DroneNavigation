@@ -13,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 class SaveReplayBufferCallback(BaseCallback):
     """
     Custom Callback for saving the replay buffer of SAC (and possibly other off-policy methods).
-    A single buffer is about 126MB.
+    A single buffer is about ~126MB.
     """
 
     def __init__(self, save_freq: int, save_path: str, verbose=0):
