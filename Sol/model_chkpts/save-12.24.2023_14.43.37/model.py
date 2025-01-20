@@ -440,7 +440,7 @@ class PBDroneEnv(
 
     def render_targets(self):
 
-        # the target visual
+        # the target visualizations
         file_dir = os.path.dirname(os.path.realpath(__file__))
         self.targ_obj_dir = os.path.join(file_dir, "./resources/target.urdf")
 
