@@ -10,29 +10,20 @@
 
 ### 1. Introduction
 
-The autonomous navigation of drones is a challenging problem that is yet to be solved.
-It requires the development of efficient algorithms for planning,
-control and intelligent decision-making amidst unexpected observations. 
-Deep reinforcement learning (DRL) has shown promise in solving these problems,
-but it is still an open question how to best apply it.
+Autonomous navigation of drones is a challenging problem that is yet to be solved.
+It requires the development of efficient algorithms for planning, control and intelligent decision-making amidst unexpected observations. 
+Deep reinforcement learning (DRL) has shown promise in solving these problems, but it is still an open question how to best apply it.
 
-My original goal was to develop a DRL-based framework for autonomous drone racing, 
-but this same model could be utilized for other, more relevant real-world scenarios, 
-such as search and rescue, surveillance and package delivery.
+My original goal was to develop a DRL-based framework for autonomous drone racing, but this same model could be utilized for other, more relevant real-world scenarios, such as search and rescue, surveillance and package delivery.
 
-The simulator is designed to be lightweight, flexible and modular,
-based on the PyBullet-drones environment, 
-with the algorithms mainly borrowed from the Stable-Baselines3 library.
-I also have used Tensorflow's TF-Agents, the OpenAI Gym library,
-and run tests using AirSim, CleanRL, and the RLLib library.
+The simulator is designed to be lightweight, flexible and modular, based on the PyBullet-drones environment, with the algorithms mainly borrowed from the Stable-Baselines3 library.
+I also have used Tensorflow's TF-Agents, the OpenAI Gym library, and run tests using AirSim, CleanRL, and the RLLib library.
 
-The focus is on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, 
-which are optimized for continuous control tasks.
+The focus is on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, which are optimized for continuous control tasks.
 
-I evaluated the performance of the algorithms with a variety of differing hyperparameters 
-and visualized the results in different ways. 
+I evaluated the performance of the algorithms with a variety of differing hyperparameters and visualized the results in different ways. 
 
-I also implemented and tested a variety of novel and research-based reward functions.
+A variety of novel and research-based reward functions were also implemented and tested.
 
 ---
 
