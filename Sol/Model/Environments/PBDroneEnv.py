@@ -1,6 +1,6 @@
+import os
 import csv
 import gzip
-import os
 import math
 import copy
 from copy import deepcopy
@@ -9,13 +9,15 @@ import inspect
 import threading
 from datetime import datetime
 
-import gym
+import numpy as np
 import pandas as pd
+
+import gym
 import torch
 from gymnasium import spaces
 # from gym import spaces
-import numpy as np
 import pybullet as p
+
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from Sol.Model.env_utils import cmd2pwm, pwm2rpm
@@ -36,31 +38,32 @@ class PBDroneEnv(
     The PyBullet environment for drone navigation.
     """
 
-    def __init__(self,
-                 target_points, threshold, discount, max_steps, aviary_dim,
-                 save_folder=None,
-                 drone_model: DroneModel = DroneModel.CF2X,
-                 initial_xyzs=None,
-                 initial_rpys=None,
-                 physics: Physics = Physics.PYB,
-                 pyb_freq: int = 240,
-                 ctrl_freq: int = 240,
-                 gui=False,
-                 record=False,
-                 obs: ObservationType = ObservationType.KIN,
-                 act: ActionType = ActionType.THRUST,
-                 vision_attributes=False,
-                 user_debug_gui=False,
-                 obstacles=False,
-                 random_spawn=False,
-                 cylinder=True,
-                 circle=False,
-                 include_target=False,
-                 include_distance=False,
-                 normalize_actions=False,
-                 collect_rollouts=False,
-                 ):
-
+    def __init__(
+            self,
+            target_points, threshold, discount, max_steps, aviary_dim,
+            save_folder=None,
+            drone_model: DroneModel = DroneModel.CF2X,
+            initial_xyzs=None,
+            initial_rpys=None,
+            physics: Physics = Physics.PYB,
+            pyb_freq: int = 240,
+            ctrl_freq: int = 240,
+            gui=False,
+            record=False,
+            obs: ObservationType = ObservationType.KIN,
+            act: ActionType = ActionType.THRUST,
+            vision_attributes=False,
+            user_debug_gui=False,
+            obstacles=False,
+            random_spawn=False,
+            cylinder=True,
+            circle=False,
+            include_target=False,
+            include_distance=False,
+            normalize_actions=False,
+            collect_rollouts=False,
+    ):
+        """Initialize Learning Environment."""
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
         self.OBS_TYPE = obs
@@ -144,9 +147,9 @@ class PBDroneEnv(
         # Saving
         self.collect_rollouts = collect_rollouts
         if self.collect_rollouts:
-            self.rollout_path = os.path.join('Sol/rollouts/', 'rollout_' +
-                                             str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/')) + 1) +
-                                             '.txt')
+            self.rollout_path = os.path.join(
+                'Sol/rollouts/',
+                'rollout_' + str(sum(len(files) for _, _, files in os.walk('Sol/rollouts/')) + 1) + '.txt')
             self.lock = threading.Lock()
 
         if save_folder is not None:
@@ -167,7 +170,6 @@ class PBDroneEnv(
 
     def step(self, action):
         """Applies the given action to the environment."""
-
         if self.normalize_actions:
             obs, reward, terminated, truncated, info = (
                 super().step(self.rescale_action(action))
@@ -192,11 +194,12 @@ class PBDroneEnv(
             self.collect_rollout(obs, reward, freq=1)
 
         if not terminated:
-            self.update_state_post_step(action)
+            self._update_state_post_step(action)
 
         return obs, reward, terminated, truncated, info
 
-    def update_state_post_step(self, action):
+    def _update_state_post_step(self, action):
+        """Update Environment state after taking a step."""
         self._steps += 1
         # self.total_steps += 1
         self._last_action = action
@@ -208,7 +211,8 @@ class PBDroneEnv(
 
         # Calculate the Euclidean distance between the drone and the next target
         self._distance_to_target = np.linalg.norm(
-            self.current_target() - self._current_position)
+            self.current_target() - self._current_position
+        )
 
         # distance_to_target = self.distance_between_points(self._computeObs()[:3],
         #                                                   self._target_points[self._current_target_index])
@@ -218,26 +222,28 @@ class PBDroneEnv(
         ):
             self.remove_target()
 
-    def _actionSpace(self):
-        """Returns the action space of the environment."""
-
+    def _actionSpace(self) -> spaces.Box:
+        """Return the action space of the Environment."""
         # return super()._actionSpace()
 
         #or self.ACT_TYPE == ActionType.RPM
         if self.normalize_actions:
-            return spaces.Box(low=-1 * np.ones(4, dtype=np.float32),
-                              high=np.ones(4, dtype=np.float32),
-                              shape=(4,), dtype=np.float32)
-
+            return spaces.Box(
+                low=-1 * np.ones(4, dtype=np.float32),
+                high=np.ones(4, dtype=np.float32),
+                shape=(4,),
+                dtype=np.float32
+            )
         else:
             # if self.ACT_TYPE == ActionType.THRUST:
-            return spaces.Box(low=self.physical_action_bounds[0],
-                              high=self.physical_action_bounds[1],
-                              dtype=np.float32)
+            return spaces.Box(
+                low=self.physical_action_bounds[0],
+                high=self.physical_action_bounds[1],
+                dtype=np.float32
+            )
 
-    def _observationSpace(self):
-        """Returns the observation space of the environment."""
-
+    def _observationSpace(self) -> spaces.Box:
+        """Return the observation space of the Environment."""
         # self.x_threshold = 2
         # self.y_threshold = 2
         # self.z_threshold = 2
@@ -288,11 +294,9 @@ class PBDroneEnv(
         #                     )
 
     def _computeObs(self):
-        """
-        Returns the current observation of the environment.
+        """Return the current observation of the environment.
 
         Kinematic observation of size 12 or 13.
-
         """
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
 
@@ -318,9 +322,8 @@ class PBDroneEnv(
         #                 ret[3], ret[4], ret[5], ret[6], ret[7], ret[8], ret[9], ret[10], ret[11]])
 
         try:
-            # Normalize observations to avoid underflow/overflow issues, STILL doesn't work
+            # Normalize observations to avoid underflow/overflow issues, still can cause issues
             ret = np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)
-
             ret = ret.astype(np.float32)
 
             assert isinstance(ret, np.ndarray) and ret.dtype == np.float32, \
@@ -333,9 +336,8 @@ class PBDroneEnv(
             return np.clip(ret, np.finfo(np.float32).min, np.finfo(np.float32).max)
 
     def _clipAndNormalizeState(self, state):
-        """
-        Original PyBullet code modified for the new observation spaces.
-        Normalizes a drone's state to the [-1,1] range.
+        """Normalize drone state into the [-1,1] range.
+        Original PyBullet code modified for new observation spaces.
 
         np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
                            self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :]])
@@ -405,13 +407,9 @@ class PBDroneEnv(
                                       clipped_vel_xy,
                                       clipped_vel_z,
                                       ):
-        """
-        Original PyBullet code, unused
+        """Print a warning if values in a state vector are out of the clipping range.
 
-        Debugging printouts associated to `_clipAndNormalizeState`.
-
-        Print a warning if values in a state vector is out of the clipping range.
-
+        Original PyBullet code, unused.
         """
         if not (clipped_pos_xy == np.array(state[0:2])).all():
             print("[WARNING] it", self.step_counter,
@@ -433,21 +431,18 @@ class PBDroneEnv(
             print("[WARNING] it", self.step_counter,
                   "in FlyThruGateAviary._clipAndNormalizeState(), clipped z velocity [{:.2f}]".format(state[12]))
 
-    def _computeInfo(self):
-        """Computes the current info dict(s).
+    def _computeInfo(self) -> dict:
+        """Compute the current info dict(s).
 
-        Returns
-        -------
-        dict[str, int]
-            A dict containing the current info values.
-            1. The number of found targets is stored under the key "found_targets".
+        Returns a dictionary containing current info values:
+        - The number of found targets is stored under the key "found_targets".
 
-            Future versions may include additional info values.
+        Future versions may include additional info values.
         """
         return {"found_targets": self._current_target_index}
 
-    def _computeTruncated(self):
-        """Computes the current truncated value(s).
+    def _computeTruncated(self) -> bool:
+        """Compute the current truncated value.
 
         Returns
         -------
@@ -458,15 +453,14 @@ class PBDroneEnv(
             return True
         return False
 
-    def _computeTerminated(self):
-        """Computes the current done value.
+    def _computeTerminated(self) -> bool:
+        """Compute the current done value.
 
         Returns
         -------
         bool
             Whether the current episode is done.
         """
-
         # Original PyBullet termination conditions:
         # print(self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC)
         # print(self._getDroneStateVector(0)[2] < self.COLLISION_H and self._steps > 100)
@@ -479,14 +473,13 @@ class PBDroneEnv(
             return False
 
     def _computeReward(self) -> float:
-        """Computes the current reward value.
+        """Compute the current reward value.
 
         Returns
         -------
         float
             The reward value.
         """
-
         # rew = self.progress_reward()
         # self._prev_distance_to_target = self._distance_to_target
         # self._last_position = copy.deepcopy(self._current_position)
@@ -577,7 +570,7 @@ class PBDroneEnv(
 
         return reward / 25
 
-    def orientation_reward(self, target_pos):
+    def orientation_reward(self, target_pos) -> float:
         threshold_angle = np.radians(10)
 
         forward_vector = self.get_forward_vector()
@@ -592,7 +585,7 @@ class PBDroneEnv(
         else:
             return 0
 
-    def get_forward_vector(self):
+    def get_forward_vector(self) -> np.array:
         euler = self.rpy[0]
 
         forward_vector = np.array([
@@ -603,10 +596,8 @@ class PBDroneEnv(
 
         return forward_vector
 
-    def smoothness_reward(self, accel_threshold=0.7, ang_accel_threshold=0.3):
-        """
-        Penalizes the drone for sudden changes in velocity or angular velocity.
-        """
+    def smoothness_reward(self, accel_threshold=0.7, ang_accel_threshold=0.3) -> float:
+        """Penalize for sudden changes in velocity or angular velocity."""
         lin_acc = np.linalg.norm(self.current_vel - self.prev_vel)
         ang_acc = np.linalg.norm(self.current_ang_v - self.prev_ang_v)
 
@@ -615,11 +606,12 @@ class PBDroneEnv(
 
         return linear_penalty + angular_penalty
 
-    def reset(self,
-              seed: int = None,
-              options: dict = None):
-        """Resets the environment."""
-
+    def reset(
+            self,
+            seed: int = None,
+            options: dict = None
+    ):
+        """Reset the Environment."""
         ret = super().reset(seed, options)
 
         self._is_done = False

@@ -1,8 +1,9 @@
-import logging
 import os
-import random
 import sys
 import time
+import random
+import logging
+from datetime import datetime
 
 import cProfile
 import pstats
@@ -23,8 +24,12 @@ sys.path.append(root_dir)
 
 import numpy as np
 import torch as th
+from torch.utils.tensorboard import SummaryWriter
+
 import wandb
 # import aim
+
+from gymnasium.envs.registration import register
 
 from Sol.Model.PBDroneSimulator import PBDroneSimulator
 import Sol.Utilities.Waypoints as Waypoints
@@ -32,9 +37,8 @@ from Sol.Utilities.Waypoints import Track
 from Sol.Utilities.ArgParser import parse_args
 from Sol.Utilities.Profiler import Profiler
 
-from gymnasium.envs.registration import register
-
-from torch.utils.tensorboard import SummaryWriter
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def init_env():
@@ -62,8 +66,8 @@ def init_wandb(args):
         sync_tensorboard=True,
         monitor_gym=True,
         save_code=True,
-
     )
+
     writer = SummaryWriter(f"runs/{run_name}")
     writer.add_text(
         "hyperparameters",
@@ -87,7 +91,9 @@ def main():
     # th.backends.cudnn.deterministic = True
 
     args.device = th.device("cuda" if th.cuda.is_available() and args.device == "cuda" else "cpu")
+    args.now = datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
 
+    # Track selection
     track = Track(Waypoints.circle(radius=1, num_points=6, height=1), circle=True)
     # track = Track(Waypoints.reaching())
     # track = Track(Waypoints.up_sharp_back_turn())
@@ -103,8 +109,7 @@ def main():
         try:
             # Setup logging
             if args.profile:
-                logging.basicConfig(level=logging.INFO)
-                logger = logging.getLogger(__name__)
+
                 profiler = Profiler()
 
                 with profiler:
@@ -124,11 +129,12 @@ def main():
 
     elif args.run_type == "test":
         sim.run_test()
+
     elif args.run_type == "saved":
         sim.test_saved()
+
     elif args.run_type == "learning":
         sim.test_learning()
-
 
 
 if __name__ == "__main__":

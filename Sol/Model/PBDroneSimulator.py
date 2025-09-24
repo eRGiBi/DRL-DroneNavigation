@@ -1,31 +1,29 @@
 import os
+import sys
+import yaml
+import time
 import re
 import subprocess
-import time
 from datetime import datetime
-
-import sys
-
-# from tensorflow.python.types.core import Callable
 from typing import Callable
 
-# import pybullet as p
-import gym
-import ray
-import torch.nn
-import yaml
-from gymnasium import spaces
-from ray import tune
-from ray.rllib.algorithms import PPOConfig
+import numpy as np
 
+import torch as th
+import torch.nn
+
+import gym
+from gymnasium import spaces
+# import pybullet as p
+
+# import ray
+# from ray import tune
+# from ray.rllib.algorithms import PPOConfig
 
 # TODO
-sys.path.append("../")
-sys.path.append("./")
+# sys.path.append("../")
+# sys.path.append("./")
 
-import numpy as np
-import torch as th
-import wandb
 
 import stable_baselines3.common.monitor
 from stable_baselines3.common.monitor import Monitor
@@ -35,35 +33,23 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3 import SAC, DDPG
-from Sol.Model.Algorithms.sb3_ppo import PPO
 from sb3_contrib import RecurrentPPO
 from sb3_contrib.common.recurrent.policies import RecurrentActorCriticPolicy
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, \
-    StopTrainingOnNoModelImprovement, CheckpointCallback
-
+from stable_baselines3.common.callbacks import (
+    EvalCallback,
+    StopTrainingOnRewardThreshold,
+    StopTrainingOnNoModelImprovement,
+    CheckpointCallback
+)
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.utils import set_random_seed
-
-from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
-from Sol.Model.Environments import normalize
-from Sol.Model.Algorithms.utils import *
-
-from Sol.PyBullet.Logger import Logger
-import Sol.Utilities.Waypoints as Waypoints
-import Sol.Utilities.Callbacks as Callbacks
-
-from Sol.PyBullet.enums import ActionType
-
-from Sol.Utilities.Plotter import plot_learning_curve, plot_trajectories, plot_trajectories2, plot_3d_trajectories, \
-    plot_all_trajectories_3d, compute_velocity_acceleration
-from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
 
 # from tf_agents.environments import py_environment
 # import tf_agents
 
 # import aim
+import wandb
 from wandb.integration.sb3 import WandbCallback
-
 
 # import rl_zoo3
 # import rl_zoo3.train
@@ -74,23 +60,44 @@ from wandb.integration.sb3 import WandbCallback
 # rl_zoo3.ALGOS["ppo"] = PPO
 # rl_zoo3.ALGOS["tqc"] = TQC
 
-# import ray
 # from ray import tune
 # from ray.rllib.agents.ppo import PPOTrainer
 # from ray.rllib.env.env_context import EnvContext
 
+from Sol.Model.Algorithms.sb3_ppo import PPO
+from Sol.Model.Environments.PBDroneEnv import PBDroneEnv
+from Sol.Model.Environments import normalize
+from Sol.Model.Algorithms.utils import *
+
+from Sol.PyBullet.Logger import Logger
+import Sol.Utilities.Waypoints as Waypoints
+import Sol.Utilities.Callbacks as Callbacks
+
+from Sol.PyBullet.enums import ActionType
+
+from Sol.Utilities.Plotter import (
+    plot_learning_curve,
+    plot_trajectories,
+    plot_trajectories2,
+    plot_3d_trajectories,
+    plot_all_trajectories_3d,
+    compute_velocity_acceleration
+)
+from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
+from Sol.Utilities.Waypoints import Track
 
 def dilate_targets(targets, factor: int) -> list:
+    """Add targets between the predefined track points."""
     dilated_points = []
 
     for i in range(len(targets) - 1):
         start_point = targets[i]
         end_point = targets[i + 1]
 
-        # Generate intermediate points using np.linspace
+        # Generate intermediate points
         intermediate_points = np.linspace(start_point, end_point, num=factor + 2)
 
-        # Append the intermediate points to the dilated points
+        # Append the intermediate points
         dilated_points.extend(intermediate_points[:-1])  # Exclude the last point to avoid duplication
 
     dilated_points.append(targets[-1])
@@ -99,14 +106,10 @@ def dilate_targets(targets, factor: int) -> list:
 
 
 class PBDroneSimulator:
-    """
-    A class to manage the training and testing of the PBDroneEnv environment.
-    """
-    def __init__(self, args, track, target_factor=0,
-                 plot=True,
-                 discount=0.999,
-                 ):
+    """Manage training and testing in the PBDroneEnv environment."""
 
+    def __init__(self, args, track: Track, target_factor: int=0, plot: bool=True, discount: float=0.999):
+        """Initialize Simulator."""
         self.args = args
         self.plot = plot
         self.discount = discount
@@ -122,21 +125,27 @@ class PBDroneSimulator:
         self.initial_xyzs = track.initial_xyzs
         self.aviary_dim = track.aviary_dim
         self.targets = dilate_targets(track.waypoints, target_factor)
+
         if track.is_circle:
             self.targets.pop(0)
         print(track)
 
+        # Example agent loaded from checkpoint
         self.continued_agent = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
 
-    def make_env(self, multi=False, gui=False, initial_xyzs=None,
-                 aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
-                 rank: int = 0,
-                 seed: int = 0,
-                 save_path: str = None,
-                 include_distance=True,
-                 normalize_actions=True,
-                 collect_rollouts=False
-                 ):
+    def make_env(
+            self,
+            multi=False,
+            gui=False,
+            initial_xyzs=None,
+            aviary_dim=np.array([-1, -1, 0, 1, 1, 1]),
+            rank: int = 0,
+            save_path: str = None,
+            include_distance: bool = True,
+            normalize_actions: bool = True,
+            collect_rollouts: bool = False,
+            seed: int = 0,
+    ):
         """
         Utility function for multi-processed env.
         """
@@ -172,7 +181,7 @@ class PBDroneSimulator:
             env = normalize.NormalizeObservation(env)
             # env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, -10, 10))
 
-            # TODO: MaxAndSkipEnv
+            # TODO: Experiments with MaxAndSkipEnv
 
             if self.args.vec_check_nan:
                 env = VecCheckNan(env)
@@ -195,97 +204,103 @@ class PBDroneSimulator:
             return _init()
 
     def setup_agent(self, tensorboard_path, train_env, chkpt_path=None) -> BaseAlgorithm:
-        """
-        Initializes the agent with the specified hyperparameters, from scratch or from a saved model.
-        """
+        """Initialize the agent with the specified hyperparameters, from scratch or from a saved model."""
 
         if self.args.lib == "sb3":
 
+            # PPO with recurrent neural networks
             if self.args.agent == "RECPPO":
-                lstm_kwargs = dict(activation_fn=th.nn.Tanh,
-                                   share_features_extractor=True,
-                                   net_arch=dict(vf=[512, 512, 256],
-                                                 pi=[512, 512, 256]),
-                                   enable_critic_lstm=False,
-                                   lstm_hidden_size=128,  # 256 default
-                                   n_lstm_layers=2,
-                                   # log_std_init=0.0,
-                                   )
+                lstm_kwargs = dict(
+                    activation_fn=th.nn.Tanh,
+                    share_features_extractor=True,
+                    net_arch=dict(
+                        vf=[512, 512, 256],
+                        pi=[512, 512, 256]),
+                    enable_critic_lstm=False,
+                    lstm_hidden_size=128,  # 256 default
+                    n_lstm_layers=2,
+                    # log_std_init=0.0,
+                )
 
-                model = RecurrentPPO(RecurrentActorCriticPolicy,
-                                     train_env,
-                                     verbose=2,
-                                     n_steps=4096,
-                                     batch_size=512,
-                                     n_epochs=10,
-                                     gamma=0.99,
-                                     # ent_coef=0.1,
-                                     vf_coef=0.5,
-                                     gae_lambda=0.9,
-                                     # use_sde=True,
-                                     # sde_sample_freq=4,
-                                     normalize_advantage=True,
-                                     clip_range=0.2,
-                                     learning_rate=2.5e-4,
-                                     tensorboard_log=tensorboard_path if self.args.savemodel else None,
-                                     device="auto",
-                                     policy_kwargs=lstm_kwargs
-                                     )
+                model = RecurrentPPO(
+                    RecurrentActorCriticPolicy,
+                    train_env,
+                    verbose=2,
+                    n_steps=4096,
+                    batch_size=512,
+                    n_epochs=10,
+                    gamma=0.99,
+                    # ent_coef=0.1,
+                    vf_coef=0.5,
+                    gae_lambda=0.9,
+                    # use_sde=True,
+                    # sde_sample_freq=4,
+                    normalize_advantage=True,
+                    clip_range=0.2,
+                    learning_rate=2.5e-4,
+                    tensorboard_log=tensorboard_path if self.args.savemodel else None,
+                    device="auto",
+                    policy_kwargs=lstm_kwargs
+                )
 
             if self.args.run_type == "full":
 
-                net_arch = dict(vf=[256, 256], pi=[256, 256]),
+                # net_arch = dict(vf=[256, 256], pi=[256, 256])
                 # net_arch = dict(vf=[512, 512, 256, 256], pi=[256, 256])
                 # net_arch = dict(vf=[512, 512, 256], pi=[512, 512, 512,512, 256, 128, 64])
                 net_arch = dict(vf=[512, 512, 256], pi=[512, 512, 256])
 
-                onpolicy_kwargs = dict(activation_fn=th.nn.Tanh,
-                                       share_features_extractor=False,
-                                       net_arch=net_arch,
-                                       # log_std_init=0.5
-                                       )
+                onpolicy_kwargs = dict(
+                    activation_fn=th.nn.Tanh,
+                    share_features_extractor=False,
+                    net_arch=net_arch,
+                    # log_std_init=0.5
+                )
 
                 if self.args.agent == 'PPO':
-                    model = PPO(ActorCriticPolicy,
-                                env=train_env,
-                                verbose=2,
-                                n_steps=4096,
-                                batch_size=512,
-                                n_epochs=10,
-                                gamma=0.99,
-                                ent_coef=0.02,
-                                vf_coef=0.5,
-                                clip_range_vf=0.3,
-                                gae_lambda=0.95,
-                                # use_sde=True,
-                                # sde_sample_freq=4,
-                                normalize_advantage=True,
-                                max_grad_norm=0.5,
-                                clip_range=0.2,
-                                target_kl=0.05,
-                                learning_rate=2.5e-4,
-                                # learning_rate=linear_schedule(2.5e-4),
-                                # learning_rate=lr_increase(2.5e-4, 5e-4, 0.4),
-                                # learning_rate=exponential_schedule(2.5e-4),
-                                tensorboard_log=tensorboard_path if self.args.savemodel else None,
-                                device="auto",
-                                policy_kwargs=onpolicy_kwargs,
-
-                                )
+                    model = PPO(
+                        ActorCriticPolicy,
+                        env=train_env,
+                        verbose=2,
+                        n_steps=4096,
+                        batch_size=512,
+                        n_epochs=10,
+                        gamma=0.99,
+                        ent_coef=0.02,
+                        vf_coef=0.5,
+                        clip_range_vf=0.3,
+                        gae_lambda=0.95,
+                        # use_sde=True,
+                        # sde_sample_freq=4,
+                        normalize_advantage=True,
+                        max_grad_norm=0.5,
+                        clip_range=0.2,
+                        target_kl=0.05,
+                        learning_rate=2.5e-4,
+                        # learning_rate=linear_schedule(2.5e-4),
+                        # learning_rate=lr_increase(2.5e-4, 5e-4, 0.4),
+                        # learning_rate=exponential_schedule(2.5e-4),
+                        tensorboard_log=tensorboard_path if self.args.savemodel else None,
+                        device="auto",
+                        policy_kwargs=onpolicy_kwargs,
+                    )
                     print_ppo_conf(model)
                     # print(model.get_parameters())
 
                 elif self.args.agent == 'SAC':
 
-                    offpolicy_kwargs = dict(activation_fn=th.nn.ReLU,
-                                            net_arch=[256, 256, ]
-                                            )
+                    offpolicy_kwargs = dict(
+                        activation_fn=th.nn.ReLU,
+                        net_arch=[256, 256, ]
+                    )
 
-                    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
-                                            net_arch=dict(qf=[256, 256, 128],
-                                                          pi=[256, 256]),
-                                            share_features_extractor=False,
-                                            )
+                    offpolicy_kwargs = dict(
+                        activation_fn=torch.nn.ReLU,
+                        net_arch=dict(
+                            qf=[256, 256, 128],
+                            pi=[256, 256]),
+                        share_features_extractor=False,
+                    )
 
                     model = SAC(
                         "MlpPolicy",
@@ -317,25 +332,25 @@ class PBDroneSimulator:
                     print_sac_conf(model)
 
                 elif self.args.agent == 'DDPG':
-                    model = DDPG("MlpPolicy",
-                                 train_env,
-                                 verbose=1,
-                                 batch_size=1024,
-                                 learning_rate=self.args.learning_rate,
-                                 train_freq=(10, "step"),
-                                 gradient_steps=10,
-                                 action_noise=None,
-                                 buffer_size=100_000,
-                                 learning_starts=1000,
-                                 policy_kwargs=dict(net_arch=[256, 256]),
 
-                                 tensorboard_log=tensorboard_path if self.args.savemodel else None,
-                                 device="auto",
-
-                                 )
+                    model = DDPG(
+                        "MlpPolicy",
+                        train_env,
+                        verbose=1,
+                        batch_size=1024,
+                        learning_rate=self.args.learning_rate,
+                        train_freq=(10, "step"),
+                        gradient_steps=10,
+                        action_noise=None,
+                        buffer_size=100_000,
+                        learning_starts=1000,
+                        policy_kwargs=dict(net_arch=[256, 256]),
+                        tensorboard_log=tensorboard_path if self.args.savemodel else None,
+                        device="auto",
+                        )
 
             elif self.args.run_type == "cont":
-                print("Train the model from save file. -----------------------------------")
+                print("Training model from save file. -----------------------------------")
 
                 if self.args.agent == "SAC":
                     model = SAC.load(self.continued_agent, env=train_env)
@@ -348,28 +363,32 @@ class PBDroneSimulator:
 
                 elif self.args.agent == "PPO":
 
-                    model = PPO.load(self.continued_agent,
-                                     env=train_env,
-                                     print_system_info=True)
+                    model = PPO.load(
+                        self.continued_agent,
+                        env=train_env,
+                        print_system_info=True
+                    )
 
                     print(model.get_parameters())
                     print_ppo_conf(model)
 
                 elif self.args.agent == "RECPPO":
                     pass
-                    # model = RecurrentPPO.load(self.continued_agent,
-                    #                           env=train_env,
-                    #                           print_system_info=True)
+                    # model = RecurrentPPO.load(
+                    #     self.continued_agent,
+                    #     env=train_env,
+                    #     print_system_info=True
+                    # )
                     # print(model.get_parameters())
                     # print_ppo_conf(model)
 
         # elif self.args.lib == "ray":
-        #
         #     self.ray_train(train_env, )
 
         return model
 
     def run_test(self):
+        """Run environment and agentic behavior testing."""
         # action = np.array([-.1, -.1, -.1, -.1], dtype=np.float32)
         # action = np.array([-.9, -.9, -.9, -.9], dtype=np.float32)
         # action = np.array([.9, .9, .9, .9], dtype=np.float32)
@@ -417,9 +436,8 @@ class PBDroneSimulator:
         # plot_learning_curve(rewards_sum)
 
     def test_saved(self):
-        """
-        Tests the best model saved during a training process.
-        Might need to tune the observation and action spaces for each model to work.
+        """Test a saved model.
+        Might be needing env tuning, as observation and action spaces for each model can be different.
         """
         # drone_environment = self.make_env(gui=True,
         #                                   aviary_dim=self.aviary_dim,
@@ -427,17 +445,22 @@ class PBDroneSimulator:
         #                                   include_distance=True,
         #                                   normalize_actions=True
         #                                   )
+
         # Older environment for earlier trials
         from Sol.Model.Environments.dum import PBDroneEnv
-        drone_environment = PBDroneEnv(gui=True,
-                                       target_points=self.targets,
-                                       threshold=self.threshold,
-                                       discount=self.discount,
-                                       max_steps=self.env_steps,
-                                       aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
-                                       initial_xyzs=self.initial_xyzs)
+        drone_environment = PBDroneEnv(
+            gui=True,
+            target_points=self.targets,
+            threshold=self.threshold,
+            discount=self.discount,
+            max_steps=self.env_steps,
+            aviary_dim=np.array([-2, -2, 0, 2, 2, 2]),
+            initial_xyzs=self.initial_xyzs
+        )
         print(drone_environment.observation_space)
         print(drone_environment.action_space)
+
+        # Saved Examples
 
         # saved_filename = "Sol/model_chkpts/save-05.12.2024_17.15.50/best_model.zip"   # quite good already
         # saved_filename = "Sol/model_chkpts/PPO_save_05.16.2024_09.37.34/best_model.zip"  #
@@ -447,16 +470,6 @@ class PBDroneSimulator:
         # saved_filename = "Sol/model_chkpts/PPO_save_05.25.2024_18.40.52/best_model.zip"  # decent
 
 
-        # The learning processes of these models are good,
-        # yet something is wrong with checkpointing them or loading them.
-        # saved_filename = "Sol/model_chkpts/exp/ver.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.30.2024_23.25.58/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_03.06.57/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.31.2024_04.57.44/rl_model_2652000_steps.zip"
-
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.29.2024_18.36.18/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_18.50.29/best_model.zip"
-        # saved_filename = "Sol/model_chkpts/PPO_save_05.28.2024_14.39.42/best_model.zip"
 
         if self.args.agent == "SAC":
             model = SAC.load(saved_filename, env=drone_environment)
@@ -559,15 +572,14 @@ class PBDroneSimulator:
             # time.sleep(1. / 240.)
 
     def test_learning(self):
-
-        """
-            For custom policy testing purposes.
-        """
-
-        train_env = SubprocVecEnv([self.make_env(multi=True, gui=False, rank=i,
-                                                 aviary_dim=np.array([-2, -2, 0, 2, 2, 2]))
-                                   for i in range(1)]
-                                  )
+        """Test custom policy purposes."""
+        train_env = SubprocVecEnv(
+            [self.make_env(
+                multi=True,
+                gui=False,
+                rank=i,
+                aviary_dim=np.array([-2, -2, 0, 2, 2, 2])) for i in range(1)]
+        )
 
         # custom_policy = CustomActorCriticPolicy(train_env.observation_space, train_env.action_space,
         #                                         net_arch=[512, 512, dict(vf=[256, 128],
@@ -577,15 +589,16 @@ class PBDroneSimulator:
 
         onpolicy_kwargs = dict(net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])])
 
-        model = PPO("MlpPolicy",
-                    train_env,
-                    verbose=1,
-                    n_steps=self.args.max_env_steps,
-                    batch_size=self.args.batch_size,
-                    device="auto",
-                    policy_kwargs=onpolicy_kwargs
-                    # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
-                    )
+        model = PPO(
+            "MlpPolicy",
+            train_env,
+            verbose=1,
+            n_steps=self.args.max_env_steps,
+            batch_size=self.args.batch_size,
+            device="auto",
+            policy_kwargs=onpolicy_kwargs
+            # dict(net_arch=[256, 256, 256], activation_fn=th.nn.GELU, ),
+        )
         print(model.policy)
 
         model.learn(total_timesteps=int(5e2), )
@@ -599,15 +612,11 @@ class PBDroneSimulator:
         #             )
 
     def run_full_training(self):
-        """ Run the full training process."""
-
-        # #
-
+        """Run the full training process."""
         if self.args.lib == "clrl" or self.args.lib == "ray":
-            print("Running with", self.args.lib)
-            print("Registering gym environment")
-            import gymnasium as gym
+            print(f"Running with {self.args.lib}.")
 
+            import gymnasium as gym
             gym.register(
                 id='PBDroneEnv-v0',
                 entry_point='Sol.Model.Environments.PBDroneEnv:PBDroneEnv',  # Ensure this matches the module and class
@@ -625,11 +634,15 @@ class PBDroneSimulator:
             if self.args.lib == "clrl":
                 self.run_clrl()
                 exit()
+
             elif self.args.lib == "ray":
                 self.ray_train()
                 exit()
 
-        now = datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+            else:
+                print("Wrong library selected.")
+
+        now = self.args.now
 
         if self.args.savemodel:
             chckpt_path, tensorboard_path, wandb_path = self.setup_paths(now)
@@ -637,27 +650,35 @@ class PBDroneSimulator:
         else:
             chckpt_path, tensorboard_path, wandb_path = None, None, None
 
-        train_env = SubprocVecEnv([self.make_env(multi=True,
-                                                 gui=False,
-                                                 rank=i,
-                                                 aviary_dim=self.aviary_dim,
-                                                 initial_xyzs=self.initial_xyzs,
-                                                 include_distance=True,
-                                                 normalize_actions=True
-                                                 )
-                                   for i in range(self.num_envs)
-                                   ])
+        train_env = SubprocVecEnv(
+            [
+                self.make_env(
+                    multi=True,
+                    gui=False,
+                    rank=i,
+                    aviary_dim=self.aviary_dim,
+                    initial_xyzs=self.initial_xyzs,
+                    include_distance=True,
+                    normalize_actions=True
+                )
+                for i in range(self.num_envs)
+            ]
+        )
 
-        eval_env = SubprocVecEnv([self.make_env(multi=True,
-                                                save_path=chckpt_path if self.args.savemodel else None,
-                                                gui=self.args.gui,
-                                                initial_xyzs=self.initial_xyzs,
-                                                aviary_dim=self.aviary_dim,
-                                                include_distance=True,
-                                                normalize_actions=True,
-                                                collect_rollouts=False
-                                                )
-                                  ])
+        eval_env = SubprocVecEnv(
+            [
+                self.make_env(
+                    multi=True,
+                    save_path=chckpt_path if self.args.savemodel else None,
+                    gui=self.args.gui,
+                    initial_xyzs=self.initial_xyzs,
+                    aviary_dim=self.aviary_dim,
+                    include_distance=True,
+                    normalize_actions=True,
+                    collect_rollouts=False
+                )
+            ]
+        )
 
         print(eval_env.observation_space)
         print(eval_env.action_space)
@@ -666,7 +687,7 @@ class PBDroneSimulator:
         if self.args.lib == "sb3":
             model = self.setup_agent(tensorboard_path, train_env, chkpt_path=chckpt_path)
 
-        model.set_random_seed(42)
+        model.set_random_seed(42) # Seeding not implemented on pybullet side
 
         # if self.args.save_model:
         #     with open(os.path.join(chckpt_path, 'config.yaml'), 'w', encoding='UTF-8') as file:
@@ -730,8 +751,9 @@ class PBDroneSimulator:
         if True:
             self.origin_log(trained_model, chckpt_path, train_env)
 
-    def origin_log(self, model, chckpt_path, train_env):
 
+    def origin_log(self, model, chckpt_path, train_env):
+        """Log with original pybullet code, not used."""
         test_env = self.make_env(multi=False)
         test_env_nogui = self.make_env(multi=False)
 
@@ -795,8 +817,7 @@ class PBDroneSimulator:
             logger.plot()
 
     def ray_train(self):
-        """"""
-
+        """Initialize and run ray training pipeline, not tested."""
         ray.init(ignore_reinit_error=True)
 
         env_config = {
@@ -883,6 +904,7 @@ class PBDroneSimulator:
         trainer.restore(best_checkpoint)
 
     def run_clrl(self):
+        """Run cleanrl training pipeline, not tested."""
         if self.args.agent == "PPO":
             clean_args = [
                 "python", "Sol/Model/Algorithms/cleanRLPPO.py",
@@ -922,7 +944,7 @@ class PBDroneSimulator:
         return 0, pitch, yaw
 
     def setup_paths(self, now, base_dir='Sol'):
-
+        """Construct paths for logging, checkpointing and cloud files."""
         base_chkpt_path = os.path.join(base_dir, 'model_chkpts')
         base_log_path = os.path.join(base_dir, 'logs')
 
@@ -945,7 +967,7 @@ class PBDroneSimulator:
 
         return chckpt_path, tensorboard_path, wandb_path
 
-        # Counting
+        # With counting
 
         # model_count = sum(len(files) for _, _, files in os.walk('Sol/model_chkpts/'))
         # model_count = sum(os.path.isdir(os.path.join(directory_path, entry)) for entry in os.listdir(directory_path))
@@ -974,16 +996,7 @@ class PBDroneSimulator:
 
 
 def load_most_recent_replay_buffer(directory) -> str:
-    """
-    Load the recentest replay buffer from a given directory.
-
-    Parameters:
-    model (BaseAlgorithm): The RL model for which the replay buffer should be loaded.
-    directory (str | Path): Path to the directory containing the replay buffer files.
-
-    Returns:
-    Path
-    """
+    """Load the most recent replay buffer from a given directory."""
     replay_buffer_files = os.listdir(directory)
     replay_buffer_pattern = re.compile(r'replay_buffer_(\d+)\.pkl')
 
