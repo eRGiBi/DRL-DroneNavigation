@@ -10,20 +10,27 @@
 
 ### 1. Introduction
 
-Autonomous navigation of drones is a challenging problem that is yet to be solved.
-It requires the development of efficient algorithms for planning, control and intelligent decision-making amidst unexpected observations. 
-Deep reinforcement learning (DRL) has shown promise in solving these problems, but it is still an open question how to best apply it.
+#### Project Goal
 
-My original goal was to develop a DRL-based framework for autonomous drone racing, but this same model could be utilized for other, more relevant real-world scenarios, such as search and rescue, surveillance and package delivery.
+Autonomous navigation of drones is a challenging problem that is yet to be  fully solved.
+It requires the development of efficient algorithms for planning,
+control and intelligent decision-making against unexpected observations. 
+Deep reinforcement learning (DRL) has shown promise in solving these problems,
+but it is still an open question how to best apply it.
 
-The simulator is designed to be lightweight, flexible and modular, based on the PyBullet-drones environment, with the algorithms mainly borrowed from the Stable-Baselines3 library.
-I also have used Tensorflow's TF-Agents, the OpenAI Gym library, and run tests using AirSim, CleanRL, and the RLLib library.
+The project's original goal was to develop a DRL-based framework for autonomous drone racing,
+but the same model could be utilized for other, more relevant real-world scenarios,
+such as search and rescue, surveillance and package delivery.
 
-The focus is on the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, which are optimized for continuous control tasks.
+#### Project Description
 
-I evaluated the performance of the algorithms with a variety of differing hyperparameters and visualized the results in different ways. 
+The Environment Simulator is designed to be lightweight, flexible and modular, built on the pybullet-drones library, with the RL algorithms mainly borrowed from the Stable-Baselines3 library.
 
-A variety of novel and research-based reward functions were also implemented and tested.
+The focus was put on Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC).
+A variety of different settings of hyperparameter combination were evaluated on performance and speed,
+visualized in different ways. 
+
+Furthermore, novel and other literature-based reward functions were implemented and tested.
 
 ---
 
@@ -54,6 +61,8 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 ```
 
 The CleanRL and RLLib implementations also need to be installed separately.
+
+Also included is a uv.lock file. 
 
 ---
 
@@ -133,13 +142,14 @@ The PPO agent learns to navigate through the waypoints in about 4 hours of train
 
 ![](assets/comb.png)
 
-With not perfectly fine-tuned hyperparameters, SAC manages to learn a circle track in 15 hours of training. 
+Although not with perfectly fine-tuned hyperparameters,
+SAC manages to learn a circle track in about 15 hours of training. 
 
 ---
 
 ### 6. Notes
 
-The OpenGl 3 engine does not work in virtual machines, so in order to have a visual representation of the simulation,
+- The OpenGl 3 engine does not work in virtual machines, so in order to have a visual representation of the simulation,
 it is necessary to run the simulation with OpenGL 2, set in the modified BaseAviary class, as such: 
 ```
 p.connect(p.GUI, options="--opengl2")
@@ -147,15 +157,16 @@ p.connect(p.GUI, options="--opengl2")
 Further: only OpenGL3 works in Windows. Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
 https://askubuntu.com/questions/1352158/libgl-error-failed-to-load-drivers-iris-and-swrast-in-ubuntu-20-04
 
-On Ubuntu, with an NVIDIA card, if encountered a "Failed to create and OpenGL context" message, launch nvidia-settings 
+- On Ubuntu, with an NVIDIA graphics card, if encountered a "Failed to create and OpenGL context" message, launch nvidia-settings 
 with "Performance Mode PRIME Profile," reboot and try again.
 
-StableBaselines3 and other packages that have '_' in them might not be installed or recognized correctly.
+- StableBaselines3 and other packages that have '_' in them might not be installed or recognized correctly.
+
+- On Windows, it is required to install C++ build tools, Windows 10/11 SDK , and the CMake tools for Visual Studio.
 
 ---
 
-### 7. To Do
+### 7. Future Improvements
 
 1. Frame skipping.
 2. Added noise test to ease the sim-to-real transfer.
-
