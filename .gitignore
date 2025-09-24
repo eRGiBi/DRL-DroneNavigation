@@ -24,7 +24,8 @@ var/
 *.egg
 
 
-Libraries
+cuda-keyring_1.1-1_all.deb
+libstdc++.so.6.0.25
 
 .idea
 
@@ -32,20 +33,6 @@ Sol/PyBullet/__pycache__
 Sol/PyBullet/__pycache__/BaseAviary.cpython-38.pyc
 Sol/__pycache__
 Sol/__pycache__/
-
-
-Sol/results
-/Sol/results/
-logs.txt
-runs/
-/runs
-/wandb
-
-
-AirSimSol/Blocks/
-AirSimSol/MSBuild2018/
-
-PPO-based-Autonomous-Navigation-for-Quadcopters-main/
 
 
 # Environments
@@ -56,16 +43,30 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-libstdc++.so.6.0.25
-cuda-keyring_1.1-1_all.deb
+
+# uv
+.python-version
+pyproject.toml
+
+Sol/Utilities/csv_r.py
+
+AirSimSol
+flightmare/
+safe-control-gym/
 
 Replay Buffer
 *.pkl
+Sol/model_chkpts
+
 Sol/Utilities/csv_r.py
 
-flightmare/
-safe-control-gym/
-Sol/logs/concats/PPO 05.11.2024_11.37.31.csv
-Sol/rollouts/
+Sol/results
 
-AirSimSol
+Sol/logs
+logs.txt
+Sol/wandb
+
+Sol/rollouts/
+runs/
+
+tester.ipynb
