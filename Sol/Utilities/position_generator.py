@@ -5,23 +5,23 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 
-class PositionGenerator():
+class PositionGenerator:
 
     def __init__(self, bounds, max_distance):
         self.bounds = bounds
         self.max_distance = max_distance
 
     def nearest_point_on_line(self, x1, y1, z1, x2, y2, z2, point):
-        # Calculate direction vector of the line
+        # Calculate direction vector
         line_vector = np.array([x2 - x1, y2 - y1, z2 - z1])
 
-        # Calculate vector from line start point to the given point
+        # Vector from line start point to the given point
         point_vector = np.array([point[0] - x1, point[1] - y1, point[2] - z1])
 
-        # Calculate the parameter t for the nearest point on the line
+        # Parameter t for the nearest point on the line
         t = np.dot(point_vector, line_vector) / np.dot(line_vector, line_vector)
 
-        # Calculate coordinates of the nearest point on the line
+        # Coordinates of the nearest point on the line
         nearest_point = np.array([x1 + t * (x2 - x1), y1 + t * (y2 - y1), z1 + t * (z2 - z1)])
 
         return nearest_point
@@ -38,13 +38,13 @@ class PositionGenerator():
     def points_around_line(self, x1, y1, z1, x2, y2, z2):
         points = []
 
-        # Calculate the length of the line
+        # Length of the line
         dx = x2 - x1
         dy = y2 - y1
         dz = z2 - z1
         length = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
 
-        # Normalize the direction vector
+        # Normalize direction vector
         ux = dx / length
         uy = dy / length
         uz = dz / length
@@ -66,7 +66,7 @@ class PositionGenerator():
             offset_y *= scale_factor
             offset_z *= scale_factor
 
-            # Calculate the coordinates of the point
+            # Calculate coordinates of the point
             x = x1 + ux * length + offset_x
             y = y1 + uy * length + offset_y
             z = z1 + uz * length + offset_z
@@ -79,10 +79,7 @@ class PositionGenerator():
         return points
 
     def generate_random_point_around_line2(self, from_point, to_point):
-        """
-        Generates a random point around a line defined by two points, clipped to the specified bounds.
-        """
-
+        """Generate a random point around a line defined by two points, clipped to the specified bounds."""
         x1, y1, z1, x2, y2, z2 = from_point[0], from_point[1], from_point[2], to_point[0], to_point[1], to_point[2]
         # Generate a random parameter t between 0 and 1
         t = random.uniform(0, 1)
@@ -122,10 +119,7 @@ class PositionGenerator():
         return x, y, z
 
     def generate_random_point_around_line(self, from_point, to_point):
-        """
-        Generates a random point around a line defined by two points, clipped to the specified bounds.
-        """
-
+        """Generate a random point around a line defined by two points, clipped to the specified bounds."""
         x1, y1, z1, x2, y2, z2 = from_point[0], from_point[1], from_point[2], to_point[0], to_point[1], to_point[2]
         # Generate a random parameter t between 0 and 1
         t = random.uniform(0, 1)
