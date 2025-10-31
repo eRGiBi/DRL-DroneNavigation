@@ -35,9 +35,9 @@ Furthermore, novel and other literature-based reward functions were implemented 
 ---
 
 ### 2. Requirements
-To install dependencies in a Conda, miniconda or Poetry environment:
+To install dependencies in a Conda, miniconda environment:
 
-```
+```bash
 $ pip install -r requirements.txt
 ```
 
@@ -46,11 +46,11 @@ Adding path might help:    $env:PYTHONPATH = "...\RL"
 
 
 To install PyTorch on Windows or Linux with CUDA 11.8 for GPU support:
-```
+```bash
 $ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 ```
 To install TensorFlow with GPU support (not need for main algorithm):
-```
+```bash
 conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
 
 # Anything above 2.10 is not supported on the GPU on Windows Native
@@ -62,7 +62,7 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 
 The CleanRL and RLLib implementations also need to be installed separately.
 
-Also included is a uv.lock file. 
+A uv.lock file is also included. 
 
 ---
 
@@ -78,26 +78,26 @@ the whole learning or testing process.
 
 
 Accessing tensorboard logs:
-```
+```bash
 tensorboard --logdir ./Sol/logs/
 ```
 
 Example args for a full training process on Windows (using gui significantly slows learning):
 
-```
+```bash
 $ python Sol/Model/simulation_controller.py --agent PPO --run_type full  --wandb f --savemodel t --gui f --norm_rew f --lib sb3 --num_envs 12 
 ``` 
 For Ubuntu:
-```
+```bash
 python3 ./Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb f
 ``` 
 
 For Ubuntu with WSL:
-```
+```bash
  python3 Sol/Model/simulation_controller.py --agent PPO --run_type full --wandb False --savemodel False
  ```
 On root installation for activating the example conda environment:
-```
+```bash
  source activate  /root/miniconda3/envs/RL-WSL
 ```
 
@@ -111,7 +111,7 @@ I sampled a few good policies in the function.
 Might need to tweak the observation (and action) spaces prior to launching.
 
 
-```
+```bash
 $  python Sol/Model/simulation_controller.py --agent PPO --run_type saved  --wandb f  
 ``` 
 
@@ -151,7 +151,7 @@ SAC manages to learn a circle track in about 15 hours of training.
 
 - The OpenGl 3 engine does not work in virtual machines, so in order to have a visual representation of the simulation,
 it is necessary to run the simulation with OpenGL 2, set in the modified BaseAviary class, as such: 
-```
+```bash
 p.connect(p.GUI, options="--opengl2")
 ```
 Further: only OpenGL3 works in Windows. Using Ubuntu Virtual Machine this stackoverflow article might be useful: 
