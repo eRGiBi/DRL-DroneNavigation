@@ -70,12 +70,12 @@ from Sol.Model.Environments import normalize
 from Sol.Model.Algorithms.utils import *
 
 from Sol.PyBullet.Logger import Logger
-import Sol.Utilities.Waypoints as Waypoints
+import Sol.Utilities.waypoints as Waypoints
 import Sol.Utilities.Callbacks as Callbacks
 
 from Sol.PyBullet.enums import ActionType
 
-from Sol.Utilities.Plotter import (
+from Sol.Utilities.plotter import (
     plot_learning_curve,
     plot_trajectories,
     plot_trajectories2,
@@ -83,8 +83,8 @@ from Sol.Utilities.Plotter import (
     plot_all_trajectories_3d,
     compute_velocity_acceleration
 )
-from Sol.Utilities.Printer import print_ppo_conf, print_sac_conf
-from Sol.Utilities.Waypoints import Track
+from Sol.Utilities.printer import print_ppo_conf, print_sac_conf
+from Sol.Utilities.waypoints import Track
 
 def dilate_targets(targets, factor: int) -> list:
     """Add targets between the predefined track points."""

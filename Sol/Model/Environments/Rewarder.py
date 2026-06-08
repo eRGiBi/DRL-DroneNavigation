@@ -1,7 +1,7 @@
 import numpy as np
 
 """
-    Yet unused.
+    Unused, different reward function implementations.
 """
 
 

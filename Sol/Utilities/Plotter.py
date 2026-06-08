@@ -1,20 +1,25 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
 
 import torch
 import torch.onnx
+from torchviz import make_dot
 
 import torchviz
 import graphviz
-from matplotlib.collections import LineCollection
-from torchviz import make_dot
 
 import hiddenlayer as hl
 
 
-def plot_metrics(episode_rewards, avg_rewards,
-                 exploration_rate, episode_durations,
-                 losses, title='Learning Metrics'):
+def plot_metrics(
+        episode_rewards,
+        avg_rewards,
+        exploration_rate,
+        episode_durations,
+        losses,
+        title='Learning Metrics'
+):
     [np.mean(episode_rewards[max(0, i - 10):i + 1]) for i in range(len(episode_rewards))]
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -71,23 +76,14 @@ def plot_learning_curve(scores, title='Rewards'):
 
 
 def plot_3d_targets(targets):
-    """
-    Plot the targets in 3D.
-
-    Parameters:
-    - targets (list): List of target points, where each target is a NumPy array of [x, y, z] coordinates.
-    """
-    # Create a 3D plot
+    """Plot targets in 3D."""
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # Extract X, Y, and Z coordinates from targets
     x, y, z = zip(*targets)
 
-    # Plot the targets
     ax.scatter(x, y, z, c='r', marker='o', label='Targets')
 
-    # Connect the targets with lines
     ax.plot(x, y, z, c='b', linestyle='-', linewidth=1, label='Path')
 
     ax.set_xlabel('X')
@@ -99,7 +95,6 @@ def plot_3d_targets(targets):
 
 
 def vis_policy(model, env):
-
     print(model.policy)
     print(model.policy.named_parameters())
 
@@ -216,7 +211,6 @@ def plot_3d_trajectories(avg_traj, avg_speed, title="Averaged Drone Trajectory")
             color=cmap(norm(speed[i])), linewidth=2
         )
 
-    # Add colorbar
     mappable = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     mappable.set_array(speed)
     cbar = plt.colorbar(mappable, ax=ax, shrink=0.5)
@@ -262,7 +256,6 @@ def plot_all_trajectories_3d(trajectories, speeds, title="All Traveled Paths (3D
                 color=cmap(norm(speed[i])), linewidth=2
             )
 
-    # Add colorbar
     mappable = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     mappable.set_array(speed)
     cbar = plt.colorbar(mappable, ax=ax, shrink=0.5)
@@ -316,9 +309,3 @@ def compute_velocity_acceleration(trajectories, speeds, title="Velocity and Acce
     fig.suptitle(title)
     plt.tight_layout()
     plt.show()
-
-
-class Plotter:
-    pass
-
-

@@ -32,9 +32,9 @@ import wandb
 from gymnasium.envs.registration import register
 
 from Sol.Model.PBDroneSimulator import PBDroneSimulator
-import Sol.Utilities.Waypoints as Waypoints
-from Sol.Utilities.Waypoints import Track
-from Sol.Utilities.ArgParser import parse_args
+import Sol.Utilities.waypoints as Waypoints
+from Sol.Utilities.waypoints import Track
+from Sol.Utilities.arg_parser import parse_args
 from Sol.Utilities.Profiler import Profiler
 
 logging.basicConfig(level=logging.INFO)
@@ -140,27 +140,3 @@ def main():
 if __name__ == "__main__":
 
     main()
-
-    # Manual PyBullet Environment for debugging #################################
-
-    # def manual_pb_env():
-
-    # physicsClient = p.connect(p.GUI)
-    # p.setGravity(0, 0, -9.81)
-    # p.setRealTimeSimulation(0)
-    # drone = p.loadURDF("cf2x.urdf", [0, 0, 0])
-
-    # print("----------------------------")
-    # print(drone_environment.action_space)
-    # print(drone_environment.action_spec())
-    # print(drone_environment.getDroneIds())
-    # print(drone_environment.observation_spec())
-    # print("----------------------------")
-
-    # tf_env = tf_py_environment.TFPyEnvironment(drone_environment)
-    #
-    # print('action_spec:', tf_env.action_spec())
-    # print('time_step_spec.observation:', tf_env.time_step_spec().observation)
-    # print('time_step_spec.step_type:', tf_env.time_step_spec().step_type)
-    # print('time_step_spec.discount:', tf_env.time_step_spec().discount)
-    # print('time_step_spec.reward:', tf_env.time_step_spec().reward)

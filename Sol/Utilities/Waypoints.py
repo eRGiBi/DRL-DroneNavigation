@@ -1,17 +1,18 @@
-import math
+"""Provide a class for representing waypoints to navigate to."""
 
+import math
 import numpy as np
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import Sol.Utilities.Plotter as Plotter
+import Sol.Utilities.plotter as Plotter
 
 
 class Track:
-    """
-    Initialized with a track function.
-    Attributes are the waypoints, init pos and dim.
+    """Represent a racetrack.
+
+    Attributes are waypoints, initial position and dimension.
     """
     def __init__(self, track, circle=False):
+        """Initialize a Track with a track function."""
         self.waypoints, self.initial_xyzs, self.aviary_dim = track
         self.is_circle = circle
 
@@ -20,8 +21,7 @@ class Track:
                 f"initial position of: {self.initial_xyzs}, and aviary dimensions of: {self.aviary_dim}.")
 
 def normalize_coordinates(coordinates, new_size):
-    """
-    Normalize the coordinates to fit within a new range.
+    """Normalize the coordinates to fit within a new range.
 
     Args:
         coordinates (np.array): Original coordinates as a numpy array of shape (n, 3).
@@ -44,9 +44,7 @@ def normalize_coordinates(coordinates, new_size):
 
 
 def parametric_eq(num_points=5):
-    """
-    Create a smooth racetrack using sine and cosine parametric equations with the "num_points" waypoints.
-    """
+    """Create a smooth racetrack using sine and cosine parametric equations with the "num_points" waypoints."""
     theta = np.linspace(0, 2 * np.pi, num_points)
     radius = 5.0  # Adjust for track size
 
@@ -106,18 +104,17 @@ def up_sharp_back_turn():
 
 
 def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
-    """
-        Generate points on a circle in 3D space.
+    """Generate points on a circle in 3D space.
 
-        Parameters:
-        - radius (float): Radius of the circle.
-        - num_points (int): Number of points to generate.
-        - center (tuple): 3D center of the circle (x, y, z).
-        - plane (str): The plane in which the circle lies, options are "XY", "XZ", "YZ".
+    Parameters:
+    - radius (float): Radius of the circle.
+    - num_points (int): Number of points to generate.
+    - center (tuple): 3D center of the circle (x, y, z).
+    - plane (str): The plane in which the circle lies, options are "XY", "XZ", "YZ".
 
-        Returns:
+    Returns:
         - np.array: Array of shape (num_points, 3) containing 3D coordinates.
-        """
+    """
     angles = np.linspace(0, 2 * np.pi, num_points + 1, endpoint=True)
     circle_points = np.zeros((num_points + 1, 3))
 
@@ -140,7 +137,7 @@ def circle(radius, num_points, height, center=(0, 0, 0), plane="XY"):
 
 
 def generate_random_targets(num_targets: int) -> np.ndarray:
-    """Generates random targets.
+    """Generate random targets.
 
     The targets are generated in a random order and are evenly distributed around the origin.
     The z-coordinate of the targets is randomly chosen between 0.1 and 1.0, but is capped at 0.1 if it is below that value.
@@ -197,6 +194,7 @@ def reaching():
     return arr, np.array([arr[0]]), np.array([-4, -4, 0, 4, 4, 4])
 
 
+# Testing purposes
 if __name__ == '__main__':
     targets = up()
     Plotter.plot_3d_targets(targets[0])
@@ -233,4 +231,3 @@ if __name__ == '__main__':
     Plotter.plot_3d_targets(targets[0])
     targets = reaching()
     Plotter.plot_3d_targets(targets[0])
-

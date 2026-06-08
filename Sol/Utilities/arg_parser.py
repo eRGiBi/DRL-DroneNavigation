@@ -1,5 +1,5 @@
-import argparse
 import os
+import argparse
 from distutils.util import strtobool
 from Sol.Model.parameter_directory.parameter_manager import *
 
